@@ -21,12 +21,14 @@ services:
       DB_HOST: mysql
       DB_PORT: 3306
       DB_DATABASE: inova7_academico
-      DB_USERNAME: laravel
-      DB_PASSWORD: laravel
+      DB_USERNAME: root
+      DB_PASSWORD: root
       CACHE_STORE: file
       SESSION_DRIVER: file
+      COMPOSER_PROCESS_TIMEOUT: 600
+      COMPOSER_MEMORY_LIMIT: -1
     command: >
-      bash -c "composer install --no-interaction --prefer-dist --no-progress && php artisan key:generate --force && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"
+      bash -c "composer install --no-interaction --prefer-dist --no-progress --no-scripts && php artisan key:generate --force && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"
 
   mysql:
     image: mysql:8.0
