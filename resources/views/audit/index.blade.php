@@ -1,0 +1,7 @@
+@extends('layouts.app')
+@section('title','Auditoria • Inova7 Acadêmico')
+@section('page-title','Auditoria do Curso')
+@section('content')
+<section class="page-head"><div><h2>Eixo 1 • Gerenciamento de Aulas</h2><p>Organização dos templates e evidências conforme QUA-INT-08 V.25.</p></div><div class="d-flex gap-2"><a class="btn btn-outline-primary" href="{{ route('audit.templates.create') }}">Carregar template</a><a class="btn btn-primary" href="{{ route('audit.documents.create') }}">Emitir CCG-FOR-01</a></div></section>
+@foreach($items as $item)<article class="card card-soft mb-3"><div class="card-body"><div class="d-flex justify-content-between"><div><span class="audit-code">{{ $item->code }}</span><h3 class="section-title mt-1">{{ $item->name }}</h3></div><span class="badge text-bg-light border">Peso {{ $item->weight }}</span></div><p class="small text-secondary mb-3">{{ $item->criteria }}</p><div class="row g-2">@forelse($item->templates as $template)<div class="col-md-4"><div class="border rounded p-3"><strong>{{ $template->code }}</strong><div class="small text-secondary">Versão {{ $template->version }} • {{ $template->shift ?: 'Todos os turnos' }}</div><span class="badge mt-2 {{ $template->is_current?'badge-soft-green':'text-bg-light' }}">{{ $template->is_current?'Vigente':'Substituído' }}</span></div></div>@empty<div class="col-12 text-secondary small">Nenhum template cadastrado.</div>@endforelse</div></div></article>@endforeach
+@endsection

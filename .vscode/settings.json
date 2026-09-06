@@ -1,0 +1,5 @@
+{
+  "files.associations": { "*.blade.php": "blade" },
+  "editor.formatOnSave": true,
+  "intelephense.environment.phpVersion": "8.2.0"
+}
