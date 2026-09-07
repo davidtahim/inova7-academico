@@ -19,6 +19,24 @@ MVP independente para gestão acadêmica de cursos, planejamento semestral, disp
 - Seed inicial com usuário de coordenação para login no sistema.
 - Ambiente local pronto com Docker Compose para Laravel + MySQL + phpMyAdmin.
 
+## Perfis de acesso
+
+O sistema já contempla os seguintes perfis de usuário:
+
+- Aluno
+- Professor
+- Coordenador
+- Funcionário (Secretaria/CRA)
+- Administrador de TI
+
+### Funcionalidades por perfil
+
+- Aluno: acesso ao painel e visualização de informações acadêmicas.
+- Professor: pode atualizar o perfil, selecionar disciplinas e informar disponibilidade por dia e horário.
+- Coordenador: acesso ao planejamento acadêmico, operação do sistema e acompanhamento das ofertas.
+- Funcionário (Secretaria/CRA): suporte operacional e cadastro de registros.
+- Administrador de TI: gestão administrativa e configuração do ambiente.
+
 ## Ainda não concluído
 
 - Formulários CRUD completos em todos os módulos.
@@ -28,7 +46,7 @@ MVP independente para gestão acadêmica de cursos, planejamento semestral, disp
 - CCG-FOR-26 e comprovantes de divulgação.
 - Cadastro de alunos e histórico individual.
 - Rotina de implantação específica do cPanel.
-- Perfis de acesso mais granulares além da coordenação básica.
+- Autorização granular por permissão mais avançada.
 
 ## Conta padrão de acesso
 
@@ -111,6 +129,16 @@ Use a conta de demonstração abaixo:
 E-mail: coordenacao@inova7.local
 Senha: alterar-senha
 ```
+
+## Perfil do professor
+
+No perfil do usuário com papel de professor, é possível:
+
+- selecionar as disciplinas que leciona;
+- informar sua disponibilidade por dia e período;
+- registrar preferência de horários e observações.
+
+Esses dados são armazenados em cadastros de professor e de disponibilidade, e servem de base para o planejamento e alocação docente.
 
 ## Template auditável
 
