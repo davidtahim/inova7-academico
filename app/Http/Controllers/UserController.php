@@ -1,6 +1,10 @@
 // app/Http/Controllers/UserController.php
 namespace App\Http\Controllers;
 
+use App\Models\AcademicTerm;
+use App\Models\Professor;
+use App\Models\ProfessorAvailability;
+use App\Models\Subject;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules\Password;
@@ -25,10 +29,22 @@ return view('users.profile', [
 public function editProfile()
 {
 $user = auth()->user();
+$term = AcademicTerm::latest('id')->first();
+$professor = Professor::where('email', $user->email)->orWhere('name', $user->name)->first();
 
 return view('users.profile-edit', [
 'user' => $user,
 'roles' => User::roleOptions(),
+'professor' => $professor,
+'term' => $term,
+'subjects' => Subject::orderBy('name')->get(),
+'availability' => $professor && $term
+? ProfessorAvailability::where('professor_id', $professor->id)
+->where('academic_term_id', $term->id)
+->orderBy('weekday')
+->orderBy('starts_at')
+->get()
+: collect(),
 ]);
 }
 
@@ -42,6 +58,9 @@ $validated = $request->validate([
 'registration_number' => ['nullable', 'string', 'max:20', 'unique:users,registration_number,' . $user->id],
 'role' => 'required|in:admin,coordinator,teacher,student,staff',
 'password' => ['nullable', 'confirmed', Password::min(8)->letters()->numbers()],
+'subjects' => ['nullable', 'array'],
+'subjects.*' => ['integer', 'exists:subjects,id'],
+'availability' => ['nullable', 'array'],
 ]);
 
 $user->fill([
@@ -56,6 +75,48 @@ $user->password = $validated['password'];
 }
 
 $user->save();
+
+if ($user->role === 'teacher') {
+$professor = Professor::firstOrCreate(
+['email' => $user->email],
+[
+'name' => $user->name,
+'registration' => $user->registration_number,
+'qualification' => 'Informado pelo perfil',
+'active' => true,
+]
+);
+
+$professor->name = $user->name;
+$professor->email = $user->email;
+$professor->registration = $user->registration_number ?? $professor->registration;
+$professor->save();
+
+$term = AcademicTerm::latest('id')->first();
+if ($term) {
+ProfessorAvailability::where('professor_id', $professor->id)
+->where('academic_term_id', $term->id)
+->delete();
+
+foreach ($request->input('availability', []) as $slot) {
+if (empty($slot['weekday']) || empty($slot['starts_at']) || empty($slot['ends_at'])) {
+continue;
+}
+
+ProfessorAvailability::create([
+'academic_term_id' => $term->id,
+'professor_id' => $professor->id,
+'weekday' => (int) $slot['weekday'],
+'starts_at' => $slot['starts_at'],
+'ends_at' => $slot['ends_at'],
+'preference' => $slot['preference'] ?? 'available',
+'notes' => $slot['notes'] ?? null,
+]);
+}
+}
+
+$professor->subjects()->sync($request->input('subjects', []));
+}
 
 return redirect()->route('profile')->with('success', 'Perfil atualizado com sucesso!');
 }
