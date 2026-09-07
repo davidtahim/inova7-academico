@@ -29,7 +29,14 @@
                                     <p class="text-muted mb-0">{{ $user->email }}</p>
                                 </div>
                             </div>
-                            <a href="{{ route('profile.edit') }}" class="btn btn-outline-primary btn-sm">Editar perfil</a>
+                            <div class="d-flex flex-wrap gap-2">
+                                <a href="{{ route('profile.edit') }}" class="btn btn-outline-primary btn-sm">Editar
+                                    perfil</a>
+                                @if ($user->role === 'teacher')
+                                    <a href="{{ route('teacher.availability.pdf') }}"
+                                        class="btn btn-outline-success btn-sm">Gerar CCG-FOR-02</a>
+                                @endif
+                            </div>
                         </div>
 
                         <div class="row g-3">

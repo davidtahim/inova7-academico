@@ -44,6 +44,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/perfil', [UserController::class, 'profile'])->name('profile');
     Route::get('/perfil/editar', [UserController::class, 'editProfile'])->name('profile.edit');
+    Route::get('/perfil/disponibilidade/pdf', [UserController::class, 'exportTeacherAvailabilityDocument'])->name('teacher.availability.pdf');
     Route::put('/perfil', [UserController::class, 'updateProfile'])->name('profile.update');
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 });

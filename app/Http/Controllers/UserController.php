@@ -7,6 +7,7 @@ use App\Models\Professor;
 use App\Models\ProfessorAvailability;
 use App\Models\Subject;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
@@ -139,6 +140,60 @@ class UserController extends Controller
         }
 
         return redirect()->route('profile')->with('success', 'Perfil atualizado com sucesso!');
+    }
+
+    public function exportTeacherAvailabilityDocument()
+    {
+        $user = Auth::user();
+        if (! $user instanceof User) {
+            abort(403);
+        }
+
+        if ($user->role !== 'teacher') {
+            abort(403, 'Apenas professores podem exportar a disponibilidade.');
+        }
+
+        $term = AcademicTerm::latest('id')->first();
+        $professor = Professor::where('email', $user->email)
+            ->orWhere('name', $user->name)
+            ->first();
+
+        $slots = $term && $professor
+            ? ProfessorAvailability::where('professor_id', $professor->id)
+            ->where('academic_term_id', $term->id)
+            ->orderBy('weekday')
+            ->orderBy('starts_at')
+            ->get()
+            : collect();
+
+        $weekdays = [
+            1 => 'Segunda-feira',
+            2 => 'Terça-feira',
+            3 => 'Quarta-feira',
+            4 => 'Quinta-feira',
+            5 => 'Sexta-feira',
+            6 => 'Sábado',
+        ];
+
+        $grouped = collect(range(1, 6))->mapWithKeys(function ($day) use ($weekdays, $slots) {
+            return [$day => $slots->filter(fn($slot) => (int) $slot->weekday === $day)->values()];
+        })->filter(fn($items) => $items->isNotEmpty());
+
+        $html = view('users.ccg-for-02-document', [
+            'user' => $user,
+            'professor' => $professor,
+            'term' => $term,
+            'slots' => $slots,
+            'weekdays' => $weekdays,
+            'grouped' => $grouped,
+        ])->render();
+
+        $pdf = Pdf::loadHTML($html)
+            ->setPaper('a4', 'portrait');
+
+        $filename = 'CCG-FOR-02-Disponibilidade-' . ($term ? $term->code : 'semestre') . '.pdf';
+
+        return $pdf->download($filename);
     }
 
     public function store(Request $request)
