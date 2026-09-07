@@ -161,8 +161,11 @@ class UserController extends Controller
             'email' => $validated['email'],
             'role' => $validated['role'],
             'password' => $validated['password'],
-            'is_active' => $request->has('is_active'),
         ];
+
+        if (Schema::hasColumn('users', 'is_active')) {
+            $payload['is_active'] = $request->has('is_active');
+        }
 
         if (Schema::hasColumn('users', 'registration_number') && ! empty($validated['registration_number'])) {
             $payload['registration_number'] = $validated['registration_number'];
