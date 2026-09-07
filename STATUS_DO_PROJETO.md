@@ -11,6 +11,31 @@
 - Classis permanece fora do sistema.
 - CCG-FOR-01 emitido a partir de template carregado no módulo Auditoria.
 - Documentos emitidos são versionados e não podem ser sobrescritos.
+- O sistema já possui autenticação com login/logout e acesso restrito ao dashboard.
+- O layout da aplicação oculta a sidebar antes do login e exibe o painel somente para usuários autenticados.
+- O projeto foi estruturado para rodar localmente com Docker Compose (Laravel + MySQL + phpMyAdmin).
+
+## Status atual da implementação
+
+### Concluído
+
+- Dashboard responsivo.
+- Tela de login funcional.
+- Autenticação de usuários.
+- Proteção de rotas internas por middleware `auth`.
+- Seed inicial com usuário de coordenação.
+- Estrutura de semestres, cursos, matrizes, disciplinas, professores, ofertas e horários.
+- Módulo de auditoria com templates e documentos.
+- Migrações base e ambiente Docker funcional.
+
+### Em andamento / pendente
+
+- CRUD completo dos módulos administrativos.
+- Importadores e integração com planilhas.
+- Geração e divulgação de documentos complementares.
+- Cadastro de alunos e históricos.
+- Controle de perfis específicos por papel e permissões mais granulares.
+- Deploy final em ambiente de produção.
 
 ## Prioridade funcional
 
@@ -21,6 +46,11 @@
 5. Emissão e divulgação do CCG-FOR-01.
 6. Organização das evidências do item 1.12.1 da auditoria.
 7. Cadastro de alunos, históricos e demais itens da auditoria.
+
+## Conta padrão do sistema
+
+- E-mail: `coordenacao@inova7.local`
+- Senha: `alterar-senha`
 
 ## Fontes já estudadas
 
