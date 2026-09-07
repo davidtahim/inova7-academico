@@ -1,64 +1,33 @@
 # Inova7 Acadêmico — Laravel 12
 
-MVP independente para gestão acadêmica de cursos, planejamento semestral, disponibilidade docente, conflitos de horários e auditoria documental. O sistema não utiliza GPT, TOTVS ou APIs externas.
+Aplicação acadêmica para gestão de cursos, planejamento semestral, disponibilidade docente, conflitos de horários e auditoria documental.
 
-## O que já existe neste pacote
+## Visão geral
 
-- Dashboard Bootstrap responsivo com layout autenticado e acesso restrito.
-- Sistema de autenticação com login e logout funcional.
-- Middleware de autenticação para rotas internas e ocultação da sidebar antes do login.
-- Estrutura multicurso e matrizes com situações Atual, Ativa e Inativa.
-- Semestres, disciplinas, professores, ofertas, alocações e horários.
-- Detector inicial de choque de professor, turma e sala.
-- Modalidades por oferta: presencial, híbrida, DOL, Navega, Notável Mestre, extensão e estágio.
-- Módulo Auditoria com QUA-INT-08 V.25 e item 1.12.1.
-- Upload e versionamento de templates HTML auditáveis.
-- Templates iniciais CCG-FOR-01 V.08 para manhã e noite.
-- Geração do CCG-FOR-01 em PDF a partir da turma cadastrada.
-- Dados de demonstração de SI e ADS para 2026.2.
-- Seed inicial com usuário de coordenação para login no sistema.
-- Ambiente local pronto com Docker Compose para Laravel + MySQL + phpMyAdmin.
+O sistema já contempla:
+
+- autenticação com login e logout;
+- dashboard com layout autenticado;
+- cursos, matrizes, semestres e disciplinas;
+- professores, ofertas e alocações de horários;
+- importação de planilhas de oferta;
+- auditoria documental com templates HTML;
+- ambiente local pronto com Docker e MySQL.
 
 ## Perfis de acesso
 
-O sistema já contempla os seguintes perfis de usuário:
+| Perfil | Descrição |
+| --- | --- |
+| Aluno | visualiza informações acadêmicas e painel pessoal. |
+| Professor | informa disponibilidade e acompanha disciplinas. |
+| Coordenador | gerencia planejamento e ofertas acadêmicas. |
+| Funcionário (Secretaria/CRA) | suporte operacional e registros administrativos. |
+| Funcionário de TI | importa planilhas e mantém dados acadêmicos importados. |
+| Administrador de TI | gestão administrativa e configuração do ambiente. |
 
-- Aluno
-- Professor
-- Coordenador
-- Funcionário (Secretaria/CRA)
-- Funcionário de TI
-- Administrador de TI
+> A importação da planilha Ubíqua é restrita ao perfil de Funcionário de TI e Administrador de TI.
 
-### Funcionalidades por perfil
-
-- Aluno: acesso ao painel e visualização de informações acadêmicas.
-- Professor: pode atualizar o perfil, selecionar disciplinas e informar disponibilidade por dia e horário.
-- Coordenador: acesso ao planejamento acadêmico, operação do sistema e acompanhamento das ofertas.
-- Funcionário (Secretaria/CRA): suporte operacional e cadastro de registros.
-- Funcionário de TI: responsável pela importação de planilhas de oferta, manutenção técnica do ambiente e gestão de dados acadêmicos importados.
-- Administrador de TI: gestão administrativa e configuração do ambiente.
-
-### Permissões específicas
-
-- Importação de ofertas da planilha Ubíqua: restrita ao perfil de Funcionário de TI.
-- Acesso ao módulo de importações e ao menu correspondente: liberado somente para usuários com esse perfil.
-- Demais perfis autenticados podem entrar no sistema, mas não acessam a funcionalidade de importação.
-
-## Ainda não concluído
-
-- Formulários CRUD completos em todos os módulos.
-- Importadores das planilhas Grades, Oferta Ubíqua e Disciplinas.
-- Leitura automática de históricos e PPCs.
-- Editor visual das marcações do template.
-- CCG-FOR-26 e comprovantes de divulgação.
-- Cadastro de alunos e histórico individual.
-- Rotina de implantação específica do cPanel.
-- Autorização granular por permissão mais avançada.
-
-## Usuários de demonstração por perfil
-
-O projeto já inclui usuários de demonstração criados via seed para cada perfil do sistema:
+## Usuários de demonstração
 
 | Perfil | E-mail | Senha |
 | --- | --- | --- |
@@ -69,46 +38,26 @@ O projeto já inclui usuários de demonstração criados via seed para cada perf
 | Funcionário de TI | ti@inova7.local | senha1234 |
 | Administrador de TI | admin@inova7.local | senha1234 |
 
-> A importação da planilha Ubíqua é restrita ao perfil de Funcionário de TI (`ti@inova7.local`) e ao perfil de administrador de TI (`admin@inova7.local`).
+Esses usuários são criados em `database/seeders/DatabaseSeeder.php`.
 
-Esses usuários são criados pelo seeder em `database/seeders/DatabaseSeeder.php`.
+## Como rodar localmente
 
-## Instalação no Windows
+### Requisitos
 
-### 1. Pré-requisitos
+- PHP 8.2+
+- Composer 2
+- MySQL 8
+- VS Code
+- extensões: `pdo_mysql`, `mbstring`, `openssl`, `fileinfo`, `gd`, `zip`, `intl`
 
-- PHP 8.2 ou superior com extensões `pdo_mysql`, `mbstring`, `openssl`, `fileinfo`, `gd`, `zip` e `intl`.
-- Composer 2.
-- MySQL 8 ou MariaDB compatível.
-- VS Code.
-
-O Laragon é a opção mais simples para ter PHP, MySQL e terminal no Windows.
-
-### 2. Colocar na pasta Projetos
-
-Extraia o pacote para:
-
-```text
-C:\Projetos\inova7-academico
-```
-
-Abra o PowerShell nessa pasta:
-
-```powershell
-cd "C:\Users\SeuUsuario\Projetos\inova7-academico"
-code .
-```
-
-### 3. Instalar e configurar
-
-Opção recomendada para ambiente local com Docker:
+### Docker
 
 ```powershell
 docker compose up -d --build
 docker compose exec -T app php artisan migrate:fresh --seed
 ```
 
-Opção tradicional localmente no Windows:
+### Windows local
 
 ```powershell
 composer install
@@ -118,74 +67,40 @@ php artisan migrate --seed
 php artisan serve
 ```
 
-No arquivo `.env`, use a configuração do banco local ou do container. Para o ambiente Docker, a configuração correta é:
-
-```dotenv
-DB_CONNECTION=mysql
-DB_HOST=mysql
-DB_PORT=3306
-DB_DATABASE=inova7_academico
-DB_USERNAME=root
-DB_PASSWORD=root
-```
-
-Acesse `http://127.0.0.1:8000`.
-
-## Acesso ao sistema
-
-Depois de iniciar o projeto, acesse a tela de login em:
+Acesse:
 
 ```text
 http://localhost:8000/login
 ```
 
-Use a conta de demonstração abaixo:
+## Módulos principais
 
-```text
-E-mail: coordenacao@inova7.local
-Senha: alterar-senha
-```
+- gestão acadêmica
+- planejamento de ofertas
+- importação de dados
+- auditoria documental
+- templating de documentos acadêmicos
 
-## Perfil do professor
+## Roadmap atual
 
-No perfil do usuário com papel de professor, é possível:
+- [x] autenticação
+- [x] dashboard e layout
+- [x] perfis de usuário
+- [x] importação da oferta Ubíqua
+- [x] usuários de demonstração
+- [ ] formulários CRUD completos
+- [ ] leitura automática de históricos e PPCs
+- [ ] editor visual dos templates
+- [ ] integrações e geração de comprovantes adicionais
 
-- selecionar as disciplinas que leciona;
-- informar sua disponibilidade por dia e período;
-- registrar preferência de horários e observações.
+## Segurança
 
-Esses dados são armazenados em cadastros de professor e de disponibilidade, e servem de base para o planejamento e alocação docente.
+Este projeto ainda é um MVP. Antes de produção, é importante reforçar:
 
-## Template auditável
+- backup do banco;
+- HTTPS;
+- controle de permissões mais granular;
+- proteção de arquivos privados;
+- validação de uploads e limites de tamanho.
 
-Os modelos iniciais estão em `resources/audit-templates`. No sistema, acesse **Auditoria → Carregar template**. O arquivo deve ser HTML e usar marcações como:
-
-```text
-{{curso}}
-{{semestre_letivo}}
-{{turma}}
-{{segunda_0730}}
-```
-
-Ao publicar uma nova versão, a anterior deixa de ser vigente, mas os documentos já emitidos preservam sua referência.
-
-## Segurança antes de produção
-
-Este pacote é um MVP de desenvolvimento. Antes de publicar, implemente autenticação, autorização por perfil, backup, HTTPS, limites de upload e proteção dos documentos privados. Nunca envie o `.env` para Git.
-
-## Template auditável
-
-Os modelos iniciais estão em `resources/audit-templates`. No sistema, acesse **Auditoria → Carregar template**. O arquivo deve ser HTML e usar marcações como:
-
-```text
-{{curso}}
-{{semestre_letivo}}
-{{turma}}
-{{segunda_0730}}
-```
-
-Ao publicar uma nova versão, a anterior deixa de ser vigente, mas os documentos já emitidos preservam sua referência.
-
-## Segurança antes de produção
-
-Este pacote é um MVP de desenvolvimento. Antes de publicar, implemente autenticação, autorização por perfil, backup, HTTPS, limites de upload e proteção dos documentos privados. Nunca envie o `.env` para Git.
+Nunca envie o arquivo `.env` para repositório público.
