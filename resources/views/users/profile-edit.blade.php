@@ -118,6 +118,24 @@
                                             $slots = old('availability', $availability->toArray() ?: []);
                                         @endphp
 
+                                        @php
+                                            $slotOptions = [
+                                                'Manhã' => [
+                                                    '07:30' => '07:30 às 08:20',
+                                                    '08:20' => '08:20 às 09:10',
+                                                    '09:10' => '09:10 às 10:00',
+                                                    '10:00' => '10:00 às 10:50',
+                                                    '10:50' => '10:50 às 11:40',
+                                                ],
+                                                'Noite' => [
+                                                    '18:30' => '18:30 às 19:20',
+                                                    '19:20' => '19:20 às 20:10',
+                                                    '20:10' => '20:10 às 21:00',
+                                                    '21:00' => '21:00 às 21:50',
+                                                ],
+                                            ];
+                                        @endphp
+
                                         @if (empty($slots))
                                             <div class="border rounded p-3 availability-row">
                                                 <div class="row g-2 align-items-end">
@@ -131,15 +149,21 @@
                                                             @endforeach
                                                         </select>
                                                     </div>
-                                                    <div class="col-md-2">
-                                                        <label class="form-label small fw-semibold">Início</label>
-                                                        <input type="time" name="availability[0][starts_at]"
-                                                            class="form-control" aria-label="Início">
-                                                    </div>
-                                                    <div class="col-md-2">
-                                                        <label class="form-label small fw-semibold">Fim</label>
-                                                        <input type="time" name="availability[0][ends_at]"
-                                                            class="form-control" aria-label="Fim">
+                                                    <div class="col-md-3">
+                                                        <label class="form-label small fw-semibold">Horário</label>
+                                                        <select name="availability[0][starts_at]" class="form-select"
+                                                            aria-label="Horário">
+                                                            <option value="">Selecione</option>
+                                                            @foreach ($slotOptions as $period => $options)
+                                                                <optgroup
+                                                                    label="{{ $period == 'Manhã' ? 'MANHÃ' : 'NOITE' }}">
+                                                                    @foreach ($options as $value => $label)
+                                                                        <option value="{{ $value }}">
+                                                                            {{ $label }}</option>
+                                                                    @endforeach
+                                                                </optgroup>
+                                                            @endforeach
+                                                        </select>
                                                     </div>
                                                     <div class="col-md-2">
                                                         <label class="form-label small fw-semibold">Preferência</label>
@@ -150,7 +174,7 @@
                                                             <option value="unavailable">Indisponível</option>
                                                         </select>
                                                     </div>
-                                                    <div class="col-md-4">
+                                                    <div class="col-md-5">
                                                         <label class="form-label small fw-semibold">Observação</label>
                                                         <input type="text" name="availability[0][notes]"
                                                             class="form-control" placeholder="Ex.: só manhã"
@@ -174,21 +198,22 @@
                                                                 @endforeach
                                                             </select>
                                                         </div>
-                                                        <div class="col-md-2">
-                                                            <label class="form-label small fw-semibold">Início</label>
-                                                            <input type="time"
-                                                                name="availability[{{ $index }}][starts_at]"
-                                                                class="form-control"
-                                                                value="{{ old('availability.' . $index . '.starts_at', $slot['starts_at'] ?? '') }}"
-                                                                aria-label="Início">
-                                                        </div>
-                                                        <div class="col-md-2">
-                                                            <label class="form-label small fw-semibold">Fim</label>
-                                                            <input type="time"
-                                                                name="availability[{{ $index }}][ends_at]"
-                                                                class="form-control"
-                                                                value="{{ old('availability.' . $index . '.ends_at', $slot['ends_at'] ?? '') }}"
-                                                                aria-label="Fim">
+                                                        <div class="col-md-3">
+                                                            <label class="form-label small fw-semibold">Horário</label>
+                                                            <select name="availability[{{ $index }}][starts_at]"
+                                                                class="form-select" aria-label="Horário">
+                                                                <option value="">Selecione</option>
+                                                                @foreach ($slotOptions as $period => $options)
+                                                                    <optgroup
+                                                                        label="{{ $period == 'Manhã' ? 'MANHÃ' : 'NOITE' }}">
+                                                                        @foreach ($options as $value => $label)
+                                                                            <option value="{{ $value }}"
+                                                                                {{ old('availability.' . $index . '.starts_at', $slot['starts_at'] ?? '') == $value ? 'selected' : '' }}>
+                                                                                {{ $label }}</option>
+                                                                        @endforeach
+                                                                    </optgroup>
+                                                                @endforeach
+                                                            </select>
                                                         </div>
                                                         <div class="col-md-2">
                                                             <label class="form-label small fw-semibold">Preferência</label>
@@ -205,7 +230,7 @@
                                                                     Indisponível</option>
                                                             </select>
                                                         </div>
-                                                        <div class="col-md-4">
+                                                        <div class="col-md-5">
                                                             <label class="form-label small fw-semibold">Observação</label>
                                                             <input type="text"
                                                                 name="availability[{{ $index }}][notes]"
@@ -255,13 +280,24 @@
                                     <option value="6">Sábado</option>
                                 </select>
                             </div>
-                            <div class="col-md-2">
-                                <label class="form-label small fw-semibold">Início</label>
-                                <input type="time" name="availability[${index}][starts_at]" class="form-control" aria-label="Início">
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label small fw-semibold">Fim</label>
-                                <input type="time" name="availability[${index}][ends_at]" class="form-control" aria-label="Fim">
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Horário</label>
+                                <select name="availability[${index}][starts_at]" class="form-select" aria-label="Horário">
+                                    <option value="">Selecione</option>
+                                    <optgroup label="MANHÃ">
+                                        <option value="07:30">07:30 às 08:20</option>
+                                        <option value="08:20">08:20 às 09:10</option>
+                                        <option value="09:10">09:10 às 10:00</option>
+                                        <option value="10:00">10:00 às 10:50</option>
+                                        <option value="10:50">10:50 às 11:40</option>
+                                    </optgroup>
+                                    <optgroup label="NOITE">
+                                        <option value="18:30">18:30 às 19:20</option>
+                                        <option value="19:20">19:20 às 20:10</option>
+                                        <option value="20:10">20:10 às 21:00</option>
+                                        <option value="21:00">21:00 às 21:50</option>
+                                    </optgroup>
+                                </select>
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label small fw-semibold">Preferência</label>
@@ -271,7 +307,7 @@
                                     <option value="unavailable">Indisponível</option>
                                 </select>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-5">
                                 <label class="form-label small fw-semibold">Observação</label>
                                 <input type="text" name="availability[${index}][notes]" class="form-control" placeholder="Ex.: só manhã" aria-label="Observação">
                             </div>

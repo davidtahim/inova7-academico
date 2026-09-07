@@ -83,6 +83,25 @@ class UserLoginTest extends TestCase
         $response->assertDontSee('Disponibilidade</h5>');
     }
 
+    public function test_teacher_availability_form_uses_standard_morning_and_evening_slots(): void
+    {
+        $user = User::create([
+            'name' => 'Professora Ana',
+            'email' => 'ana.prof.slot@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'teacher',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($user)->get('/perfil/editar');
+
+        $response->assertOk();
+        $response->assertSee('07:30 às 08:20');
+        $response->assertSee('10:50 às 11:40');
+        $response->assertSee('18:30 às 19:20');
+        $response->assertSee('21:00 às 21:50');
+    }
+
     public function test_only_it_staff_can_access_ubiquitous_import(): void
     {
         $coordinator = User::create([
