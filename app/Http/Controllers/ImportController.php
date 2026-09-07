@@ -123,14 +123,30 @@ class ImportController extends Controller
 
     private function parseXlsx(string $path): array
     {
-        $spreadsheet = IOFactory::load($path);
+        $reader = IOFactory::createReaderForFile($path);
+
+        if (method_exists($reader, 'setReadDataOnly')) {
+            $reader->setReadDataOnly(true);
+        }
+
+        if (method_exists($reader, 'setReadEmptyCells')) {
+            $reader->setReadEmptyCells(false);
+        }
+
+        $spreadsheet = $reader->load($path);
         $sheet = $spreadsheet->getActiveSheet();
         $rows = [];
 
         foreach ($sheet->getRowIterator() as $row) {
             $cells = [];
             foreach ($row->getCellIterator() as $cell) {
-                $cells[] = trim((string) $cell->getValue());
+                $value = $cell->getValue();
+
+                if (is_object($value) && method_exists($value, 'getPlainText')) {
+                    $value = $value->getPlainText();
+                }
+
+                $cells[] = trim((string) $value);
             }
 
             $values = array_values($cells);
@@ -140,6 +156,8 @@ class ImportController extends Controller
 
             $rows[] = $values;
         }
+
+        $spreadsheet->garbageCollect();
 
         return $this->buildNormalizedRows($rows);
     }
