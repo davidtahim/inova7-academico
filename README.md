@@ -27,6 +27,7 @@ O sistema já contempla os seguintes perfis de usuário:
 - Professor
 - Coordenador
 - Funcionário (Secretaria/CRA)
+- Funcionário de TI
 - Administrador de TI
 
 ### Funcionalidades por perfil
@@ -35,7 +36,14 @@ O sistema já contempla os seguintes perfis de usuário:
 - Professor: pode atualizar o perfil, selecionar disciplinas e informar disponibilidade por dia e horário.
 - Coordenador: acesso ao planejamento acadêmico, operação do sistema e acompanhamento das ofertas.
 - Funcionário (Secretaria/CRA): suporte operacional e cadastro de registros.
+- Funcionário de TI: responsável pela importação de planilhas de oferta, manutenção técnica do ambiente e gestão de dados acadêmicos importados.
 - Administrador de TI: gestão administrativa e configuração do ambiente.
+
+### Permissões específicas
+
+- Importação de ofertas da planilha Ubíqua: restrita ao perfil de Funcionário de TI.
+- Acesso ao módulo de importações e ao menu correspondente: liberado somente para usuários com esse perfil.
+- Demais perfis autenticados podem entrar no sistema, mas não acessam a funcionalidade de importação.
 
 ## Ainda não concluído
 
@@ -48,14 +56,22 @@ O sistema já contempla os seguintes perfis de usuário:
 - Rotina de implantação específica do cPanel.
 - Autorização granular por permissão mais avançada.
 
-## Conta padrão de acesso
+## Usuários de demonstração por perfil
 
-O projeto já inclui um usuário de demonstração criado via seed:
+O projeto já inclui usuários de demonstração criados via seed para cada perfil do sistema:
 
-- E-mail: coordenacao@inova7.local
-- Senha: alterar-senha
+| Perfil | E-mail | Senha |
+| --- | --- | --- |
+| Aluno | aluno@inova7.local | senha1234 |
+| Professor | professor@inova7.local | senha1234 |
+| Coordenador | coordenacao@inova7.local | alterar-senha |
+| Funcionário (Secretaria/CRA) | secretaria@inova7.local | senha1234 |
+| Funcionário de TI | ti@inova7.local | senha1234 |
+| Administrador de TI | admin@inova7.local | senha1234 |
 
-A conta é criada pelo seeder em `database/seeders/DatabaseSeeder.php`.
+> A importação da planilha Ubíqua é restrita ao perfil de Funcionário de TI (`ti@inova7.local`) e ao perfil de administrador de TI (`admin@inova7.local`).
+
+Esses usuários são criados pelo seeder em `database/seeders/DatabaseSeeder.php`.
 
 ## Instalação no Windows
 
