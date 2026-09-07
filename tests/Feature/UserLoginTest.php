@@ -147,7 +147,7 @@ class UserLoginTest extends TestCase
         $this->assertDatabaseHas('class_offerings', ['period' => 2]);
     }
 
-    public function test_user_can_import_ubiquitous_sheet_with_document_metadata_before_header(): void
+    public function test_user_can_import_ubiquous_sheet_with_document_metadata_before_header(): void
     {
         $user = User::create([
             'name' => 'Larissa Torres',
@@ -174,6 +174,35 @@ class UserLoginTest extends TestCase
         $response->assertRedirect();
         $this->assertDatabaseHas('subjects', ['name' => 'Banco de Dados']);
         $this->assertDatabaseHas('class_offerings', ['period' => 2]);
+    }
+
+    public function test_user_can_import_ubiquitous_sheet_with_nonstandard_column_names(): void
+    {
+        $user = User::create([
+            'name' => 'Larissa Torres',
+            'email' => 'larissa4@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $filePath = storage_path('framework/testing/ubiqua-variant.csv');
+        $directory = dirname($filePath);
+        if (! is_dir($directory)) {
+            mkdir($directory, 0777, true);
+        }
+
+        $csv = "Planilha de oferta ubíqua\nCurso;Matriz;Nome da Disciplina;Código da Disciplina;Período;Turma;Turno;Modalidade;Professor\nSI;GRA-MAT-0228-F;Banco de Dados;GSER133620;2;CSE0280102NMA;MANHÃ;HÍBRIDA;Larissa Torres Ferreira\n";
+        file_put_contents($filePath, $csv);
+
+        $response = $this->actingAs($user)->post('/importacoes/oferta-ubiqua', [
+            'arquivo' => new \Illuminate\Http\UploadedFile($filePath, 'ubiqua-variant.csv', 'text/csv', null, true),
+            'academic_term_code' => '2026.2',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('subjects', ['code' => 'GSER133620']);
+        $this->assertDatabaseHas('class_offerings', ['class_code' => 'CSE0280102NMA']);
     }
 
     public function test_catalog_can_filter_students_and_subjects_by_search(): void

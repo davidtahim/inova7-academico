@@ -224,24 +224,53 @@ class ImportController extends Controller
 
         $aliases = [
             'CURSO' => 'curso',
+            'NOME_DO_CURSO' => 'curso',
             'MATRIZ' => 'matriz',
+            'NOME_DA_MATRIZ' => 'matriz',
             'DISCIPLINA' => 'disciplina',
+            'NOME_DA_DISCIPLINA' => 'disciplina',
             'CODIGO' => 'codigo',
+            'CODIGO_DA_DISCIPLINA' => 'codigo',
+            'COD_DISCIPLINA' => 'codigo',
             'PERIODO' => 'periodo',
+            'PERIODO_ACADEMICO' => 'periodo',
             'TURMA' => 'turma',
             'TURNO' => 'turno',
             'MODALIDADE' => 'modalidade',
             'PROFESSOR' => 'professor',
+            'NOME_DO_PROFESSOR' => 'professor',
             'DIA' => 'dia',
             'HORARIO' => 'horario',
             'VAGAS' => 'vagas',
             'CARGA_HORARIA' => 'carga_horaria',
             'CH' => 'carga_horaria',
+            'CARGA_HORARIA_TOTAL' => 'carga_horaria',
             'HA_CLASSIS_PAGAMENTO' => 'carga_horaria',
             'H_A_CLASSIS_PAGAMENTO' => 'carga_horaria',
+            'H_A' => 'carga_horaria',
+            'HA' => 'carga_horaria',
         ];
 
-        return $aliases[$normalized] ?? Str::lower($normalized);
+        if (isset($aliases[$normalized])) {
+            return $aliases[$normalized];
+        }
+
+        $variantMatches = [
+            'NOME_DA_DISCIPLINA' => 'disciplina',
+            'DISCIPLINA_NOME' => 'disciplina',
+            'NOME_DISCIPLINA' => 'disciplina',
+            'CODIGO_DISCIPLINA' => 'codigo',
+            'COD_DISCIP' => 'codigo',
+            'NOME_CURSO' => 'curso',
+            'CURSO_NOME' => 'curso',
+            'NOME_PROFESSOR' => 'professor',
+            'PROFESSOR_NOME' => 'professor',
+            'NOME_MATRIZ' => 'matriz',
+            'MATRIZ_NOME' => 'matriz',
+            'PERIODO_DISCIPLINA' => 'periodo',
+        ];
+
+        return $variantMatches[$normalized] ?? Str::lower($normalized);
     }
 
     private function normalizeRow(?array $row): ?array
