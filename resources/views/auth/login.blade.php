@@ -35,6 +35,12 @@
 
                             <button type="submit" class="btn btn-primary w-100 fw-bold">Entrar</button>
                         </form>
+
+                        <div class="mt-3 text-center">
+                            <span class="text-secondary">Não tem conta?</span>
+                            <a href="{{ route('users.create') }}"
+                                class="fw-semibold text-primary text-decoration-none">Criar usuário</a>
+                        </div>
                     </div>
                 </div>
             </div>
