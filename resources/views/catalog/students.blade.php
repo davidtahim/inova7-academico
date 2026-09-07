@@ -14,12 +14,15 @@
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body">
                 <form method="GET" action="{{ route('catalog.students') }}" class="row g-2 align-items-center">
-                    <div class="col-md-10">
+                    <div class="col-md-8">
                         <input type="text" name="q" class="form-control" value="{{ $query ?? '' }}"
                             placeholder="Buscar por nome, e-mail ou matrícula">
                     </div>
-                    <div class="col-md-2 d-grid">
+                    <div class="col-md-4 d-grid gap-2">
                         <button type="submit" class="btn btn-primary">Buscar</button>
+                        @if (($query ?? '') !== '')
+                            <a href="{{ route('catalog.students') }}" class="btn btn-outline-secondary">Limpar</a>
+                        @endif
                     </div>
                 </form>
             </div>
