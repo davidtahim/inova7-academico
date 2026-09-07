@@ -1,8 +1,10 @@
+---
 deployment:
   tasks:
-    - export DeploymentPath=/home1/inova7/coordenacao.inova7.com.br
-    - cd $DeploymentPath
-    - composer install --no-dev --optimize-autoloader
-    - php artisan config:cache
-    - php artisan route:cache
+    - export DEPLOYPATH=/home1/inova7/coordenacao.inova7.com.br/
+    - /bin/cp -R * $DEPLOYPATH
+    - cd $DEPLOYPATH
+    - php artisan config:clear
+    - php artisan cache:clear
+    - php artisan route:clear
     - php artisan migrate --force
