@@ -25,7 +25,15 @@
         <header class="topbar">
             <button class="btn d-lg-none" type="button" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
             <div><small class="text-uppercase text-secondary">Inova7 Acadêmico</small><h1>@yield('page-title', 'Painel')</h1></div>
-            <span class="badge text-bg-light border">Laravel 12 • MySQL</span>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge text-bg-light border">Laravel 12 • MySQL</span>
+                @auth
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">Sair</button>
+                    </form>
+                @endauth
+            </div>
         </header>
         @if(session('success'))<div class="alert alert-success mt-3">{{ session('success') }}</div>@endif
         @yield('content')
