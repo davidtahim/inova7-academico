@@ -3,7 +3,7 @@
         'name' => 'inova7/academico',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'e56a9e25261cfcec8e3256fd0847c159e1708bf3',
+        'reference' => '9057bad7eeeacd07594aa21ac1013adf25dd6517',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -430,7 +430,7 @@
         'inova7/academico' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'e56a9e25261cfcec8e3256fd0847c159e1708bf3',
+            'reference' => '9057bad7eeeacd07594aa21ac1013adf25dd6517',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

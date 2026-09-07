@@ -146,4 +146,57 @@ class UserLoginTest extends TestCase
         $this->assertDatabaseHas('subjects', ['name' => 'Banco de Dados']);
         $this->assertDatabaseHas('class_offerings', ['period' => 2]);
     }
+
+    public function test_catalog_can_filter_students_and_subjects_by_search(): void
+    {
+        $admin = User::create([
+            'name' => 'Administrador',
+            'email' => 'admin.catalog@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        User::create([
+            'name' => 'Maria Souza',
+            'email' => 'maria.aluno@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'student',
+            'registration_number' => '2026001',
+            'is_active' => true,
+        ]);
+
+        User::create([
+            'name' => 'José Pereira',
+            'email' => 'jose.aluno@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'student',
+            'registration_number' => '2026002',
+            'is_active' => true,
+        ]);
+
+        $subjectOne = \App\Models\Subject::create([
+            'code' => 'BD01',
+            'name' => 'Banco de Dados',
+            'total_hours' => 80,
+        ]);
+
+        $subjectTwo = \App\Models\Subject::create([
+            'code' => 'ALG01',
+            'name' => 'Algoritmos',
+            'total_hours' => 60,
+        ]);
+
+        $this->actingAs($admin)
+            ->get('/disciplinas?q=Banco')
+            ->assertOk()
+            ->assertSee('Banco de Dados')
+            ->assertDontSee('Algoritmos');
+
+        $this->actingAs($admin)
+            ->get('/alunos?q=Maria')
+            ->assertOk()
+            ->assertSee('Maria Souza')
+            ->assertDontSee('José Pereira');
+    }
 }

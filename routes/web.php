@@ -4,6 +4,7 @@ use App\Http\Controllers\AuditController;
 use App\Http\Controllers\AuditDocumentController;
 use App\Http\Controllers\AuditTemplateController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\PlanningController;
@@ -20,6 +21,10 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
     Route::get('/planejamento', [PlanningController::class, 'index'])->name('planning.index');
+    Route::get('/cursos', [CatalogController::class, 'courses'])->name('catalog.courses');
+    Route::get('/professores', [CatalogController::class, 'professors'])->name('catalog.professors');
+    Route::get('/disciplinas', [CatalogController::class, 'subjects'])->name('catalog.subjects');
+    Route::get('/alunos', [CatalogController::class, 'students'])->name('catalog.students');
     Route::middleware('can:access-imports')->group(function () {
         Route::get('/importacoes/oferta-ubiqua', [ImportController::class, 'index'])->name('imports.ubiqua.index');
         Route::post('/importacoes/oferta-ubiqua', [ImportController::class, 'storeOfertaUbiqua'])->name('imports.ubiqua.store');

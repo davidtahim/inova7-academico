@@ -16,18 +16,45 @@
                 <a class="brand" href="{{ route('dashboard') }}"><span
                         class="brand-mark">7</span><span><strong>INOVA7</strong><small>Gestão Acadêmica</small></span></a>
                 <nav class="nav flex-column gap-1 mt-4">
+                    <div class="nav-section">Geral</div>
                     <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
                         href="{{ route('dashboard') }}">▦ Painel</a>
-                    <a class="nav-link {{ request()->routeIs('planning.*') ? 'active' : '' }}"
-                        href="{{ route('planning.index') }}">▤ Planejamento</a>
-                    <a class="nav-link" href="#">◫ Cursos e matrizes</a>
-                    <a class="nav-link" href="#">♙ Professores</a>
-                    <a class="nav-link {{ request()->routeIs('audit.*') ? 'active' : '' }}"
-                        href="{{ route('audit.index') }}">✓ Auditoria</a>
-                    @can('access-imports')
+
+                    @if (in_array(Auth::user()->role, ['student', 'teacher', 'coordinator', 'staff', 'admin'], true))
+                        <a class="nav-link {{ request()->routeIs('planning.*') ? 'active' : '' }}"
+                            href="{{ route('planning.index') }}">▤ Planejamento</a>
+                    @endif
+
+                    @if (in_array(Auth::user()->role, ['coordinator', 'staff', 'admin'], true))
+                        <a class="nav-link {{ request()->routeIs('catalog.courses') ? 'active' : '' }}"
+                            href="{{ route('catalog.courses') }}">◫ Cursos e matrizes</a>
+                        <a class="nav-link {{ request()->routeIs('catalog.professors') ? 'active' : '' }}"
+                            href="{{ route('catalog.professors') }}">♙ Professores</a>
+                        <a class="nav-link {{ request()->routeIs('catalog.subjects') ? 'active' : '' }}"
+                            href="{{ route('catalog.subjects') }}">◌ Disciplinas</a>
+                        <a class="nav-link {{ request()->routeIs('catalog.students') ? 'active' : '' }}"
+                            href="{{ route('catalog.students') }}">◍ Alunos</a>
+                    @endif
+
+                    <a class="nav-link {{ request()->routeIs('profile') || request()->routeIs('profile.edit') ? 'active' : '' }}"
+                        href="{{ route('profile') }}">◉ Meu perfil</a>
+
+                    @if (Auth::user()->role === 'teacher')
+                        <div class="nav-section">Professor</div>
+                        <a class="nav-link {{ request()->routeIs('profile.edit') ? 'active' : '' }}"
+                            href="{{ route('profile.edit') }}">◔ Minha disponibilidade</a>
+                    @endif
+
+                    @if (in_array(Auth::user()->role, ['coordinator', 'staff', 'admin'], true))
+                        <div class="nav-section">Operação</div>
+                        <a class="nav-link {{ request()->routeIs('audit.*') ? 'active' : '' }}"
+                            href="{{ route('audit.index') }}">✓ Auditoria</a>
+                    @endif
+
+                    @if (Auth::user()->role === 'admin')
                         <a class="nav-link {{ request()->routeIs('imports.*') ? 'active' : '' }}"
                             href="{{ route('imports.ubiqua.index') }}">⇧ Importações</a>
-                    @endcan
+                    @endif
                 </nav>
                 <div class="sidebar-footer">
                     <a href="{{ route('profile') }}"
