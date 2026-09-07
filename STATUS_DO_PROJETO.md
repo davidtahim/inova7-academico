@@ -2,7 +2,7 @@
 
 ## Decisões confirmadas
 
-- Laravel 12, MySQL e Bootstrap.
+- Laravel 11, MySQL e Bootstrap.
 - Hospedagem futura em subdomínio da `inova7.com.br` no cPanel da HostGator.
 - Sem integração com GPT, TOTVS ou Classis.
 - Importação de planilhas e documentos fornecidos pela coordenação.
