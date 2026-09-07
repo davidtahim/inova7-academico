@@ -31,12 +31,17 @@
                 </nav>
                 <div class="sidebar-footer">
                     <a href="{{ route('profile') }}"
-                        class="d-flex align-items-center gap-2 text-decoration-none text-dark">
-                        <span
-                            class="avatar">{{ strtoupper(Str::of(auth()->user()->name)->split('/\s+/')->map(fn($part) => Str::substr($part, 0, 1))->take(2)->implode('')) }}</span>
+                        class="d-flex align-items-center gap-2 text-decoration-none text-white">
+                        @if (Auth::user()->photo_path)
+                            <img src="{{ Storage::disk('public')->url(Auth::user()->photo_path) }}" alt="Foto do usuário"
+                                class="avatar" style="object-fit:cover;">
+                        @else
+                            <span
+                                class="avatar">{{ strtoupper(Str::of(Auth::user()->name)->split('/\s+/')->map(fn($part) => Str::substr($part, 0, 1))->take(2)->implode('')) }}</span>
+                        @endif
                         <span>
-                            <strong>{{ auth()->user()->name }}</strong>
-                            <small>{{ auth()->user()->role_label }}</small>
+                            <strong class="text-white">{{ Auth::user()->name }}</strong>
+                            <small>{{ Auth::user()->role_label }}</small>
                         </span>
                     </a>
                 </div>

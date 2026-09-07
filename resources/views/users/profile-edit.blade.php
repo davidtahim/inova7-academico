@@ -11,11 +11,28 @@
                         <h5 class="mb-0 fw-bold">Editar perfil</h5>
                     </div>
                     <div class="card-body p-4">
-                        <form action="{{ route('profile.update') }}" method="POST">
+                        <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             @method('PUT')
 
                             <div class="row g-3">
+                                <div class="col-12">
+                                    <label for="photo" class="form-label fw-semibold">Foto do usuário</label>
+                                    <input type="file" class="form-control @error('photo') is-invalid @enderror"
+                                        id="photo" name="photo" accept="image/jpeg,image/png,image/webp">
+                                    <div class="form-text">JPG, PNG ou WEBP até 2MB.</div>
+                                    @error('photo')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+
+                                    @if ($user->photo_path)
+                                        <div class="mt-3">
+                                            <img src="{{ Storage::disk('public')->url($user->photo_path) }}"
+                                                alt="Foto atual" class="img-thumbnail"
+                                                style="width:96px;height:96px;object-fit:cover;">
+                                        </div>
+                                    @endif
+                                </div>
                                 <div class="col-md-6">
                                     <label for="name" class="form-label fw-semibold">Nome completo</label>
                                     <input type="text" class="form-control @error('name') is-invalid @enderror"

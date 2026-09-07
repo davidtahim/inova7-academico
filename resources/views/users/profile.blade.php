@@ -14,10 +14,16 @@
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="avatar avatar-lg d-inline-flex align-items-center justify-content-center rounded-circle bg-secondary text-white fw-bold"
-                                    style="width:72px;height:72px;font-size:1.5rem;">
-                                    {{ strtoupper(Str::of($user->name)->split('/\s+/')->map(fn($part) => Str::substr($part, 0, 1))->take(2)->implode('')) }}
-                                </div>
+                                @if ($user->photo_path)
+                                    <img src="{{ Storage::disk('public')->url($user->photo_path) }}" alt="Foto de perfil"
+                                        class="rounded-circle border border-2 border-white shadow-sm"
+                                        style="width:72px;height:72px;object-fit:cover;">
+                                @else
+                                    <div class="avatar avatar-lg d-inline-flex align-items-center justify-content-center rounded-circle bg-secondary text-white fw-bold"
+                                        style="width:72px;height:72px;font-size:1.5rem;">
+                                        {{ strtoupper(Str::of($user->name)->split('/\s+/')->map(fn($part) => Str::substr($part, 0, 1))->take(2)->implode('')) }}
+                                    </div>
+                                @endif
                                 <div>
                                     <h3 class="mb-1">{{ $user->name }}</h3>
                                     <p class="text-muted mb-0">{{ $user->email }}</p>

@@ -8,6 +8,8 @@ use App\Models\ProfessorAvailability;
 use App\Models\Subject;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
 
 class UserController extends Controller
@@ -19,7 +21,10 @@ class UserController extends Controller
 
     public function profile()
     {
-        $user = auth()->user();
+        $user = Auth::user();
+        if (! $user instanceof User) {
+            abort(403);
+        }
 
         return view('users.profile', [
             'user' => $user,
@@ -29,7 +34,11 @@ class UserController extends Controller
 
     public function editProfile()
     {
-        $user = auth()->user();
+        $user = Auth::user();
+        if (! $user instanceof User) {
+            abort(403);
+        }
+
         $term = AcademicTerm::latest('id')->first();
         $professor = Professor::where('email', $user->email)->orWhere('name', $user->name)->first();
 
@@ -51,7 +60,10 @@ class UserController extends Controller
 
     public function updateProfile(Request $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
+        if (! $user instanceof User) {
+            abort(403);
+        }
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -59,10 +71,16 @@ class UserController extends Controller
             'registration_number' => ['nullable', 'string', 'max:20', 'unique:users,registration_number,' . $user->id],
             'role' => 'required|in:admin,coordinator,teacher,student,staff',
             'password' => ['nullable', 'confirmed', Password::min(8)->letters()->numbers()],
+            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'subjects' => ['nullable', 'array'],
             'subjects.*' => ['integer', 'exists:subjects,id'],
             'availability' => ['nullable', 'array'],
         ]);
+
+        if ($request->hasFile('photo')) {
+            $path = $request->file('photo')->store('profile_photos', 'public');
+            $user->photo_path = $path;
+        }
 
         $user->fill([
             'name' => $validated['name'],
