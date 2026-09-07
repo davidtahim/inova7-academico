@@ -43,13 +43,14 @@ class UserController extends Controller
 
         $term = AcademicTerm::latest('id')->first();
         $professor = Professor::where('email', $user->email)->orWhere('name', $user->name)->first();
+        $assignedSubjects = $this->assignedSubjectsForProfessor($professor, $term);
 
         return view('users.profile-edit', [
             'user' => $user,
             'roles' => User::roleOptions(),
             'professor' => $professor,
             'term' => $term,
-            'subjects' => Subject::orderBy('name')->get(),
+            'subjects' => $assignedSubjects,
             'availability' => $professor && $term
                 ? ProfessorAvailability::where('professor_id', $professor->id)
                 ->where('academic_term_id', $term->id)
@@ -113,30 +114,9 @@ class UserController extends Controller
             $professor->registration = $user->registration_number ?? $professor->registration;
             $professor->save();
 
-            $term = AcademicTerm::latest('id')->first();
-            if ($term) {
-                ProfessorAvailability::where('professor_id', $professor->id)
-                    ->where('academic_term_id', $term->id)
-                    ->delete();
-
-                foreach ($request->input('availability', []) as $slot) {
-                    if (empty($slot['weekday']) || empty($slot['starts_at']) || empty($slot['ends_at'])) {
-                        continue;
-                    }
-
-                    ProfessorAvailability::create([
-                        'academic_term_id' => $term->id,
-                        'professor_id' => $professor->id,
-                        'weekday' => (int) $slot['weekday'],
-                        'starts_at' => $slot['starts_at'],
-                        'ends_at' => $slot['ends_at'],
-                        'preference' => $slot['preference'] ?? 'available',
-                        'notes' => $slot['notes'] ?? null,
-                    ]);
-                }
-            }
-
-            $professor->subjects()->sync($request->input('subjects', []));
+            // A disponibilidade do professor é ingerida pela importação da oferta Ubíqua.
+            // O professor não deve sobrescrever esses dados pelo próprio perfil.
+            // Quando a importação falhar, a correção deve ser feita pela equipe de TI.
         }
 
         return redirect()->route('profile')->with('success', 'Perfil atualizado com sucesso!');
@@ -194,6 +174,23 @@ class UserController extends Controller
         $filename = 'CCG-FOR-02-Disponibilidade-' . ($term ? $term->code : 'semestre') . '.pdf';
 
         return $pdf->download($filename);
+    }
+
+    private function assignedSubjectsForProfessor(?Professor $professor, ?AcademicTerm $term = null)
+    {
+        if (! $professor) {
+            return collect();
+        }
+
+        $subjectIds = \Illuminate\Support\Facades\DB::table('teaching_assignments')
+            ->join('class_offerings', 'teaching_assignments.class_offering_id', '=', 'class_offerings.id')
+            ->where('teaching_assignments.professor_id', $professor->id)
+            ->when($term, fn($query) => $query->where('class_offerings.academic_term_id', $term->id))
+            ->select('class_offerings.subject_id')
+            ->distinct()
+            ->pluck('class_offerings.subject_id');
+
+        return Subject::whereIn('id', $subjectIds)->orderBy('name')->get();
     }
 
     public function store(Request $request)

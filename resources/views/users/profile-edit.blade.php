@@ -99,153 +99,65 @@
                                 <hr class="my-4">
 
                                 <div id="disciplinas" class="mb-4">
-                                    <div class="row g-2">
-                                        @foreach ($subjects as $subject)
-                                            <div class="col-md-6 col-xl-4">
-                                                <label class="border rounded p-2 d-flex align-items-center gap-2 mb-0">
-                                                    <input type="checkbox" name="subjects[]" value="{{ $subject->id }}"
-                                                        {{ in_array($subject->id, old('subjects', $professor?->subjects->pluck('id')->all() ?? []), true) ? 'checked' : '' }}>
-                                                    <span>{{ $subject->name }}</span>
-                                                </label>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-
-                                <div id="disponibilidade">
-                                    <div id="availability-list" class="d-grid gap-3">
-                                        @php
-                                            $slots = old('availability', $availability->toArray() ?: []);
-                                        @endphp
-
-                                        @php
-                                            $slotOptions = [
-                                                'Manhã' => [
-                                                    '07:30' => '07:30 às 08:20',
-                                                    '08:20' => '08:20 às 09:10',
-                                                    '09:10' => '09:10 às 10:00',
-                                                    '10:00' => '10:00 às 10:50',
-                                                    '10:50' => '10:50 às 11:40',
-                                                ],
-                                                'Noite' => [
-                                                    '18:30' => '18:30 às 19:20',
-                                                    '19:20' => '19:20 às 20:10',
-                                                    '20:10' => '20:10 às 21:00',
-                                                    '21:00' => '21:00 às 21:50',
-                                                ],
-                                            ];
-                                        @endphp
-
-                                        @if (empty($slots))
-                                            <div class="border rounded p-3 availability-row">
-                                                <div class="row g-2 align-items-end">
-                                                    <div class="col-md-2">
-                                                        <label class="form-label small fw-semibold">Dia</label>
-                                                        <select name="availability[0][weekday]" class="form-select">
-                                                            <option value="">Selecione</option>
-                                                            @foreach (['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'] as $index => $day)
-                                                                <option value="{{ $index + 1 }}">{{ $day }}
-                                                                </option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-                                                    <div class="col-md-3">
-                                                        <label class="form-label small fw-semibold">Horário</label>
-                                                        <select name="availability[0][starts_at]" class="form-select"
-                                                            aria-label="Horário">
-                                                            <option value="">Selecione</option>
-                                                            @foreach ($slotOptions as $period => $options)
-                                                                <optgroup
-                                                                    label="{{ $period == 'Manhã' ? 'MANHÃ' : 'NOITE' }}">
-                                                                    @foreach ($options as $value => $label)
-                                                                        <option value="{{ $value }}">
-                                                                            {{ $label }}</option>
-                                                                    @endforeach
-                                                                </optgroup>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-                                                    <div class="col-md-2">
-                                                        <label class="form-label small fw-semibold">Preferência</label>
-                                                        <select name="availability[0][preference]" class="form-select"
-                                                            aria-label="Preferência">
-                                                            <option value="available">Disponível</option>
-                                                            <option value="preferred">Preferencial</option>
-                                                            <option value="unavailable">Indisponível</option>
-                                                        </select>
-                                                    </div>
-                                                    <div class="col-md-5">
-                                                        <label class="form-label small fw-semibold">Observação</label>
-                                                        <input type="text" name="availability[0][notes]"
-                                                            class="form-control" placeholder="Ex.: só manhã"
-                                                            aria-label="Observação">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        @else
-                                            @foreach ($slots as $index => $slot)
-                                                <div class="border rounded p-3 availability-row">
-                                                    <div class="row g-2 align-items-end">
-                                                        <div class="col-md-2">
-                                                            <label class="form-label small fw-semibold">Dia</label>
-                                                            <select name="availability[{{ $index }}][weekday]"
-                                                                class="form-select">
-                                                                <option value="">Selecione</option>
-                                                                @foreach (['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'] as $dayIndex => $day)
-                                                                    <option value="{{ $dayIndex + 1 }}"
-                                                                        {{ old('availability.' . $index . '.weekday', $slot['weekday'] ?? '') == $dayIndex + 1 ? 'selected' : '' }}>
-                                                                        {{ $day }}</option>
-                                                                @endforeach
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-md-3">
-                                                            <label class="form-label small fw-semibold">Horário</label>
-                                                            <select name="availability[{{ $index }}][starts_at]"
-                                                                class="form-select" aria-label="Horário">
-                                                                <option value="">Selecione</option>
-                                                                @foreach ($slotOptions as $period => $options)
-                                                                    <optgroup
-                                                                        label="{{ $period == 'Manhã' ? 'MANHÃ' : 'NOITE' }}">
-                                                                        @foreach ($options as $value => $label)
-                                                                            <option value="{{ $value }}"
-                                                                                {{ old('availability.' . $index . '.starts_at', $slot['starts_at'] ?? '') == $value ? 'selected' : '' }}>
-                                                                                {{ $label }}</option>
-                                                                        @endforeach
-                                                                    </optgroup>
-                                                                @endforeach
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-md-2">
-                                                            <label class="form-label small fw-semibold">Preferência</label>
-                                                            <select name="availability[{{ $index }}][preference]"
-                                                                class="form-select" aria-label="Preferência">
-                                                                <option value="available"
-                                                                    {{ old('availability.' . $index . '.preference', $slot['preference'] ?? 'available') === 'available' ? 'selected' : '' }}>
-                                                                    Disponível</option>
-                                                                <option value="preferred"
-                                                                    {{ old('availability.' . $index . '.preference', $slot['preference'] ?? 'available') === 'preferred' ? 'selected' : '' }}>
-                                                                    Preferencial</option>
-                                                                <option value="unavailable"
-                                                                    {{ old('availability.' . $index . '.preference', $slot['preference'] ?? 'available') === 'unavailable' ? 'selected' : '' }}>
-                                                                    Indisponível</option>
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-md-5">
-                                                            <label class="form-label small fw-semibold">Observação</label>
-                                                            <input type="text"
-                                                                name="availability[{{ $index }}][notes]"
-                                                                class="form-control"
-                                                                value="{{ old('availability.' . $index . '.notes', $slot['notes'] ?? '') }}"
-                                                                placeholder="Ex.: só manhã" aria-label="Observação">
-                                                        </div>
+                                    <h6 class="fw-bold mb-3">Disciplinas atribuídas pelo coordenador</h6>
+                                    @if ($subjects->isEmpty())
+                                        <div class="alert alert-warning mb-0">
+                                            Nenhuma disciplina foi atribuída ao professor neste semestre. O coordenador deve
+                                            alocar as disciplinas antes da disponibilização.
+                                        </div>
+                                    @else
+                                        <div class="row g-2">
+                                            @foreach ($subjects as $subject)
+                                                <div class="col-md-6 col-xl-4">
+                                                    <div
+                                                        class="border rounded p-2 d-flex align-items-center gap-2 mb-0 bg-light">
+                                                        <span class="badge text-bg-primary rounded-pill">✓</span>
+                                                        <span>{{ $subject->name }}</span>
                                                     </div>
                                                 </div>
                                             @endforeach
-                                        @endif
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <div id="disponibilidade">
+                                    <h6 class="fw-bold mb-3">Disponibilidade</h6>
+                                    <div class="alert alert-info mb-3">
+                                        A disponibilidade é preenchida pela oferta Ubíqua. Se a importação não estiver
+                                        disponível, a equipe de TI pode cadastrar e corrigir os dados manualmente.
                                     </div>
 
-                                    <button type="button" class="btn btn-outline-secondary btn-sm mt-3"
-                                        onclick="addAvailabilitySlot()">+ Adicionar horário</button>
+                                    @if ($availability->isEmpty())
+                                        <div class="alert alert-secondary mb-0">
+                                            Nenhuma disponibilidade registrada para o semestre atual. Verifique a importação
+                                            da oferta Ubíqua ou solicite suporte da área de TI.
+                                        </div>
+                                    @else
+                                        <div class="table-responsive">
+                                            <table class="table table-sm align-middle">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Dia</th>
+                                                        <th>Horário</th>
+                                                        <th>Preferência</th>
+                                                        <th>Observação</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach ($availability as $slot)
+                                                        <tr>
+                                                            <td>{{ ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'][($slot->weekday ?? 1) - 1] ?? '—' }}
+                                                            </td>
+                                                            <td>{{ $slot->starts_at }} às {{ $slot->ends_at }}</td>
+                                                            <td>{{ $slot->preference === 'preferred' ? 'Preferencial' : ($slot->preference === 'unavailable' ? 'Indisponível' : 'Disponível') }}
+                                                            </td>
+                                                            <td>{{ $slot->notes ?: '—' }}</td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    @endif
                                 </div>
                             @endif
 
@@ -260,62 +172,4 @@
         </div>
     </div>
 
-    @if ($user->role === 'teacher')
-        <script>
-            function addAvailabilitySlot() {
-                const container = document.getElementById('availability-list');
-                const index = container.querySelectorAll('.availability-row').length;
-                const template = `
-                    <div class="border rounded p-3 availability-row">
-                        <div class="row g-2 align-items-end">
-                            <div class="col-md-2">
-                                <label class="form-label small fw-semibold">Dia</label>
-                                <select name="availability[${index}][weekday]" class="form-select">
-                                    <option value="">Selecione</option>
-                                    <option value="1">Segunda</option>
-                                    <option value="2">Terça</option>
-                                    <option value="3">Quarta</option>
-                                    <option value="4">Quinta</option>
-                                    <option value="5">Sexta</option>
-                                    <option value="6">Sábado</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-semibold">Horário</label>
-                                <select name="availability[${index}][starts_at]" class="form-select" aria-label="Horário">
-                                    <option value="">Selecione</option>
-                                    <optgroup label="MANHÃ">
-                                        <option value="07:30">07:30 às 08:20</option>
-                                        <option value="08:20">08:20 às 09:10</option>
-                                        <option value="09:10">09:10 às 10:00</option>
-                                        <option value="10:00">10:00 às 10:50</option>
-                                        <option value="10:50">10:50 às 11:40</option>
-                                    </optgroup>
-                                    <optgroup label="NOITE">
-                                        <option value="18:30">18:30 às 19:20</option>
-                                        <option value="19:20">19:20 às 20:10</option>
-                                        <option value="20:10">20:10 às 21:00</option>
-                                        <option value="21:00">21:00 às 21:50</option>
-                                    </optgroup>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label small fw-semibold">Preferência</label>
-                                <select name="availability[${index}][preference]" class="form-select" aria-label="Preferência">
-                                    <option value="available">Disponível</option>
-                                    <option value="preferred">Preferencial</option>
-                                    <option value="unavailable">Indisponível</option>
-                                </select>
-                            </div>
-                            <div class="col-md-5">
-                                <label class="form-label small fw-semibold">Observação</label>
-                                <input type="text" name="availability[${index}][notes]" class="form-control" placeholder="Ex.: só manhã" aria-label="Observação">
-                            </div>
-                        </div>
-                    </div>
-                `;
-                container.insertAdjacentHTML('beforeend', template);
-            }
-        </script>
-    @endif
 @endsection

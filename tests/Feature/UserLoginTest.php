@@ -2,6 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Models\AcademicTerm;
+use App\Models\ClassOffering;
+use App\Models\Course;
+use App\Models\CurriculumMatrix;
+use App\Models\Professor;
+use App\Models\Subject;
+use App\Models\TeachingAssignment;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -100,6 +107,162 @@ class UserLoginTest extends TestCase
         $response->assertSee('10:50 às 11:40');
         $response->assertSee('18:30 às 19:20');
         $response->assertSee('21:00 às 21:50');
+    }
+
+    public function test_teacher_sees_only_subjects_allocated_by_coordinator(): void
+    {
+        $user = User::create([
+            'name' => 'Professora Ana',
+            'email' => 'ana.prof.subjects@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'teacher',
+            'is_active' => true,
+        ]);
+
+        $term = AcademicTerm::create([
+            'code' => '2026.2',
+            'starts_at' => '2026-08-01',
+            'ends_at' => '2026-12-15',
+            'status' => 'active',
+        ]);
+
+        $course = Course::create([
+            'code' => 'SI',
+            'name' => 'Sistemas de Informação',
+            'degree' => 'Bacharelado',
+            'active' => true,
+        ]);
+
+        $matrix = CurriculumMatrix::create([
+            'course_id' => $course->id,
+            'code' => 'MTR-001',
+            'name' => 'Matriz 2026',
+            'status' => 'Atual',
+        ]);
+
+        $allocated = Subject::create([
+            'code' => 'ALG101',
+            'name' => 'Algoritmos',
+            'total_hours' => 40,
+            'presential_hours' => 40,
+        ]);
+
+        $unallocated = Subject::create([
+            'code' => 'BD101',
+            'name' => 'Banco de Dados',
+            'total_hours' => 40,
+            'presential_hours' => 40,
+        ]);
+
+        $professor = Professor::create([
+            'name' => 'Professora Ana',
+            'email' => 'ana.prof.subjects@inova7.local',
+            'qualification' => 'Doutora',
+            'active' => true,
+        ]);
+
+        $offering = ClassOffering::create([
+            'academic_term_id' => $term->id,
+            'course_id' => $course->id,
+            'curriculum_matrix_id' => $matrix->id,
+            'subject_id' => $allocated->id,
+            'class_code' => 'ALG-01',
+            'period' => 2,
+            'shift' => 'MANHÃ',
+            'modality' => 'PRESENCIAL',
+            'occurs' => true,
+            'weekly_hours' => 4,
+            'totvs_hours' => 4,
+            'status' => 'planned',
+        ]);
+
+        TeachingAssignment::create([
+            'class_offering_id' => $offering->id,
+            'professor_id' => $professor->id,
+            'weekly_hours' => 4,
+            'status' => 'planned',
+        ]);
+
+        $response = $this->actingAs($user)->get('/perfil/editar');
+
+        $response->assertOk();
+        $response->assertSee('Algoritmos');
+        $response->assertDontSee('Banco de Dados');
+    }
+
+    public function test_teacher_profile_hides_manual_subject_and_availability_editor(): void
+    {
+        $user = User::create([
+            'name' => 'Professora Ana',
+            'email' => 'ana.prof.readonly@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'teacher',
+            'is_active' => true,
+        ]);
+
+        $term = AcademicTerm::create([
+            'code' => '2026.2',
+            'starts_at' => '2026-08-01',
+            'ends_at' => '2026-12-15',
+            'status' => 'active',
+        ]);
+
+        $course = Course::create([
+            'code' => 'SI',
+            'name' => 'Sistemas de Informação',
+            'degree' => 'Bacharelado',
+            'active' => true,
+        ]);
+
+        $matrix = CurriculumMatrix::create([
+            'course_id' => $course->id,
+            'code' => 'MTR-001',
+            'name' => 'Matriz 2026',
+            'status' => 'Atual',
+        ]);
+
+        $subject = Subject::create([
+            'code' => 'ALG101',
+            'name' => 'Algoritmos',
+            'total_hours' => 40,
+            'presential_hours' => 40,
+        ]);
+
+        $professor = Professor::create([
+            'name' => 'Professora Ana',
+            'email' => 'ana.prof.readonly@inova7.local',
+            'qualification' => 'Doutora',
+            'active' => true,
+        ]);
+
+        $offering = ClassOffering::create([
+            'academic_term_id' => $term->id,
+            'course_id' => $course->id,
+            'curriculum_matrix_id' => $matrix->id,
+            'subject_id' => $subject->id,
+            'class_code' => 'ALG-01',
+            'period' => 2,
+            'shift' => 'MANHÃ',
+            'modality' => 'PRESENCIAL',
+            'occurs' => true,
+            'weekly_hours' => 4,
+            'totvs_hours' => 4,
+            'status' => 'planned',
+        ]);
+
+        TeachingAssignment::create([
+            'class_offering_id' => $offering->id,
+            'professor_id' => $professor->id,
+            'weekly_hours' => 4,
+            'status' => 'planned',
+        ]);
+
+        $response = $this->actingAs($user)->get('/perfil/editar');
+
+        $response->assertOk();
+        $response->assertSee('A disponibilidade é preenchida pela oferta Ubíqua');
+        $response->assertDontSee('name="subjects[]"');
+        $response->assertDontSee('+ Adicionar horário');
     }
 
     public function test_only_it_staff_can_access_ubiquitous_import(): void
