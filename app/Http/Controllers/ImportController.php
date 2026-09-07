@@ -9,6 +9,7 @@ use App\Models\CurriculumMatrix;
 use App\Models\Professor;
 use App\Models\Subject;
 use App\Models\TeachingAssignment;
+use App\Services\ProfessorAllocationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -24,7 +25,7 @@ class ImportController extends Controller
         ]);
     }
 
-    public function storeOfertaUbiqua(Request $request)
+    public function storeOfertaUbiqua(Request $request, ProfessorAllocationService $allocationService)
     {
         $validated = $request->validate([
             'arquivo' => ['required', 'file', 'mimetypes:text/csv,text/plain,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
@@ -97,8 +98,11 @@ class ImportController extends Controller
                 );
             }
 
+            $allocationService->allocateForTerm($term->id);
             $imported++;
         }
+
+        $allocationService->allocateForTerm($term->id);
 
         return redirect()->back()->with('success', "Importação concluída: {$imported} ofertas processadas.");
     }
