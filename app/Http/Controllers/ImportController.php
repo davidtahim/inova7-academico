@@ -1,0 +1,323 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\AcademicTerm;
+use App\Models\ClassOffering;
+use App\Models\Course;
+use App\Models\CurriculumMatrix;
+use App\Models\Professor;
+use App\Models\Subject;
+use App\Models\TeachingAssignment;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+
+class ImportController extends Controller
+{
+    public function index()
+    {
+        return view('imports.ubiqua', [
+            'terms' => AcademicTerm::orderBy('code', 'desc')->get(),
+        ]);
+    }
+
+    public function storeOfertaUbiqua(Request $request)
+    {
+        $validated = $request->validate([
+            'arquivo' => ['required', 'file', 'mimetypes:text/csv,text/plain,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+            'academic_term_code' => ['required', 'string'],
+        ]);
+
+        $term = AcademicTerm::firstOrCreate(
+            ['code' => $validated['academic_term_code']],
+            ['starts_at' => now()->startOfMonth(), 'ends_at' => now()->addMonths(5), 'status' => 'planning']
+        );
+
+        $file = $request->file('arquivo');
+        $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension());
+
+        if ($extension === 'csv') {
+            $rows = $this->parseCsv($file->getRealPath());
+        } else {
+            if (! class_exists(\ZipArchive::class)) {
+                throw ValidationException::withMessages([
+                    'arquivo' => ['Para importar XLSX/XLS, ative a extensão ZIP do PHP (php_zip.dll no Windows ou php-zip no Linux/macOS) e reinicie o servidor.'],
+                ]);
+            }
+
+            $rows = $this->parseXlsx($file->getRealPath());
+        }
+
+        $imported = 0;
+        foreach ($rows as $row) {
+            $normalized = $this->normalizeRow($row);
+            if ($normalized === null) {
+                continue;
+            }
+
+            $course = $this->ensureCourse($normalized['curso']);
+            $matrix = $this->ensureMatrix($course, $normalized['matriz']);
+            $subject = $this->ensureSubject($normalized['codigo'], $normalized['disciplina']);
+
+            $classCode = trim((string) ($normalized['turma'] ?? '')) ?: (trim((string) ($normalized['codigo'] ?? '')) ?: 'IMPORTADO-' . $subject->id . '-' . $term->id . '-' . ($normalized['periodo'] ?? 1));
+
+            $offering = ClassOffering::updateOrCreate(
+                [
+                    'academic_term_id' => $term->id,
+                    'course_id' => $course->id,
+                    'class_code' => $classCode,
+                    'subject_id' => $subject->id,
+                ],
+                [
+                    'curriculum_matrix_id' => $matrix?->id,
+                    'period' => (int) ($normalized['periodo'] ?? 1),
+                    'shift' => $this->resolveShift($normalized['turno'] ?? 'MANHA'),
+                    'modality' => $this->normalizeModality($normalized['modalidade'] ?? 'PRESENCIAL'),
+                    'occurs' => true,
+                    'weekly_hours' => (float) ($normalized['carga_horaria'] ?? 2),
+                    'totvs_hours' => (float) ($normalized['carga_horaria'] ?? 2),
+                    'status' => 'planned',
+                ]
+            );
+
+            if (! empty($normalized['professor'])) {
+                $professor = $this->ensureProfessor($normalized['professor']);
+                TeachingAssignment::updateOrCreate(
+                    [
+                        'class_offering_id' => $offering->id,
+                        'professor_id' => $professor->id,
+                    ],
+                    [
+                        'weekly_hours' => (float) ($normalized['carga_horaria'] ?? 2),
+                        'status' => 'planned',
+                    ]
+                );
+            }
+
+            $imported++;
+        }
+
+        return redirect()->back()->with('success', "Importação concluída: {$imported} ofertas processadas.");
+    }
+
+    private function parseCsv(string $path): array
+    {
+        $rows = [];
+        $handle = fopen($path, 'r');
+        $header = null;
+
+        while (($data = fgetcsv($handle, 0, ';')) !== false) {
+            if ($data === [null] || count($data) === 1 && trim((string) $data[0]) === '') {
+                continue;
+            }
+
+            $clean = array_map(fn($value) => trim((string) $value), $data);
+            if ($header === null) {
+                $header = array_map(fn($value) => $this->normalizeHeader($value), $clean);
+                continue;
+            }
+
+            $rows[] = array_combine($header, $clean);
+        }
+
+        fclose($handle);
+
+        return array_values(array_filter($rows, fn($row) => is_array($row) && ! empty($row)));
+    }
+
+    private function parseXlsx(string $path): array
+    {
+        $spreadsheet = IOFactory::load($path);
+        $sheet = $spreadsheet->getActiveSheet();
+        $rows = [];
+        $header = null;
+
+        foreach ($sheet->getRowIterator() as $row) {
+            $cells = [];
+            foreach ($row->getCellIterator() as $cell) {
+                $cells[] = trim((string) $cell->getValue());
+            }
+
+            $values = array_values($cells);
+            if ($header === null) {
+                $header = array_map(fn($value) => $this->normalizeHeader($value), $values);
+                continue;
+            }
+
+            if ($values === []) {
+                continue;
+            }
+
+            $rows[] = array_combine($header, $values);
+        }
+
+        return array_values(array_filter($rows, fn($row) => is_array($row) && ! empty($row)));
+    }
+
+    private function normalizeHeader(string $value): string
+    {
+        $normalized = Str::ascii(Str::upper(trim((string) $value)));
+        $normalized = preg_replace('/[^A-Z0-9]+/', '_', $normalized);
+        $normalized = trim((string) preg_replace('/_+/', '_', (string) $normalized), '_');
+
+        $aliases = [
+            'CURSO' => 'curso',
+            'MATRIZ' => 'matriz',
+            'DISCIPLINA' => 'disciplina',
+            'CODIGO' => 'codigo',
+            'PERIODO' => 'periodo',
+            'TURMA' => 'turma',
+            'TURNO' => 'turno',
+            'MODALIDADE' => 'modalidade',
+            'PROFESSOR' => 'professor',
+            'DIA' => 'dia',
+            'HORARIO' => 'horario',
+            'VAGAS' => 'vagas',
+            'CARGA_HORARIA' => 'carga_horaria',
+            'CH' => 'carga_horaria',
+            'HA_CLASSIS_PAGAMENTO' => 'carga_horaria',
+            'H_A_CLASSIS_PAGAMENTO' => 'carga_horaria',
+        ];
+
+        return $aliases[$normalized] ?? Str::lower($normalized);
+    }
+
+    private function normalizeRow(?array $row): ?array
+    {
+        if (! is_array($row) || empty($row)) {
+            return null;
+        }
+
+        $row = array_filter($row, fn($value) => $value !== null && trim((string) $value) !== '');
+        if ($row === []) {
+            return null;
+        }
+
+        $curso = trim((string) ($row['curso'] ?? $row['CURSO'] ?? ''));
+        $disciplina = trim((string) ($row['disciplina'] ?? $row['DISCIPLINA'] ?? ''));
+        $codigo = trim((string) ($row['codigo'] ?? $row['CODIGO'] ?? ''));
+        $matriz = trim((string) ($row['matriz'] ?? $row['MATRIZ'] ?? ''));
+        $turma = trim((string) ($row['turma'] ?? $row['TURMA'] ?? ''));
+        $turno = trim((string) ($row['turno'] ?? $row['TURNO'] ?? ''));
+        $modalidade = trim((string) ($row['modalidade'] ?? $row['MODALIDADE'] ?? ''));
+        $professor = trim((string) ($row['professor'] ?? $row['PROFESSOR'] ?? ''));
+
+        if ($curso === '' && $disciplina === '' && $codigo === '' && $matriz === '') {
+            return null;
+        }
+
+        $periodo = $this->toNumericValue($row['periodo'] ?? $row['PERIODO'] ?? '1');
+        $cargaHoraria = $this->toNumericValue($row['carga_horaria'] ?? $row['CARGA_HORARIA'] ?? $row['CH'] ?? $row['HA_CLASSIS_PAGAMENTO'] ?? $row['H_A_CLASSIS_PAGAMENTO'] ?? '2');
+
+        return [
+            'curso' => $curso,
+            'matriz' => $matriz,
+            'disciplina' => $disciplina ?: $codigo,
+            'codigo' => $codigo,
+            'periodo' => (int) $periodo,
+            'turma' => $turma,
+            'turno' => $turno,
+            'modalidade' => $modalidade,
+            'professor' => $professor,
+            'carga_horaria' => (float) $cargaHoraria,
+        ];
+    }
+
+    private function toNumericValue(mixed $value): float
+    {
+        if (is_numeric($value)) {
+            return (float) $value;
+        }
+
+        $clean = preg_replace('/[^0-9,\.]/', '', (string) $value);
+
+        if ($clean === '') {
+            return 2.0;
+        }
+
+        return (float) str_replace(',', '.', $clean);
+    }
+
+    private function ensureCourse(string $name): Course
+    {
+        $code = strtoupper(Str::slug($name, '')) ?: 'SI';
+        $course = Course::firstOrCreate(['code' => $code], [
+            'name' => $name ?: 'Sistemas de Informação',
+            'degree' => 'Bacharelado',
+            'active' => true,
+        ]);
+
+        return $course;
+    }
+
+    private function ensureMatrix(Course $course, string $matrixCode): ?CurriculumMatrix
+    {
+        if (trim($matrixCode) === '') {
+            return null;
+        }
+
+        return CurriculumMatrix::firstOrCreate(
+            ['course_id' => $course->id, 'code' => trim($matrixCode)],
+            ['name' => trim($matrixCode), 'version' => 'importado', 'status' => 'Atual']
+        );
+    }
+
+    private function ensureSubject(string $code, string $name): Subject
+    {
+        $subjectCode = trim($code) !== '' ? $code : strtoupper(Str::slug($name, ''));
+        $subject = Subject::firstOrCreate(['code' => $subjectCode], [
+            'name' => $name ?: 'Disciplina importada',
+            'total_hours' => 40,
+            'presential_hours' => 40,
+        ]);
+
+        return $subject;
+    }
+
+    private function ensureProfessor(string $name): Professor
+    {
+        $cleanName = trim($name);
+
+        return Professor::firstOrCreate(
+            ['name' => $cleanName],
+            ['registration' => null, 'email' => null, 'qualification' => 'Importado', 'active' => true]
+        );
+    }
+
+    private function resolveShift(string $value): string
+    {
+        $value = Str::upper(trim($value));
+        $map = [
+            'MANHA' => 'MANHÃ',
+            'MANHÃ' => 'MANHÃ',
+            'TARDE' => 'TARDE',
+            'NOITE' => 'NOITE',
+            'NOTURNO' => 'NOITE',
+        ];
+
+        return $map[$value] ?? 'MANHÃ';
+    }
+
+    private function normalizeModality(string $value): string
+    {
+        $value = Str::upper(trim($value));
+        $map = [
+            'PRESENCIAL' => 'PRESENCIAL',
+            'HÍBRIDA' => 'HÍBRIDA',
+            'HIBRIDA' => 'HÍBRIDA',
+            'DOL' => 'DOL',
+            'NAVEGA' => 'NAVEGA',
+            'NOTAVEL MESTRE' => 'NOTÁVEL MESTRE',
+            'NOTÁVEL MESTRE' => 'NOTÁVEL MESTRE',
+            'EXTENSAO' => 'EXTENSÃO',
+            'EXTENSÃO' => 'EXTENSÃO',
+            'ESTAGIO' => 'ESTÁGIO',
+            'ESTÁGIO' => 'ESTÁGIO',
+        ];
+
+        return $map[$value] ?? 'PRESENCIAL';
+    }
+}

@@ -24,10 +24,14 @@
                     <a class="nav-link" href="#">♙ Professores</a>
                     <a class="nav-link {{ request()->routeIs('audit.*') ? 'active' : '' }}"
                         href="{{ route('audit.index') }}">✓ Auditoria</a>
-                    <a class="nav-link" href="#">⇧ Importações</a>
+                    @can('access-imports')
+                        <a class="nav-link {{ request()->routeIs('imports.*') ? 'active' : '' }}"
+                            href="{{ route('imports.ubiqua.index') }}">⇧ Importações</a>
+                    @endcan
                 </nav>
                 <div class="sidebar-footer">
-                    <a href="{{ route('profile') }}" class="d-flex align-items-center gap-2 text-decoration-none text-dark">
+                    <a href="{{ route('profile') }}"
+                        class="d-flex align-items-center gap-2 text-decoration-none text-dark">
                         <span
                             class="avatar">{{ strtoupper(Str::of(auth()->user()->name)->split('/\s+/')->map(fn($part) => Str::substr($part, 0, 1))->take(2)->implode('')) }}</span>
                         <span>

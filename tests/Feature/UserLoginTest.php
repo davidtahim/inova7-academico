@@ -12,9 +12,11 @@ class UserLoginTest extends TestCase
 
     public function test_user_can_login_with_valid_credentials(): void
     {
-        User::factory()->create([
+        User::create([
+            'name' => 'Maria da Silva',
             'email' => 'maria@inova7.local',
             'password' => 'senha1234',
+            'role' => 'admin',
             'is_active' => true,
         ]);
 
@@ -29,9 +31,11 @@ class UserLoginTest extends TestCase
 
     public function test_inactive_user_cannot_login(): void
     {
-        User::factory()->create([
+        User::create([
+            'name' => 'Usuário Inativo',
             'email' => 'inativo@inova7.local',
             'password' => 'senha1234',
+            'role' => 'admin',
             'is_active' => false,
         ]);
 
@@ -58,5 +62,88 @@ class UserLoginTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Perfil do usuário');
+    }
+
+    public function test_only_it_staff_can_access_ubiquitous_import(): void
+    {
+        $coordinator = User::create([
+            'name' => 'Coordenador',
+            'email' => 'coord@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'coordinator',
+            'is_active' => true,
+        ]);
+
+        $itStaff = User::create([
+            'name' => 'Funcionário de TI',
+            'email' => 'ti@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($coordinator)->get('/importacoes/oferta-ubiqua');
+        $response->assertForbidden();
+
+        $allowed = $this->actingAs($itStaff)->get('/importacoes/oferta-ubiqua');
+        $allowed->assertOk();
+    }
+
+    public function test_user_can_import_ubiquitous_offering_sheet(): void
+    {
+        $user = User::create([
+            'name' => 'Larissa Torres',
+            'email' => 'larissa@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $filePath = storage_path('framework/testing/ubiqua.csv');
+        $directory = dirname($filePath);
+        if (! is_dir($directory)) {
+            mkdir($directory, 0777, true);
+        }
+
+        $csv = "CURSO;MATRIZ;DISCIPLINA;CODIGO;PERIODO;TURMA;TURNO;MODALIDADE;PROFESSOR;DIA;HORARIO;VAGAS\nSI;GRA-MAT-0228-F;Banco de Dados;GSER133620;2;CSE0280102NMA;MANHA;HÍBRIDA;Larissa Torres Ferreira;SEGUNDA;09:10-10:50;40\n";
+        file_put_contents($filePath, $csv);
+
+        $response = $this->actingAs($user)->post('/importacoes/oferta-ubiqua', [
+            'arquivo' => new \Illuminate\Http\UploadedFile($filePath, 'ubiqua.csv', 'text/csv', null, true),
+            'academic_term_code' => '2026.2',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('class_offerings', ['class_code' => 'CSE0280102NMA']);
+        $this->assertDatabaseHas('subjects', ['code' => 'GSER133620']);
+    }
+
+    public function test_user_can_import_ubiquitous_offering_sheet_without_secretariat_metadata(): void
+    {
+        $user = User::create([
+            'name' => 'Larissa Torres',
+            'email' => 'larissa2@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $filePath = storage_path('framework/testing/ubiqua-maintainer.csv');
+        $directory = dirname($filePath);
+        if (! is_dir($directory)) {
+            mkdir($directory, 0777, true);
+        }
+
+        $csv = "CURSO;PERIODO;DISCIPLINA;MATRIZ;H/A CLASSIS (PAGAMENTO)\nSI;2;Banco de Dados;GRA-MAT-0228-F;4\n";
+        file_put_contents($filePath, $csv);
+
+        $response = $this->actingAs($user)->post('/importacoes/oferta-ubiqua', [
+            'arquivo' => new \Illuminate\Http\UploadedFile($filePath, 'ubiqua-maintainer.csv', 'text/csv', null, true),
+            'academic_term_code' => '2026.2',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('subjects', ['name' => 'Banco de Dados']);
+        $this->assertDatabaseHas('class_offerings', ['period' => 2]);
     }
 }

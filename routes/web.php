@@ -5,6 +5,7 @@ use App\Http\Controllers\AuditDocumentController;
 use App\Http\Controllers\AuditTemplateController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ImportController;
 use App\Http\Controllers\PlanningController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -19,6 +20,10 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
     Route::get('/planejamento', [PlanningController::class, 'index'])->name('planning.index');
+    Route::middleware('can:access-imports')->group(function () {
+        Route::get('/importacoes/oferta-ubiqua', [ImportController::class, 'index'])->name('imports.ubiqua.index');
+        Route::post('/importacoes/oferta-ubiqua', [ImportController::class, 'storeOfertaUbiqua'])->name('imports.ubiqua.store');
+    });
     Route::get('/auditoria', [AuditController::class, 'index'])->name('audit.index');
     Route::get('/auditoria/templates/novo', [AuditTemplateController::class, 'create'])->name('audit.templates.create');
     Route::post('/auditoria/templates', [AuditTemplateController::class, 'store'])->name('audit.templates.store');
