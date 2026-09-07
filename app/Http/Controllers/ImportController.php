@@ -107,25 +107,18 @@ class ImportController extends Controller
     {
         $rows = [];
         $handle = fopen($path, 'r');
-        $header = null;
 
         while (($data = fgetcsv($handle, 0, ';')) !== false) {
             if ($data === [null] || count($data) === 1 && trim((string) $data[0]) === '') {
                 continue;
             }
 
-            $clean = array_map(fn($value) => trim((string) $value), $data);
-            if ($header === null) {
-                $header = array_map(fn($value) => $this->normalizeHeader($value), $clean);
-                continue;
-            }
-
-            $rows[] = array_combine($header, $clean);
+            $rows[] = array_map(fn($value) => trim((string) $value), $data);
         }
 
         fclose($handle);
 
-        return array_values(array_filter($rows, fn($row) => is_array($row) && ! empty($row)));
+        return $this->buildNormalizedRows($rows);
     }
 
     private function parseXlsx(string $path): array
@@ -133,7 +126,6 @@ class ImportController extends Controller
         $spreadsheet = IOFactory::load($path);
         $sheet = $spreadsheet->getActiveSheet();
         $rows = [];
-        $header = null;
 
         foreach ($sheet->getRowIterator() as $row) {
             $cells = [];
@@ -142,19 +134,68 @@ class ImportController extends Controller
             }
 
             $values = array_values($cells);
-            if ($header === null) {
-                $header = array_map(fn($value) => $this->normalizeHeader($value), $values);
-                continue;
-            }
-
             if ($values === []) {
                 continue;
             }
 
-            $rows[] = array_combine($header, $values);
+            $rows[] = $values;
         }
 
-        return array_values(array_filter($rows, fn($row) => is_array($row) && ! empty($row)));
+        return $this->buildNormalizedRows($rows);
+    }
+
+    private function buildNormalizedRows(array $rows): array
+    {
+        $headerIndex = null;
+        foreach ($rows as $index => $values) {
+            if (! is_array($values) || count($values) < 2) {
+                continue;
+            }
+
+            $matchedHeaders = 0;
+            foreach ($values as $value) {
+                $normalized = $this->normalizeHeader((string) $value);
+                if (in_array($normalized, ['curso', 'periodo', 'disciplina', 'codigo', 'matriz', 'turma', 'turno', 'modalidade', 'professor', 'carga_horaria'], true)) {
+                    $matchedHeaders++;
+                }
+            }
+
+            if ($matchedHeaders >= 2) {
+                $headerIndex = $index;
+                break;
+            }
+        }
+
+        if ($headerIndex === null) {
+            return [];
+        }
+
+        $header = array_map(fn($value) => $this->normalizeHeader($value), $rows[$headerIndex]);
+        $headerCount = count($header);
+        $normalizedRows = [];
+
+        for ($i = $headerIndex + 1; $i < count($rows); $i++) {
+            $values = array_values($rows[$i]);
+            if ($values === []) {
+                continue;
+            }
+
+            $values = array_slice($values, 0, $headerCount);
+            if (count($values) < $headerCount) {
+                $values = array_pad($values, $headerCount, '');
+            }
+
+            if (count($values) !== $headerCount) {
+                continue;
+            }
+
+            $row = array_combine($header, $values);
+            if (is_array($row) && ! empty($row)) {
+                $normalizedRows[] = $row;
+            }
+        }
+
+        return array_values(array_filter($normalizedRows, fn($row) => is_array($row) && ! empty($row)));
     }
 
     private function normalizeHeader(string $value): string

@@ -147,6 +147,35 @@ class UserLoginTest extends TestCase
         $this->assertDatabaseHas('class_offerings', ['period' => 2]);
     }
 
+    public function test_user_can_import_ubiquitous_sheet_with_document_metadata_before_header(): void
+    {
+        $user = User::create([
+            'name' => 'Larissa Torres',
+            'email' => 'larissa3@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $filePath = storage_path('framework/testing/ubiqua-metadata.csv');
+        $directory = dirname($filePath);
+        if (! is_dir($directory)) {
+            mkdir($directory, 0777, true);
+        }
+
+        $csv = "Matriz baseada no Fliug - DOCUMENTOS: Coordenação de Curso - Graduação -> Matrizes e Planos de Ensino - Graduação PRESENCIAL -> Unidades\nAtenção: ...\nData da Criação da Planilha: 16/06/2017\nCURSO;PERIODO;DISCIPLINA;MATRIZ;PROFESSOR\nSI;2;Banco de Dados;GRA-MAT-0228-F;Larissa Torres Ferreira\n";
+        file_put_contents($filePath, $csv);
+
+        $response = $this->actingAs($user)->post('/importacoes/oferta-ubiqua', [
+            'arquivo' => new \Illuminate\Http\UploadedFile($filePath, 'ubiqua-metadata.csv', 'text/csv', null, true),
+            'academic_term_code' => '2025.1',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('subjects', ['name' => 'Banco de Dados']);
+        $this->assertDatabaseHas('class_offerings', ['period' => 2]);
+    }
+
     public function test_catalog_can_filter_students_and_subjects_by_search(): void
     {
         $admin = User::create([
