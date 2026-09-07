@@ -64,7 +64,7 @@ class UserLoginTest extends TestCase
         $response->assertSee('Perfil do usuário');
     }
 
-    public function test_teacher_availability_page_matches_ccg_for_02_document_structure(): void
+    public function test_teacher_sidebar_links_expose_disciplines_and_availability(): void
     {
         $user = User::create([
             'name' => 'Professora Ana',
@@ -77,13 +77,10 @@ class UserLoginTest extends TestCase
         $response = $this->actingAs($user)->get('/perfil/editar');
 
         $response->assertOk();
-        $response->assertSee('Disponibilidade de horário do professor');
-        $response->assertSee('Semestre / período');
-        $response->assertSee('Professor');
-        $response->assertSee('Dia');
-        $response->assertSee('Início');
-        $response->assertSee('Fim');
-        $response->assertSee('Preferência');
+        $response->assertSee('Minhas disciplinas');
+        $response->assertSee('Minha disponibilidade');
+        $response->assertDontSee('Disciplinas</h5>');
+        $response->assertDontSee('Disponibilidade</h5>');
     }
 
     public function test_only_it_staff_can_access_ubiquitous_import(): void

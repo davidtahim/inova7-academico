@@ -110,6 +110,30 @@ body {
     background: linear-gradient(90deg, rgba(255, 255, 255, .18), rgba(255, 255, 255, .06))
 }
 
+.sidebar .nav-section+.nav-link {
+    margin-top: 4px
+}
+
+.sidebar .nav-section:has(+ .nav-link) {
+    color: #f5d78a;
+}
+
+.sidebar .nav-link[href$="#disciplinas"],
+.sidebar .nav-link[href$="#disponibilidade"] {
+    background: rgba(228, 185, 79, .12);
+    border: 1px solid rgba(228, 185, 79, .24);
+    font-weight: 700;
+    color: #fff8df;
+}
+
+.sidebar .nav-link[href$="#disciplinas"]:hover,
+.sidebar .nav-link[href$="#disponibilidade"]:hover,
+.sidebar .nav-link[href$="#disciplinas"].active,
+.sidebar .nav-link[href$="#disponibilidade"].active {
+    background: linear-gradient(90deg, rgba(228, 185, 79, .22), rgba(255, 255, 255, .09));
+    box-shadow: inset 3px 0 var(--gold);
+}
+
 .sidebar-footer {
     margin-top: auto;
     padding: 16px 9px 0;

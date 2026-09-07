@@ -43,7 +43,9 @@
                     @if (Auth::user()->role === 'teacher')
                         <div class="nav-section">Professor</div>
                         <a class="nav-link {{ request()->routeIs('profile.edit') ? 'active' : '' }}"
-                            href="{{ route('profile.edit') }}">◔ Minha disponibilidade</a>
+                            href="{{ route('profile.edit') }}#disciplinas">◌ Minhas disciplinas</a>
+                        <a class="nav-link {{ request()->routeIs('profile.edit') ? 'active' : '' }}"
+                            href="{{ route('profile.edit') }}#disponibilidade">◔ Minha disponibilidade</a>
                     @endif
 
                     @if (in_array(Auth::user()->role, ['coordinator', 'staff', 'admin'], true))

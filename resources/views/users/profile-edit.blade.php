@@ -98,35 +98,7 @@
                             @if ($user->role === 'teacher')
                                 <hr class="my-4">
 
-                                <div class="border rounded p-3 mb-4 bg-light-subtle">
-                                    <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3">
-                                        <h5 class="fw-bold mb-0">Disponibilidade de horário do professor</h5>
-                                        <span class="badge text-bg-light border">
-                                            {{ $term?->code ?? 'Sem semestre informado' }}
-                                        </span>
-                                    </div>
-
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label
-                                                class="form-label small fw-semibold text-uppercase text-secondary">Professor</label>
-                                            <div class="form-control-plaintext border rounded px-3 py-2 bg-white">
-                                                {{ $professor?->name ?? $user->name }}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label
-                                                class="form-label small fw-semibold text-uppercase text-secondary">Semestre
-                                                / período</label>
-                                            <div class="form-control-plaintext border rounded px-3 py-2 bg-white">
-                                                {{ $term?->code ?? 'Sem semestre informado' }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="mb-4">
-                                    <h5 class="fw-bold mb-3">Disciplinas</h5>
+                                <div id="disciplinas" class="mb-4">
                                     <div class="row g-2">
                                         @foreach ($subjects as $subject)
                                             <div class="col-md-6 col-xl-4">
@@ -140,8 +112,7 @@
                                     </div>
                                 </div>
 
-                                <div>
-                                    <h5 class="fw-bold mb-3">Disponibilidade</h5>
+                                <div id="disponibilidade">
                                     <div id="availability-list" class="d-grid gap-3">
                                         @php
                                             $slots = old('availability', $availability->toArray() ?: []);
