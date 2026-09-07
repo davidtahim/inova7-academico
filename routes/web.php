@@ -24,5 +24,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/auditoria/documentos', [AuditDocumentController::class, 'store'])->name('audit.documents.store');
     Route::get('/usuarios/novo', [UserController::class, 'create'])->name('users.create');
     Route::post('/usuarios', [UserController::class, 'store'])->name('users.store');
+    Route::get('/perfil', [UserController::class, 'profile'])->name('profile');
+    Route::get('/perfil/editar', [UserController::class, 'editProfile'])->name('profile.edit');
+    Route::put('/perfil', [UserController::class, 'updateProfile'])->name('profile.update');
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 });

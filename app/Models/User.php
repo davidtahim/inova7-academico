@@ -29,4 +29,20 @@ class User extends Authenticatable
         'password' => 'hashed', // Hash automático ao salvar (Laravel 11)
         'is_active' => 'boolean',
     ];
+
+    public static function roleOptions(): array
+    {
+        return [
+            'student' => 'Aluno',
+            'teacher' => 'Professor',
+            'coordinator' => 'Coordenador',
+            'staff' => 'Funcionário (Secretaria/CRA)',
+            'admin' => 'Administrador de TI',
+        ];
+    }
+
+    public function getRoleLabelAttribute(): string
+    {
+        return self::roleOptions()[$this->role] ?? ucfirst(str_replace('_', ' ', $this->role));
+    }
 }

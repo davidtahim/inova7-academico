@@ -26,8 +26,16 @@
                         href="{{ route('audit.index') }}">✓ Auditoria</a>
                     <a class="nav-link" href="#">⇧ Importações</a>
                 </nav>
-                <div class="sidebar-footer"><span class="avatar">LT</span><span><strong>Larissa
-                            Torres</strong><small>Coordenação</small></span></div>
+                <div class="sidebar-footer">
+                    <a href="{{ route('profile') }}" class="d-flex align-items-center gap-2 text-decoration-none text-dark">
+                        <span
+                            class="avatar">{{ strtoupper(Str::of(auth()->user()->name)->split('/\s+/')->map(fn($part) => Str::substr($part, 0, 1))->take(2)->implode('')) }}</span>
+                        <span>
+                            <strong>{{ auth()->user()->name }}</strong>
+                            <small>{{ auth()->user()->role_label }}</small>
+                        </span>
+                    </a>
+                </div>
             </aside>
             <main class="content">
                 <header class="topbar">

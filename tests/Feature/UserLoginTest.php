@@ -43,4 +43,20 @@ class UserLoginTest extends TestCase
         $response->assertRedirect('/login');
         $this->assertGuest();
     }
+
+    public function test_authenticated_user_can_view_the_profile_page(): void
+    {
+        $user = User::create([
+            'name' => 'Maria Souza',
+            'email' => 'maria.perfil@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'coordinator',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($user)->get('/perfil');
+
+        $response->assertOk();
+        $response->assertSee('Perfil do usuário');
+    }
 }
