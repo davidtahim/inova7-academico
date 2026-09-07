@@ -4,6 +4,8 @@ deployment:
     - export DEPLOYPATH=/home1/inova7/coordenacao.inova7.com.br/
     - /bin/cp -R . $DEPLOYPATH
     - cd $DEPLOYPATH
+    - composer install --no-interaction --prefer-dist --no-progress --no-dev
+    - composer dump-autoload --no-dev
     - php artisan config:clear
     - php artisan cache:clear
     - php artisan route:clear
