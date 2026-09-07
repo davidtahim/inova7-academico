@@ -199,4 +199,23 @@ class UserLoginTest extends TestCase
             ->assertSee('Maria Souza')
             ->assertDontSee('José Pereira');
     }
+
+    public function test_student_cannot_access_catalog_and_audit_routes(): void
+    {
+        $student = User::create([
+            'name' => 'Aluno Restringido',
+            'email' => 'aluno.restrito@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'student',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($student)
+            ->get('/cursos')
+            ->assertForbidden();
+
+        $this->actingAs($student)
+            ->get('/auditoria')
+            ->assertForbidden();
+    }
 }

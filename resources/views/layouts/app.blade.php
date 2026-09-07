@@ -26,6 +26,7 @@
                     @endif
 
                     @if (in_array(Auth::user()->role, ['coordinator', 'staff', 'admin'], true))
+                        <div class="nav-section">Catálogo</div>
                         <a class="nav-link {{ request()->routeIs('catalog.courses') ? 'active' : '' }}"
                             href="{{ route('catalog.courses') }}">◫ Cursos e matrizes</a>
                         <a class="nav-link {{ request()->routeIs('catalog.professors') ? 'active' : '' }}"
@@ -51,7 +52,7 @@
                             href="{{ route('audit.index') }}">✓ Auditoria</a>
                     @endif
 
-                    @if (Auth::user()->role === 'admin')
+                    @if (in_array(Auth::user()->role, ['admin', 'staff'], true))
                         <a class="nav-link {{ request()->routeIs('imports.*') ? 'active' : '' }}"
                             href="{{ route('imports.ubiqua.index') }}">⇧ Importações</a>
                     @endif

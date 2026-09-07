@@ -15,7 +15,15 @@ class AppServiceProvider extends ServiceProvider
         date_default_timezone_set(config('app.timezone'));
 
         Gate::define('access-imports', function (User $user) {
-            return $user->role === 'admin';
+            return in_array($user->role, ['admin', 'staff'], true);
+        });
+
+        Gate::define('access-catalog', function (User $user) {
+            return in_array($user->role, ['coordinator', 'staff', 'admin'], true);
+        });
+
+        Gate::define('access-audit', function (User $user) {
+            return in_array($user->role, ['coordinator', 'staff', 'admin'], true);
         });
     }
 }

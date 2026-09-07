@@ -57,7 +57,14 @@ docker compose up -d --build
 docker compose exec -T app php artisan migrate:fresh --seed
 ```
 
-### Windows local
+No ambiente Docker, a aplicação acessa o MySQL pelo nome do serviço:
+
+```env
+DB_HOST=mysql
+DB_PORT=3306
+```
+
+### Windows local (Laravel no host, MySQL no Docker)
 
 ```powershell
 composer install
@@ -67,11 +74,30 @@ php artisan migrate --seed
 php artisan serve
 ```
 
+Quando a aplicação roda no host do Windows e o MySQL está no Docker, use:
+
+```env
+DB_HOST=127.0.0.1
+DB_PORT=3307
+```
+
+> Importante: `DB_HOST=mysql` só funciona quando a app está dentro do container. `DB_HOST=127.0.0.1` e porta `3307` são usados quando a app roda no Windows host e o MySQL está exposto pelos containers.
+
 Acesse:
 
 ```text
 http://localhost:8000/login
 ```
+
+## Ambientes e configuração do banco
+
+| Ambiente | Host do banco | Porta |
+| --- | --- | --- |
+| Laravel dentro do container Docker | `mysql` | `3306` |
+| Laravel rodando no Windows/host com MySQL no Docker | `127.0.0.1` | `3307` |
+| Produção | host interno/real do banco | porta do serviço real |
+
+Se o host e a porta estiverem trocados, a aplicação quebra ao iniciar a sessão e ao tentar salvar usuário, porque o Laravel tenta acessar a tabela `sessions` e a tabela `users` no banco errado.
 
 ## Módulos principais
 
