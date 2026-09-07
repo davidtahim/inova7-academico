@@ -98,6 +98,33 @@
                             @if ($user->role === 'teacher')
                                 <hr class="my-4">
 
+                                <div class="border rounded p-3 mb-4 bg-light-subtle">
+                                    <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3">
+                                        <h5 class="fw-bold mb-0">Disponibilidade de horário do professor</h5>
+                                        <span class="badge text-bg-light border">
+                                            {{ $term?->code ?? 'Sem semestre informado' }}
+                                        </span>
+                                    </div>
+
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label
+                                                class="form-label small fw-semibold text-uppercase text-secondary">Professor</label>
+                                            <div class="form-control-plaintext border rounded px-3 py-2 bg-white">
+                                                {{ $professor?->name ?? $user->name }}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label
+                                                class="form-label small fw-semibold text-uppercase text-secondary">Semestre
+                                                / período</label>
+                                            <div class="form-control-plaintext border rounded px-3 py-2 bg-white">
+                                                {{ $term?->code ?? 'Sem semestre informado' }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="mb-4">
                                     <h5 class="fw-bold mb-3">Disciplinas</h5>
                                     <div class="row g-2">
@@ -136,16 +163,17 @@
                                                     <div class="col-md-2">
                                                         <label class="form-label small fw-semibold">Início</label>
                                                         <input type="time" name="availability[0][starts_at]"
-                                                            class="form-control">
+                                                            class="form-control" aria-label="Início">
                                                     </div>
                                                     <div class="col-md-2">
                                                         <label class="form-label small fw-semibold">Fim</label>
                                                         <input type="time" name="availability[0][ends_at]"
-                                                            class="form-control">
+                                                            class="form-control" aria-label="Fim">
                                                     </div>
                                                     <div class="col-md-2">
                                                         <label class="form-label small fw-semibold">Preferência</label>
-                                                        <select name="availability[0][preference]" class="form-select">
+                                                        <select name="availability[0][preference]" class="form-select"
+                                                            aria-label="Preferência">
                                                             <option value="available">Disponível</option>
                                                             <option value="preferred">Preferencial</option>
                                                             <option value="unavailable">Indisponível</option>
@@ -154,7 +182,8 @@
                                                     <div class="col-md-4">
                                                         <label class="form-label small fw-semibold">Observação</label>
                                                         <input type="text" name="availability[0][notes]"
-                                                            class="form-control" placeholder="Ex.: só manhã">
+                                                            class="form-control" placeholder="Ex.: só manhã"
+                                                            aria-label="Observação">
                                                     </div>
                                                 </div>
                                             </div>
@@ -179,19 +208,21 @@
                                                             <input type="time"
                                                                 name="availability[{{ $index }}][starts_at]"
                                                                 class="form-control"
-                                                                value="{{ old('availability.' . $index . '.starts_at', $slot['starts_at'] ?? '') }}">
+                                                                value="{{ old('availability.' . $index . '.starts_at', $slot['starts_at'] ?? '') }}"
+                                                                aria-label="Início">
                                                         </div>
                                                         <div class="col-md-2">
                                                             <label class="form-label small fw-semibold">Fim</label>
                                                             <input type="time"
                                                                 name="availability[{{ $index }}][ends_at]"
                                                                 class="form-control"
-                                                                value="{{ old('availability.' . $index . '.ends_at', $slot['ends_at'] ?? '') }}">
+                                                                value="{{ old('availability.' . $index . '.ends_at', $slot['ends_at'] ?? '') }}"
+                                                                aria-label="Fim">
                                                         </div>
                                                         <div class="col-md-2">
                                                             <label class="form-label small fw-semibold">Preferência</label>
                                                             <select name="availability[{{ $index }}][preference]"
-                                                                class="form-select">
+                                                                class="form-select" aria-label="Preferência">
                                                                 <option value="available"
                                                                     {{ old('availability.' . $index . '.preference', $slot['preference'] ?? 'available') === 'available' ? 'selected' : '' }}>
                                                                     Disponível</option>
@@ -209,7 +240,7 @@
                                                                 name="availability[{{ $index }}][notes]"
                                                                 class="form-control"
                                                                 value="{{ old('availability.' . $index . '.notes', $slot['notes'] ?? '') }}"
-                                                                placeholder="Ex.: só manhã">
+                                                                placeholder="Ex.: só manhã" aria-label="Observação">
                                                         </div>
                                                     </div>
                                                 </div>
@@ -255,15 +286,15 @@
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label small fw-semibold">Início</label>
-                                <input type="time" name="availability[${index}][starts_at]" class="form-control">
+                                <input type="time" name="availability[${index}][starts_at]" class="form-control" aria-label="Início">
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label small fw-semibold">Fim</label>
-                                <input type="time" name="availability[${index}][ends_at]" class="form-control">
+                                <input type="time" name="availability[${index}][ends_at]" class="form-control" aria-label="Fim">
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label small fw-semibold">Preferência</label>
-                                <select name="availability[${index}][preference]" class="form-select">
+                                <select name="availability[${index}][preference]" class="form-select" aria-label="Preferência">
                                     <option value="available">Disponível</option>
                                     <option value="preferred">Preferencial</option>
                                     <option value="unavailable">Indisponível</option>
@@ -271,7 +302,7 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small fw-semibold">Observação</label>
-                                <input type="text" name="availability[${index}][notes]" class="form-control" placeholder="Ex.: só manhã">
+                                <input type="text" name="availability[${index}][notes]" class="form-control" placeholder="Ex.: só manhã" aria-label="Observação">
                             </div>
                         </div>
                     </div>

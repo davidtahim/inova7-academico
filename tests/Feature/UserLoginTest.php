@@ -64,6 +64,28 @@ class UserLoginTest extends TestCase
         $response->assertSee('Perfil do usuário');
     }
 
+    public function test_teacher_availability_page_matches_ccg_for_02_document_structure(): void
+    {
+        $user = User::create([
+            'name' => 'Professora Ana',
+            'email' => 'ana.prof@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'teacher',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($user)->get('/perfil/editar');
+
+        $response->assertOk();
+        $response->assertSee('Disponibilidade de horário do professor');
+        $response->assertSee('Semestre / período');
+        $response->assertSee('Professor');
+        $response->assertSee('Dia');
+        $response->assertSee('Início');
+        $response->assertSee('Fim');
+        $response->assertSee('Preferência');
+    }
+
     public function test_only_it_staff_can_access_ubiquitous_import(): void
     {
         $coordinator = User::create([
