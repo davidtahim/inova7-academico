@@ -35,14 +35,14 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <div class="border rounded p-3 h-100">
-                                    <small class="text-uppercase text-secondary">Matrícula</small>
-                                    <div class="fw-semibold mt-1">{{ $user->registration_number ?? 'Não informado' }}</div>
+                                    <small class="text-uppercase text-secondary">Perfil atual</small>
+                                    <div class="fw-semibold mt-1">{{ $user->role_label }}</div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="border rounded p-3 h-100">
-                                    <small class="text-uppercase text-secondary">Perfil</small>
-                                    <div class="fw-semibold mt-1">{{ $user->role_label }}</div>
+                                    <small class="text-uppercase text-secondary">Matrícula</small>
+                                    <div class="fw-semibold mt-1">{{ $user->registration_number ?? 'Não informado' }}</div>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -53,7 +53,7 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="border rounded p-3 h-100">
-                                    <small class="text-uppercase text-secondary">Acesso</small>
+                                    <small class="text-uppercase text-secondary">Resumo de acesso</small>
                                     <div class="fw-semibold mt-1">
                                         {{ $user->role === 'admin' ? 'Administrador' : ($user->role === 'coordinator' ? 'Coordenador' : ($user->role === 'teacher' ? 'Professor' : ($user->role === 'student' ? 'Aluno' : 'Funcionário'))) }}
                                     </div>

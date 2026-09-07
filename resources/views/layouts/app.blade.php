@@ -67,9 +67,9 @@
                             <span
                                 class="avatar">{{ strtoupper(Str::of(Auth::user()->name)->split('/\s+/')->map(fn($part) => Str::substr($part, 0, 1))->take(2)->implode('')) }}</span>
                         @endif
-                        <span>
+                        <span class="d-flex flex-column">
                             <strong class="text-white">{{ Auth::user()->name }}</strong>
-                            <small>{{ Auth::user()->role_label }}</small>
+                            <small class="text-white-50">{{ Auth::user()->role_label }}</small>
                         </span>
                     </a>
                 </div>

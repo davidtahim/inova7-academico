@@ -218,4 +218,23 @@ class UserLoginTest extends TestCase
             ->get('/auditoria')
             ->assertForbidden();
     }
+
+    public function test_profile_page_shows_current_role_and_access_summary(): void
+    {
+        $user = User::create([
+            'name' => 'Ana Costa',
+            'email' => 'ana.perfil@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'coordinator',
+            'registration_number' => '2024102',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($user)->get('/perfil');
+
+        $response->assertOk();
+        $response->assertSee('Coordenador');
+        $response->assertSee('Resumo de acesso');
+        $response->assertSee('Perfil atual');
+    }
 }
