@@ -9,6 +9,7 @@ use App\Models\Subject;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
 
@@ -142,22 +143,32 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'registration_number' => 'nullable|string|max:20|unique:users',
             'role' => 'required|in:admin,coordinator,teacher,student,staff',
             'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers()],
-        ]);
+        ];
 
-        User::create([
+        if (Schema::hasColumn('users', 'registration_number')) {
+            $rules['registration_number'] = 'nullable|string|max:20|unique:users';
+        }
+
+        $validated = $request->validate($rules);
+
+        $payload = [
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'registration_number' => $validated['registration_number'],
             'role' => $validated['role'],
             'password' => $validated['password'],
             'is_active' => $request->has('is_active'),
-        ]);
+        ];
+
+        if (Schema::hasColumn('users', 'registration_number') && ! empty($validated['registration_number'])) {
+            $payload['registration_number'] = $validated['registration_number'];
+        }
+
+        User::create($payload);
 
         return redirect()->route('dashboard')->with('success', 'Novo usuário cadastrado com sucesso!');
     }

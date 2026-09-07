@@ -7,6 +7,7 @@ use App\Models\Professor;
 use App\Models\Subject;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class CatalogController extends Controller
 {
@@ -60,8 +61,11 @@ class CatalogController extends Controller
             ->when($query, function ($q) use ($query) {
                 $q->where(function ($inner) use ($query) {
                     $inner->where('name', 'like', "%{$query}%")
-                        ->orWhere('email', 'like', "%{$query}%")
-                        ->orWhere('registration_number', 'like', "%{$query}%");
+                        ->orWhere('email', 'like', "%{$query}%");
+
+                    if (Schema::hasColumn('users', 'registration_number')) {
+                        $inner->orWhere('registration_number', 'like', "%{$query}%");
+                    }
                 });
             })
             ->orderBy('name')
