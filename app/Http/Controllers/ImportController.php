@@ -66,6 +66,34 @@ class ImportController extends Controller
         ]);
     }
 
+    public function resetOfertaUbiqua(Request $request)
+    {
+        $validated = $request->validate([
+            'academic_term_code' => ['required', 'string'],
+        ]);
+
+        $term = AcademicTerm::where('code', $validated['academic_term_code'])->firstOrFail();
+
+        DB::transaction(function () use ($term) {
+            $offeringIds = ClassOffering::where('academic_term_id', $term->id)->pluck('id');
+
+            if ($offeringIds->isNotEmpty()) {
+                TeachingAssignment::whereIn('class_offering_id', $offeringIds)->delete();
+                ClassOffering::where('academic_term_id', $term->id)->delete();
+            }
+        });
+
+        session([
+            'ubiqua_import_progress' => 0,
+            'ubiqua_import_status' => 'Oferta zerada para o semestre selecionado.',
+            'ubiqua_import_finished' => true,
+            'ubiqua_import_started_at' => time(),
+            'ubiqua_import_total_rows' => 0,
+        ]);
+
+        return redirect()->route('imports.ubiqua.index')->with('success', 'Oferta do semestre ' . $term->code . ' zerada com sucesso.');
+    }
+
     public function storeOfertaUbiqua(Request $request, ProfessorAllocationService $allocationService)
     {
         $validated = $request->validate([

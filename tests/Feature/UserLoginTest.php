@@ -158,6 +158,75 @@ class UserLoginTest extends TestCase
         $this->assertFalse($blocked->allowed_for_import);
     }
 
+    public function test_admin_can_reset_imported_offer_for_selected_term(): void
+    {
+        $user = User::create([
+            'name' => 'Administrador',
+            'email' => 'admin.reset-import@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $term = AcademicTerm::create([
+            'code' => '2026.2',
+            'starts_at' => '2026-08-01',
+            'ends_at' => '2026-12-15',
+            'status' => 'active',
+        ]);
+
+        $course = Course::create([
+            'code' => 'SI',
+            'name' => 'Sistemas de Informação',
+            'degree' => 'Bacharelado',
+            'active' => true,
+        ]);
+
+        $subject = Subject::create([
+            'code' => 'SI001',
+            'name' => 'Introdução à Sistemas',
+            'total_hours' => 80,
+            'presential_hours' => 80,
+        ]);
+
+        $offering = ClassOffering::create([
+            'academic_term_id' => $term->id,
+            'course_id' => $course->id,
+            'subject_id' => $subject->id,
+            'curriculum_matrix_id' => null,
+            'class_code' => 'SI001-A',
+            'period' => 1,
+            'shift' => 'MANHÃ',
+            'modality' => 'PRESENCIAL',
+            'occurs' => true,
+            'weekly_hours' => 4,
+            'totvs_hours' => 4,
+            'status' => 'planned',
+        ]);
+
+        $professor = Professor::create([
+            'name' => 'Prof. João da Silva',
+            'registration' => '12345',
+            'email' => 'joao@inova7.local',
+            'qualification' => 'Doutorado',
+            'active' => true,
+        ]);
+
+        TeachingAssignment::create([
+            'class_offering_id' => $offering->id,
+            'professor_id' => $professor->id,
+            'weekly_hours' => 4,
+            'status' => 'planned',
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('imports.ubiqua.reset'), ['academic_term_code' => $term->code])
+            ->assertRedirect(route('imports.ubiqua.index'));
+
+        $this->assertDatabaseMissing('class_offerings', ['id' => $offering->id]);
+        $this->assertDatabaseMissing('teaching_assignments', ['class_offering_id' => $offering->id]);
+    }
+
     public function test_topbar_allows_selecting_current_academic_term(): void
     {
         $user = User::create([

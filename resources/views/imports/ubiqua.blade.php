@@ -49,6 +49,13 @@
                         TURNO, MODALIDADE e PROFESSOR.
                     </div>
 
+                    <div class="d-flex flex-wrap align-items-center gap-2 mt-4">
+                        <button type="submit" id="import-submit-button"
+                            class="btn btn-primary px-4 py-3 fw-semibold rounded-3 import-submit-button">
+                            <span class="btn-label">Importar dados</span>
+                        </button>
+                    </div>
+
                     <div id="import-progress" class="mt-4 d-none p-3 rounded-4 border import-progress-shell">
                         <div class="d-flex justify-content-between align-items-center small text-secondary mb-2">
                             <span class="fw-semibold">Status da importação</span>
@@ -68,9 +75,16 @@
                         <div id="import-progress-eta" class="small text-muted mt-1">Tempo restante: calculando...</div>
                     </div>
 
-                    <button type="submit" id="import-submit-button"
-                        class="btn btn-primary mt-4 px-4 py-3 fw-semibold rounded-3 import-submit-button">
-                        <span class="btn-label">Importar dados</span>
+                </form>
+
+                <form id="ubiqua-reset-form" action="{{ route('imports.ubiqua.reset') }}" method="POST"
+                    class="d-inline-block mt-3">
+                    @csrf
+                    <input type="hidden" id="reset-academic-term-code" name="academic_term_code"
+                        value="{{ $terms->first()?->code ?? '' }}">
+                    <button type="submit" class="btn btn-outline-danger px-3 py-2 fw-semibold rounded-3"
+                        onclick="return confirm('Deseja apagar toda a oferta importada deste semestre? Esta ação não pode ser desfeita.')">
+                        Zerar oferta
                     </button>
                 </form>
 
@@ -109,6 +123,17 @@
                         const progressValue = document.getElementById('import-progress-value');
                         const progressStatus = document.getElementById('import-progress-status');
                         const progressEta = document.getElementById('import-progress-eta');
+                        const semesterSelect = document.getElementById('academic_term_code');
+                        const resetSemesterInput = document.getElementById('reset-academic-term-code');
+
+                        if (semesterSelect && resetSemesterInput) {
+                            const syncResetSemester = () => {
+                                resetSemesterInput.value = semesterSelect.value;
+                            };
+
+                            semesterSelect.addEventListener('change', syncResetSemester);
+                            syncResetSemester();
+                        }
 
                         if (!form || !submitButton || !progressWrap || !progressBar || !progressValue || !progressStatus || !
                             progressEta) {
