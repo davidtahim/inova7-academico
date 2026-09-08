@@ -107,6 +107,15 @@ Se o host e a porta estiverem trocados, a aplicação quebra ao iniciar a sessã
 - auditoria documental
 - templating de documentos acadêmicos
 
+## Importação da Oferta Ubíqua
+
+A importação da planilha Ubíqua é orientada por semestre. Cada arquivo deve ser carregado para o período acadêmico correspondente e não substitui o cadastro manual do administrador.
+
+- a carga serve como base do semestre selecionado;
+- o mesmo arquivo pode ser importado novamente em outro período sem misturar dados;
+- o administrador pode editar, complementar ou corrigir informações após a importação;
+- a base da Ubíqua alimenta o planejamento, mas não bloqueia a gestão operacional do sistema.
+
 ## Roadmap atual
 
 - [x] autenticação

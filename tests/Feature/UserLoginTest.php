@@ -462,6 +462,41 @@ class UserLoginTest extends TestCase
         $this->assertDatabaseHas('class_offerings', ['class_code' => 'CSE0280102NMA']);
     }
 
+    public function test_ubiquitous_import_is_scoped_by_academic_term(): void
+    {
+        $user = User::create([
+            'name' => 'Larissa Torres',
+            'email' => 'larissa5@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $filePath = storage_path('framework/testing/ubiqua-cross-term.csv');
+        $directory = dirname($filePath);
+        if (! is_dir($directory)) {
+            mkdir($directory, 0777, true);
+        }
+
+        $csv = "CURSO;MATRIZ;DISCIPLINA;CODIGO;PERIODO;TURMA;TURNO;MODALIDADE;PROFESSOR\nSI;GRA-MAT-0228-F;Banco de Dados;GSER133620;2;CSE0280102NMA;MANHA;HÍBRIDA;Larissa Torres Ferreira\n";
+        file_put_contents($filePath, $csv);
+
+        $first = $this->actingAs($user)->post('/importacoes/oferta-ubiqua', [
+            'arquivo' => new \Illuminate\Http\UploadedFile($filePath, 'ubiqua-cross-term.csv', 'text/csv', null, true),
+            'academic_term_code' => '2026.1',
+        ]);
+        $first->assertRedirect();
+
+        $second = $this->actingAs($user)->post('/importacoes/oferta-ubiqua', [
+            'arquivo' => new \Illuminate\Http\UploadedFile($filePath, 'ubiqua-cross-term.csv', 'text/csv', null, true),
+            'academic_term_code' => '2026.2',
+        ]);
+        $second->assertRedirect();
+
+        $this->assertDatabaseHas('class_offerings', ['academic_term_id' => AcademicTerm::where('code', '2026.1')->value('id'), 'class_code' => 'CSE0280102NMA']);
+        $this->assertDatabaseHas('class_offerings', ['academic_term_id' => AcademicTerm::where('code', '2026.2')->value('id'), 'class_code' => 'CSE0280102NMA']);
+    }
+
     public function test_allocation_prefers_professor_with_matching_subject_and_preferred_availability(): void
     {
         $term = AcademicTerm::create([

@@ -21,13 +21,24 @@
                         </div>
 
                         <div class="col-md-6">
-                            <label for="academic_term_code" class="form-label">Semestre</label>
-                            <input id="academic_term_code" type="text" name="academic_term_code" value="2026.2"
-                                class="form-control" required>
+                            <label for="academic_term_code" class="form-label">Semestre de destino</label>
+                            <select id="academic_term_code" name="academic_term_code" class="form-select" required>
+                                @foreach ($terms as $term)
+                                    <option value="{{ $term->code }}" {{ $term->code === '2026.2' ? 'selected' : '' }}>
+                                        {{ $term->code }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
 
                     <div class="mt-3 text-muted small">
+                        A importação da Oferta Ubíqua é por semestre. Ela carrega a base acadêmica do período selecionado
+                        e pode ser reimportada em outro semestre sem sobrescrever dados de períodos anteriores.
+                        O administrador continua livre para cadastrar ou editar qualquer informação manualmente.
+                    </div>
+
+                    <div class="mt-2 text-muted small">
                         Arquivos esperados: CSV ou XLSX com colunas como CURSO, MATRIZ, DISCIPLINA, CÓDIGO, PERÍODO, TURMA,
                         TURNO, MODALIDADE e PROFESSOR.
                     </div>
