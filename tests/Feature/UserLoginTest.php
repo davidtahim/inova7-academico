@@ -72,6 +72,25 @@ class UserLoginTest extends TestCase
         $this->assertAuthenticated();
     }
 
+    public function test_teacher_user_is_redirected_to_profile_edit_after_login(): void
+    {
+        $user = User::create([
+            'name' => 'Prof. Débora Souza',
+            'email' => '7788@prof.uni7.edu.br',
+            'password' => 'senha1234',
+            'role' => 'teacher',
+            'is_active' => true,
+        ]);
+
+        $response = $this->post('/login', [
+            'email' => '7788@prof.uni7.edu.br',
+            'password' => 'senha1234',
+        ]);
+
+        $response->assertRedirect(route('profile.edit'));
+        $this->assertAuthenticatedAs($user);
+    }
+
     public function test_inactive_user_cannot_login(): void
     {
         User::create([
@@ -190,7 +209,7 @@ class UserLoginTest extends TestCase
             'password' => 'senha1234',
         ]);
 
-        $response->assertRedirect(route('dashboard'));
+        $response->assertRedirect(route('profile.edit'));
         $this->assertAuthenticatedAs($user);
     }
 
@@ -484,6 +503,140 @@ class UserLoginTest extends TestCase
         $response->assertOk();
         $response->assertSee('Algoritmos');
         $response->assertDontSee('Banco de Dados');
+    }
+
+    public function test_teacher_profile_uses_selected_academic_term_for_disciplines_and_availability(): void
+    {
+        $user = User::create([
+            'name' => 'Professora Ana',
+            'email' => 'ana.prof.semestre@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'teacher',
+            'is_active' => true,
+        ]);
+
+        $termOne = AcademicTerm::create([
+            'code' => '2026.1',
+            'starts_at' => '2026-02-01',
+            'ends_at' => '2026-06-30',
+            'status' => 'closed',
+        ]);
+
+        $termTwo = AcademicTerm::create([
+            'code' => '2026.2',
+            'starts_at' => '2026-08-01',
+            'ends_at' => '2026-12-15',
+            'status' => 'active',
+        ]);
+
+        $course = Course::create([
+            'code' => 'SI',
+            'name' => 'Sistemas de Informação',
+            'degree' => 'Bacharelado',
+            'active' => true,
+        ]);
+
+        $matrix = CurriculumMatrix::create([
+            'course_id' => $course->id,
+            'code' => 'MTR-001',
+            'name' => 'Matriz 2026',
+            'status' => 'Atual',
+        ]);
+
+        $subjectOne = Subject::create([
+            'code' => 'ALG101',
+            'name' => 'Algoritmos',
+            'total_hours' => 40,
+            'presential_hours' => 40,
+        ]);
+
+        $subjectTwo = Subject::create([
+            'code' => 'BD101',
+            'name' => 'Banco de Dados',
+            'total_hours' => 40,
+            'presential_hours' => 40,
+        ]);
+
+        $professor = Professor::create([
+            'name' => 'Professora Ana',
+            'email' => 'ana.prof.semestre@inova7.local',
+            'qualification' => 'Doutora',
+            'active' => true,
+        ]);
+
+        $offeringOne = ClassOffering::create([
+            'academic_term_id' => $termOne->id,
+            'course_id' => $course->id,
+            'curriculum_matrix_id' => $matrix->id,
+            'subject_id' => $subjectOne->id,
+            'class_code' => 'ALG-01',
+            'period' => 2,
+            'shift' => 'MANHÃ',
+            'modality' => 'PRESENCIAL',
+            'occurs' => true,
+            'weekly_hours' => 4,
+            'totvs_hours' => 4,
+            'status' => 'planned',
+        ]);
+
+        $offeringTwo = ClassOffering::create([
+            'academic_term_id' => $termTwo->id,
+            'course_id' => $course->id,
+            'curriculum_matrix_id' => $matrix->id,
+            'subject_id' => $subjectTwo->id,
+            'class_code' => 'BD-01',
+            'period' => 4,
+            'shift' => 'NOITE',
+            'modality' => 'PRESENCIAL',
+            'occurs' => true,
+            'weekly_hours' => 4,
+            'totvs_hours' => 4,
+            'status' => 'planned',
+        ]);
+
+        TeachingAssignment::create([
+            'class_offering_id' => $offeringOne->id,
+            'professor_id' => $professor->id,
+            'weekly_hours' => 4,
+            'status' => 'planned',
+        ]);
+
+        TeachingAssignment::create([
+            'class_offering_id' => $offeringTwo->id,
+            'professor_id' => $professor->id,
+            'weekly_hours' => 4,
+            'status' => 'planned',
+        ]);
+
+        ProfessorAvailability::create([
+            'academic_term_id' => $termOne->id,
+            'professor_id' => $professor->id,
+            'weekday' => 1,
+            'starts_at' => '08:00:00',
+            'ends_at' => '09:30:00',
+            'preference' => 'preferred',
+            'notes' => 'Antigo',
+        ]);
+
+        ProfessorAvailability::create([
+            'academic_term_id' => $termTwo->id,
+            'professor_id' => $professor->id,
+            'weekday' => 2,
+            'starts_at' => '19:00:00',
+            'ends_at' => '20:30:00',
+            'preference' => 'preferred',
+            'notes' => 'Atual',
+        ]);
+
+        $response = $this->withSession(['selected_academic_term_id' => $termTwo->id])
+            ->actingAs($user)
+            ->get('/perfil/editar');
+
+        $response->assertOk();
+        $response->assertSee('Banco de Dados');
+        $response->assertDontSee('Algoritmos');
+        $response->assertSee('Semestre ativo');
+        $response->assertSee('2026.2');
     }
 
     public function test_catalog_courses_show_matrix_subject_structure_and_syllabus(): void

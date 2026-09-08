@@ -41,7 +41,10 @@ class UserController extends Controller
             abort(403);
         }
 
-        $term = AcademicTerm::latest('id')->first();
+        $selectedTermId = session('selected_academic_term_id');
+        $term = $selectedTermId ? AcademicTerm::find($selectedTermId) : null;
+        $term ??= AcademicTerm::latest('id')->first();
+
         $professor = Professor::where('email', $user->email)->orWhere('name', $user->name)->first();
         $assignedSubjects = $this->assignedSubjectsForProfessor($professor, $term);
 

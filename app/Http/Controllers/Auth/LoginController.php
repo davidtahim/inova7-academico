@@ -42,6 +42,10 @@ class LoginController extends Controller
 
         $request->session()->regenerate();
 
+        if ($user->role === 'teacher') {
+            return redirect()->route('profile.edit');
+        }
+
         return redirect()->route('dashboard');
     }
 
