@@ -87,17 +87,39 @@
                                                 Nenhuma disponibilidade registrada para o semestre atual.
                                             </div>
                                         @else
-                                            <div class="d-grid gap-2">
-                                                @foreach ($availability as $slot)
-                                                    <div class="border rounded p-2 bg-light">
-                                                        <div class="fw-semibold">
-                                                            {{ ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'][($slot->weekday ?? 1) - 1] ?? '—' }}
+                                            @php
+                                                $groupedAvailability = $availability
+                                                    ->sortBy('weekday')
+                                                    ->sortBy('starts_at')
+                                                    ->groupBy('weekday');
+                                            @endphp
+
+                                            <div class="d-grid gap-3">
+                                                @foreach ([1, 2, 3, 4, 5, 6] as $dayNumber)
+                                                    @php $daySlots = $groupedAvailability->get((string) $dayNumber, collect()); @endphp
+                                                    @if ($daySlots->isEmpty())
+                                                        @continue
+                                                    @endif
+
+                                                    <div class="border rounded p-3 bg-light-subtle">
+                                                        <div class="fw-semibold mb-2">
+                                                            {{ ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'][$dayNumber - 1] ?? '—' }}
                                                         </div>
-                                                        <div class="small text-secondary">
-                                                            {{ $slot->starts_at }} às {{ $slot->ends_at }}
-                                                        </div>
-                                                        <div class="small text-secondary">
-                                                            {{ $slot->preference === 'preferred' ? 'Preferencial' : ($slot->preference === 'unavailable' ? 'Indisponível' : 'Disponível') }}
+
+                                                        <div class="d-grid gap-2">
+                                                            @foreach ($daySlots as $slot)
+                                                                <div class="border rounded p-2 bg-white">
+                                                                    <div class="small text-secondary">
+                                                                        {{ $slot->starts_at }} às {{ $slot->ends_at }}
+                                                                    </div>
+                                                                    <div class="small mt-1">
+                                                                        <span
+                                                                            class="badge {{ $slot->preference === 'preferred' ? 'text-bg-primary' : ($slot->preference === 'unavailable' ? 'text-bg-danger' : 'text-bg-success') }} rounded-pill">
+                                                                            {{ $slot->preference === 'preferred' ? 'Preferencial' : ($slot->preference === 'unavailable' ? 'Indisponível' : 'Disponível') }}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            @endforeach
                                                         </div>
                                                     </div>
                                                 @endforeach
