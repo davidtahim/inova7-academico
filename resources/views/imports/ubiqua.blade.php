@@ -161,9 +161,18 @@
                                         'X-Requested-With': 'XMLHttpRequest'
                                     }
                                 })
-                                .then(response => response.ok ? response.json() : null)
+                                .then(async response => {
+                                    if (!response.ok) {
+                                        throw new Error('Progress response not ok');
+                                    }
+
+                                    return response.json().catch(() => null);
+                                })
                                 .then(data => {
                                     if (!data) {
+                                        setStatus('Processando importação...', true);
+                                        progressEta.textContent = 'Tempo restante: calculando...';
+                                        window.setTimeout(pollProgress, 600);
                                         return;
                                     }
 
