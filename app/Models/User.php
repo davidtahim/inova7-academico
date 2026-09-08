@@ -46,4 +46,9 @@ class User extends Authenticatable
     {
         return self::roleOptions()[$this->role] ?? ucfirst(str_replace('_', ' ', $this->role));
     }
+
+    public function studentAcademicRecords()
+    {
+        return $this->hasMany(StudentAcademicRecord::class);
+    }
 }

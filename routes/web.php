@@ -63,6 +63,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/professores', [CatalogController::class, 'professors'])->name('catalog.professors');
         Route::get('/disciplinas', [CatalogController::class, 'subjects'])->name('catalog.subjects');
         Route::get('/alunos', [CatalogController::class, 'students'])->name('catalog.students');
+        Route::get('/alunos/{user}', [CatalogController::class, 'studentDetail'])->name('catalog.student.detail');
     });
 
     Route::middleware('can:access-imports')->group(function () {

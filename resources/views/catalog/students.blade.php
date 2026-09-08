@@ -41,6 +41,10 @@
                             </div>
                             <div class="small text-muted">Matrícula: {{ $student->registration_number ?? 'Não informada' }}
                             </div>
+                            <div class="mt-3">
+                                <a href="{{ route('catalog.student.detail', $student) }}"
+                                    class="btn btn-sm btn-outline-primary">Ver histórico</a>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -76,4 +76,19 @@ class CatalogController extends Controller
             'query' => $query,
         ]);
     }
+
+    public function studentDetail(User $user)
+    {
+        abort_unless($user->role === 'student', 404);
+
+        $records = $user->studentAcademicRecords()
+            ->with(['academicTerm', 'course', 'subject'])
+            ->orderByDesc('created_at')
+            ->get();
+
+        return view('catalog.student-detail', [
+            'student' => $user,
+            'records' => $records,
+        ]);
+    }
 }

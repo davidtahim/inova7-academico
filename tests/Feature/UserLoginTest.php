@@ -837,6 +837,65 @@ class UserLoginTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_student_detail_page_shows_academic_history(): void
+    {
+        $admin = User::create([
+            'name' => 'Administrador acadêmico',
+            'email' => 'admin.historico@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $student = User::create([
+            'name' => 'Ana Student',
+            'email' => 'ana.student@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'student',
+            'registration_number' => '2027001',
+            'is_active' => true,
+        ]);
+
+        $term = AcademicTerm::create([
+            'code' => '2027.1',
+            'starts_at' => '2027-02-01',
+            'ends_at' => '2027-06-30',
+            'status' => 'active',
+        ]);
+
+        $course = Course::create([
+            'code' => 'ADS',
+            'name' => 'Análise e Desenvolvimento de Sistemas',
+            'degree' => 'Tecnólogo',
+            'active' => true,
+        ]);
+
+        $subject = Subject::create([
+            'code' => 'PROG-01',
+            'name' => 'Programação I',
+            'total_hours' => 80,
+            'presential_hours' => 80,
+        ]);
+
+        \App\Models\StudentAcademicRecord::create([
+            'user_id' => $student->id,
+            'academic_term_id' => $term->id,
+            'course_id' => $course->id,
+            'subject_id' => $subject->id,
+            'status' => 'aprovado',
+            'grade' => 9.5,
+            'credits' => 4,
+            'observations' => 'Desempenho destacado',
+        ]);
+
+        $this->actingAs($admin)
+            ->get('/alunos/' . $student->id)
+            ->assertOk()
+            ->assertSee('Histórico acadêmico')
+            ->assertSee('Programação I')
+            ->assertSee('Aprovado');
+    }
+
     public function test_profile_page_shows_current_role_and_access_summary(): void
     {
         $user = User::create([
