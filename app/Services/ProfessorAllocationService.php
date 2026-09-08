@@ -87,6 +87,7 @@ class ProfessorAllocationService
 
         $candidates = Professor::query()
             ->whereIn('id', $professorIds)
+            ->where('active', true)
             ->get();
 
         $eligible = $candidates->filter(fn(Professor $professor) => $this->isAvailableForOffering($professor, $offering));

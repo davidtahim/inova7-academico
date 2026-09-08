@@ -508,6 +508,112 @@ class UserLoginTest extends TestCase
         ]);
     }
 
+    public function test_allocation_ignores_inactive_professors(): void
+    {
+        $term = AcademicTerm::create([
+            'code' => '2026.5',
+            'starts_at' => '2026-08-01',
+            'ends_at' => '2026-12-15',
+            'status' => 'active',
+        ]);
+
+        $course = Course::create([
+            'code' => 'SI',
+            'name' => 'Sistemas de Informação',
+            'degree' => 'Bacharelado',
+            'active' => true,
+        ]);
+
+        $matrix = CurriculumMatrix::create([
+            'course_id' => $course->id,
+            'code' => 'MTR-500',
+            'name' => 'Matriz 2026',
+            'status' => 'Atual',
+        ]);
+
+        $subject = Subject::create([
+            'code' => 'ADS-05',
+            'name' => 'Arquitetura de Software',
+            'total_hours' => 40,
+            'presential_hours' => 40,
+        ]);
+
+        $inactiveProfessor = Professor::create([
+            'name' => 'Professor Inativo',
+            'email' => 'inativo@inova7.local',
+            'qualification' => 'Mestre',
+            'active' => false,
+        ]);
+
+        $activeProfessor = Professor::create([
+            'name' => 'Professor Ativo',
+            'email' => 'ativo@inova7.local',
+            'qualification' => 'Doutor',
+            'active' => true,
+        ]);
+
+        $inactiveProfessor->subjects()->sync([$subject->id]);
+        $activeProfessor->subjects()->sync([$subject->id]);
+
+        $offering = ClassOffering::create([
+            'academic_term_id' => $term->id,
+            'course_id' => $course->id,
+            'curriculum_matrix_id' => $matrix->id,
+            'subject_id' => $subject->id,
+            'class_code' => 'ADS-05',
+            'period' => 3,
+            'shift' => 'NOITE',
+            'modality' => 'PRESENCIAL',
+            'occurs' => true,
+            'weekly_hours' => 4,
+            'totvs_hours' => 4,
+            'status' => 'planned',
+        ]);
+
+        ScheduleSlot::create([
+            'class_offering_id' => $offering->id,
+            'professor_id' => null,
+            'weekday' => 3,
+            'starts_at' => '19:10:00',
+            'ends_at' => '20:50:00',
+            'room' => 'LI22',
+            'block' => '4º ANDAR',
+        ]);
+
+        ProfessorAvailability::create([
+            'academic_term_id' => $term->id,
+            'professor_id' => $inactiveProfessor->id,
+            'weekday' => 3,
+            'starts_at' => '19:00:00',
+            'ends_at' => '21:00:00',
+            'preference' => 'preferred',
+            'notes' => 'Disponível, mas inativo',
+        ]);
+
+        ProfessorAvailability::create([
+            'academic_term_id' => $term->id,
+            'professor_id' => $activeProfessor->id,
+            'weekday' => 3,
+            'starts_at' => '19:00:00',
+            'ends_at' => '21:00:00',
+            'preference' => 'preferred',
+            'notes' => 'Disponível e ativo',
+        ]);
+
+        $service = new \App\Services\ProfessorAllocationService();
+        $service->allocateForTerm($term->id);
+
+        $this->assertDatabaseHas('teaching_assignments', [
+            'class_offering_id' => $offering->id,
+            'professor_id' => $activeProfessor->id,
+        ]);
+
+        $this->assertDatabaseMissing('teaching_assignments', [
+            'class_offering_id' => $offering->id,
+            'professor_id' => $inactiveProfessor->id,
+        ]);
+    }
+
     public function test_planning_page_shows_suggested_professor_and_compatibility_status(): void
     {
         $term = AcademicTerm::create([
