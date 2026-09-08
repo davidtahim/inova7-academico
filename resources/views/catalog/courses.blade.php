@@ -31,10 +31,46 @@
                                 <div class="d-grid gap-2">
                                     @foreach ($course->matrices as $matrix)
                                         <div class="border rounded-3 px-3 py-2 bg-light-subtle">
-                                            <div>
-                                                <strong>{{ $matrix->name ?: 'Matriz ' . ($matrix->version ?? $loop->iteration) . ' - ' . $course->name }}</strong>
+                                            <div class="d-flex justify-content-between align-items-start gap-2">
+                                                <div>
+                                                    <strong>{{ $matrix->name ?: 'Matriz ' . ($matrix->version ?? $loop->iteration) . ' - ' . $course->name }}</strong>
+                                                    <div class="small text-muted mt-1">{{ $matrix->code }}</div>
+                                                </div>
+                                                <a href="{{ route('admin.matrices.edit', $matrix) }}"
+                                                    class="btn btn-sm btn-outline-secondary">Editar</a>
                                             </div>
-                                            <div class="small text-muted mt-1">{{ $matrix->code }}</div>
+
+                                            @if ($matrix->subjects->isNotEmpty())
+                                                <details class="mt-3">
+                                                    <summary class="small fw-semibold text-primary" style="cursor:pointer;">
+                                                        Estrutura da disciplina</summary>
+                                                    <div class="d-grid gap-2 mt-3">
+                                                        @foreach ($matrix->subjects as $subject)
+                                                            <div class="border rounded-2 bg-white px-2 py-2">
+                                                                <div
+                                                                    class="d-flex justify-content-between align-items-start gap-3">
+                                                                    <div>
+                                                                        <div class="fw-semibold">{{ $subject->name }}</div>
+                                                                        <div class="small text-muted">{{ $subject->code }}
+                                                                        </div>
+                                                                    </div>
+                                                                    @if (!empty($subject->syllabus))
+                                                                        <details class="small">
+                                                                            <summary style="cursor:pointer; color:#0d6efd;">
+                                                                                Abrir ementa</summary>
+                                                                            <div class="mt-2 text-muted">
+                                                                                {{ $subject->syllabus }}</div>
+                                                                        </details>
+                                                                    @endif
+                                                                </div>
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+                                                </details>
+                                            @else
+                                                <div class="small text-muted mt-2">Nenhuma disciplina associada a esta
+                                                    matriz.</div>
+                                            @endif
                                         </div>
                                     @endforeach
                                 </div>

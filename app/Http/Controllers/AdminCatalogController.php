@@ -266,6 +266,7 @@ class AdminCatalogController extends Controller
         $validated = $request->validate([
             'code' => ['required', 'string', 'max:100'],
             'name' => ['required', 'string', 'max:255'],
+            'syllabus' => ['nullable', 'string'],
             'total_hours' => ['nullable', 'integer', 'min:0'],
             'presential_hours' => ['nullable', 'integer', 'min:0'],
             'online_hours' => ['nullable', 'integer', 'min:0'],
@@ -294,6 +295,7 @@ class AdminCatalogController extends Controller
         $validated = $request->validate([
             'code' => ['required', 'string', 'max:100'],
             'name' => ['required', 'string', 'max:255'],
+            'syllabus' => ['nullable', 'string'],
             'total_hours' => ['nullable', 'integer', 'min:0'],
             'presential_hours' => ['nullable', 'integer', 'min:0'],
             'online_hours' => ['nullable', 'integer', 'min:0'],

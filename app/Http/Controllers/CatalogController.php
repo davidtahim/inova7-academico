@@ -13,7 +13,11 @@ class CatalogController extends Controller
 {
     public function courses()
     {
-        $courses = Course::with('matrices')
+        $courses = Course::with(['matrices' => function ($query) {
+            $query->with(['subjects' => function ($subjectQuery) {
+                $subjectQuery->orderBy('name');
+            }]);
+        }])
             ->orderBy('name')
             ->get();
 

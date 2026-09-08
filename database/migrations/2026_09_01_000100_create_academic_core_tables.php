@@ -17,7 +17,7 @@ return new class extends Migration {
             $table->id(); $table->foreignId('course_id')->constrained()->cascadeOnDelete(); $table->string('code'); $table->string('name'); $table->string('version')->nullable(); $table->enum('status', ['Atual', 'Ativa', 'Inativa'])->default('Ativa'); $table->date('effective_from')->nullable(); $table->timestamps(); $table->unique(['course_id', 'code']);
         });
         Schema::create('subjects', function (Blueprint $table) {
-            $table->id(); $table->string('code')->nullable()->index(); $table->string('name'); $table->unsignedSmallInteger('total_hours')->default(0); $table->unsignedSmallInteger('presential_hours')->default(0); $table->unsignedSmallInteger('online_hours')->default(0); $table->unsignedSmallInteger('practice_hours')->default(0); $table->unsignedSmallInteger('extension_hours')->default(0); $table->timestamps();
+            $table->id(); $table->string('code')->nullable()->index(); $table->string('name'); $table->text('syllabus')->nullable(); $table->unsignedSmallInteger('total_hours')->default(0); $table->unsignedSmallInteger('presential_hours')->default(0); $table->unsignedSmallInteger('online_hours')->default(0); $table->unsignedSmallInteger('practice_hours')->default(0); $table->unsignedSmallInteger('extension_hours')->default(0); $table->timestamps();
         });
         Schema::create('curriculum_subject', function (Blueprint $table) {
             $table->id(); $table->foreignId('curriculum_matrix_id')->constrained()->cascadeOnDelete(); $table->foreignId('subject_id')->constrained()->cascadeOnDelete(); $table->unsignedTinyInteger('period'); $table->unsignedTinyInteger('sequence')->default(1); $table->unique(['curriculum_matrix_id', 'subject_id']);

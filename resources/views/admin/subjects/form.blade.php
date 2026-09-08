@@ -32,6 +32,11 @@
                                 <div class="form-text">Cadastre o nome completo da disciplina, como Banco de Dados.</div>
                             </div>
 
+                            <div class="mb-3">
+                                <label class="form-label">Ementa</label>
+                                <textarea name="syllabus" class="form-control" rows="5" placeholder="Descreva os objetivos, conteúdos e competências da disciplina...">{{ old('syllabus', $subject->syllabus ?? '') }}</textarea>
+                            </div>
+
                             <div class="row g-3 mb-3">
                                 <div class="col-md-3">
                                     <label class="form-label">Total</label>

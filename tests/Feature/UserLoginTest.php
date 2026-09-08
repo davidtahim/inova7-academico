@@ -246,6 +246,50 @@ class UserLoginTest extends TestCase
         $response->assertDontSee('Banco de Dados');
     }
 
+    public function test_catalog_courses_show_matrix_subject_structure_and_syllabus(): void
+    {
+        $user = User::create([
+            'name' => 'Coordenadora',
+            'email' => 'coord.catalog@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'coordinator',
+            'is_active' => true,
+        ]);
+
+        $course = Course::create([
+            'code' => 'ADS',
+            'name' => 'Análise e Desenvolvimento de Sistemas',
+            'degree' => 'Tecnólogo',
+            'active' => true,
+        ]);
+
+        $matrix = CurriculumMatrix::create([
+            'course_id' => $course->id,
+            'code' => 'GRA-MAT-2140-H',
+            'name' => 'Matriz 56 - Análise e Desenvolvimento de Sistemas',
+            'version' => '56',
+            'status' => 'Atual',
+        ]);
+
+        $subject = Subject::create([
+            'code' => 'PROG101',
+            'name' => 'Programação I',
+            'total_hours' => 80,
+            'presential_hours' => 80,
+            'syllabus' => 'Fundamentos de lógica, algoritmos e programação estruturada.',
+        ]);
+
+        $matrix->subjects()->attach($subject->id, ['period' => 1, 'sequence' => 1]);
+
+        $response = $this->actingAs($user)->get('/cursos');
+
+        $response->assertOk();
+        $response->assertSee('Estrutura da disciplina');
+        $response->assertSee('Programação I');
+        $response->assertSee('Abrir ementa');
+        $response->assertSee('Fundamentos de lógica, algoritmos e programação estruturada.');
+    }
+
     public function test_teacher_profile_hides_manual_subject_and_availability_editor(): void
     {
         $user = User::create([
