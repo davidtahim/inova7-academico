@@ -24,6 +24,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/planejamento', [PlanningController::class, 'index'])->name('planning.index');
 
     Route::middleware('can:access-catalog')->group(function () {
+        Route::get('/admin', function () {
+            return redirect()->route('admin.courses.index');
+        })->name('admin.index');
+
         Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('/cursos', [\App\Http\Controllers\AdminCatalogController::class, 'coursesIndex'])->name('courses.index');
             Route::get('/cursos/novo', [\App\Http\Controllers\AdminCatalogController::class, 'courseCreate'])->name('courses.create');
