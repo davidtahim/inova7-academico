@@ -72,11 +72,16 @@
                         <span class="section-title">Cadastros</span>
                     </div>
                     <div class="card-body d-grid gap-2 py-2">
-                        <a href="{{ route('admin.courses.index') }}" class="btn btn-outline-primary admin-panel-btn">Cursos</a>
-                        <a href="{{ route('admin.matrices.index') }}" class="btn btn-outline-primary admin-panel-btn">Matrizes</a>
-                        <a href="{{ route('admin.subjects.index') }}" class="btn btn-outline-primary admin-panel-btn">Disciplinas</a>
-                        <a href="{{ route('admin.professors.index') }}" class="btn btn-outline-primary admin-panel-btn">Professores</a>
-                        <a href="{{ route('admin.semestres.index') }}" class="btn btn-outline-primary admin-panel-btn">Semestres</a>
+                        <a href="{{ route('admin.courses.index') }}"
+                            class="btn btn-outline-primary admin-panel-btn">Cursos</a>
+                        <a href="{{ route('admin.matrices.index') }}"
+                            class="btn btn-outline-primary admin-panel-btn">Matrizes</a>
+                        <a href="{{ route('admin.subjects.index') }}"
+                            class="btn btn-outline-primary admin-panel-btn">Disciplinas</a>
+                        <a href="{{ route('admin.professors.index') }}"
+                            class="btn btn-outline-primary admin-panel-btn">Professores</a>
+                        <a href="{{ route('admin.semestres.index') }}"
+                            class="btn btn-outline-primary admin-panel-btn">Semestres</a>
                     </div>
                 </article>
             </div>
@@ -87,10 +92,14 @@
                         <span class="section-title">Ações rápidas</span>
                     </div>
                     <div class="card-body d-grid gap-2 py-2">
-                        <a href="{{ route('admin.courses.create') }}" class="btn btn-primary admin-panel-btn">Novo curso</a>
-                        <a href="{{ route('admin.subjects.create') }}" class="btn btn-primary admin-panel-btn">Nova disciplina</a>
-                        <a href="{{ route('admin.professors.create') }}" class="btn btn-primary admin-panel-btn">Novo professor</a>
-                        <a href="{{ route('admin.semestres.create') }}" class="btn btn-primary admin-panel-btn">Novo semestre</a>
+                        <a href="{{ route('admin.courses.create') }}" class="btn btn-primary admin-panel-btn">Novo
+                            curso</a>
+                        <a href="{{ route('admin.subjects.create') }}" class="btn btn-primary admin-panel-btn">Nova
+                            disciplina</a>
+                        <a href="{{ route('admin.professors.create') }}" class="btn btn-primary admin-panel-btn">Novo
+                            professor</a>
+                        <a href="{{ route('admin.semestres.create') }}" class="btn btn-primary admin-panel-btn">Novo
+                            semestre</a>
                     </div>
                 </article>
             </div>
