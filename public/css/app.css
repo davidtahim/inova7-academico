@@ -179,6 +179,41 @@ body {
     letter-spacing: .1em
 }
 
+.topbar-semester-form {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7);
+}
+
+.topbar-semester-form label {
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+.topbar-semester-select {
+    min-width: 110px;
+    max-width: 140px;
+    height: 32px;
+    padding: 0.25rem 2rem 0.25rem 0.8rem;
+    border: 1px solid #dfe6ed;
+    border-radius: 999px;
+    background-color: #f8fafc;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+    cursor: pointer;
+}
+
+.topbar-semester-select:focus {
+    box-shadow: 0 0 0 0.2rem rgba(18, 100, 163, 0.12);
+    border-color: rgba(18, 100, 163, 0.4);
+}
+
 .page-head {
     display: flex;
     justify-content: space-between;

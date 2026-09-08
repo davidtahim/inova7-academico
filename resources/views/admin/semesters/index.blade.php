@@ -4,15 +4,15 @@
 
 @section('content')
     <div class="container py-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="page-head">
             <div>
-                <h2 class="mb-1">Semestres</h2>
-                <p class="text-muted mb-0">Cadastro e manutenção dos períodos letivos.</p>
+                <h2>Semestres</h2>
+                <p>Cadastro e manutenção dos períodos letivos.</p>
             </div>
             <a href="{{ route('admin.semestres.create') }}" class="btn btn-primary">Novo semestre</a>
         </div>
 
-        <div class="card border-0 shadow-sm">
+        <div class="card border-0 shadow-sm card-soft">
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover mb-0 align-middle">

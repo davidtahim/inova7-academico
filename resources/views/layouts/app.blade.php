@@ -88,6 +88,28 @@
                         <h1>@yield('page-title', 'Painel')</h1>
                     </div>
                     <div class="d-flex align-items-center gap-2">
+                        @php
+                            $academicTerms = \App\Models\AcademicTerm::orderByDesc('id')->get();
+                            $selectedAcademicTermId = session('selected_academic_term_id');
+                            $selectedAcademicTerm =
+                                $academicTerms->firstWhere('id', $selectedAcademicTermId) ?? $academicTerms->first();
+                        @endphp
+                        @if ($academicTerms->isNotEmpty())
+                            <form method="POST" action="{{ route('academic-term.select') }}"
+                                class="d-flex align-items-center gap-2 topbar-semester-form">
+                                @csrf
+                                <label for="academic_term_id" class="small text-secondary mb-0">Semestre</label>
+                                <select id="academic_term_id" name="academic_term_id"
+                                    class="form-select form-select-sm topbar-semester-select" onchange="this.form.submit()">
+                                    @foreach ($academicTerms as $term)
+                                        <option value="{{ $term->id }}"
+                                            {{ optional($selectedAcademicTerm)->id == $term->id ? 'selected' : '' }}>
+                                            {{ $term->code }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </form>
+                        @endif
                         <span class="badge text-bg-light border">Laravel 12 • MySQL</span>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf

@@ -13,7 +13,14 @@ class PlanningController extends Controller
 {
     public function index(Request $request, ConflictDetector $detector, ProfessorAllocationService $allocationService)
     {
-        $term = AcademicTerm::find($request->integer('term')) ?? AcademicTerm::latest('id')->first();
+        $selectedTermId = session('selected_academic_term_id');
+        $term = AcademicTerm::find($request->integer('term'))
+            ?? AcademicTerm::find($selectedTermId)
+            ?? AcademicTerm::latest('id')->first();
+
+        if ($term) {
+            session(['selected_academic_term_id' => $term->id]);
+        }
 
         $query = ClassOffering::with(['course', 'subject', 'assignments.professor', 'slots.professor'])->when($term, fn($q) => $q->where('academic_term_id', $term->id));
         if ($request->filled('course')) $query->where('course_id', $request->integer('course'));

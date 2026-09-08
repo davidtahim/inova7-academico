@@ -92,6 +92,43 @@ class UserLoginTest extends TestCase
         $response->assertDontSee('Disponibilidade</h5>');
     }
 
+    public function test_topbar_allows_selecting_current_academic_term(): void
+    {
+        $user = User::create([
+            'name' => 'Usuário com semestre',
+            'email' => 'semestre@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'coordinator',
+            'is_active' => true,
+        ]);
+
+        $termOne = AcademicTerm::create([
+            'code' => '2026.1',
+            'starts_at' => '2026-02-01',
+            'ends_at' => '2026-06-30',
+            'status' => 'closed',
+        ]);
+
+        $termTwo = AcademicTerm::create([
+            'code' => '2026.2',
+            'starts_at' => '2026-08-01',
+            'ends_at' => '2026-12-15',
+            'status' => 'active',
+        ]);
+
+        $response = $this->actingAs($user)->get('/');
+
+        $response->assertOk();
+        $response->assertSee('Semestre');
+        $response->assertSee('2026.2');
+
+        $this->actingAs($user)
+            ->from('/')->post('/semestre/selecionar', ['academic_term_id' => $termOne->id])
+            ->assertRedirect('/');
+
+        $this->assertEquals($termOne->id, session('selected_academic_term_id'));
+    }
+
     public function test_teacher_availability_form_uses_standard_morning_and_evening_slots(): void
     {
         $user = User::create([

@@ -13,7 +13,15 @@ class DashboardController extends Controller
 {
     public function __invoke(ConflictDetector $detector)
     {
-        $term = AcademicTerm::where('status', 'planning')->latest('id')->first() ?? AcademicTerm::latest('id')->first();
+        $selectedTermId = session('selected_academic_term_id');
+        $term = AcademicTerm::find($selectedTermId)
+            ?? AcademicTerm::where('status', 'planning')->latest('id')->first()
+            ?? AcademicTerm::latest('id')->first();
+
+        if ($term) {
+            session(['selected_academic_term_id' => $term->id]);
+        }
+
         $offerings = $term ? ClassOffering::where('academic_term_id', $term->id) : ClassOffering::query()->whereRaw('1=0');
         return view('dashboard.index', [
             'term' => $term,
@@ -24,5 +32,19 @@ class DashboardController extends Controller
             'conflicts' => $term ? $detector->forTerm($term->id) : collect(),
             'auditDocuments' => AuditDocument::latest()->limit(5)->get(),
         ]);
+    }
+
+    public function selectAcademicTerm(
+        \Illuminate\Http\Request $request
+    ) {
+        $request->validate([
+            'academic_term_id' => ['nullable', 'exists:academic_terms,id'],
+        ]);
+
+        if ($request->filled('academic_term_id')) {
+            session(['selected_academic_term_id' => $request->integer('academic_term_id')]);
+        }
+
+        return redirect()->back();
     }
 }

@@ -20,6 +20,7 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
+    Route::post('/semestre/selecionar', [DashboardController::class, 'selectAcademicTerm'])->name('academic-term.select');
     Route::get('/planejamento', [PlanningController::class, 'index'])->name('planning.index');
 
     Route::middleware('can:access-catalog')->group(function () {
