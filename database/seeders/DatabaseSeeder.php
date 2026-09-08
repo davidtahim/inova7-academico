@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Http\Controllers\ImportController;
 use App\Models\AcademicTerm;
 use App\Models\AuditItem;
 use App\Models\AuditTemplate;
@@ -18,6 +19,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use ReflectionMethod;
 
 class DatabaseSeeder extends Seeder
 {
@@ -47,6 +49,8 @@ class DatabaseSeeder extends Seeder
             ['email' => 'admin@inova7.local'],
             ['name' => 'Administrador de TI', 'password' => Hash::make('senha1234'), 'role' => 'admin', 'is_active' => true]
         );
+
+        $this->seedBaseDocuments();
 
         $term = AcademicTerm::updateOrCreate(['code' => '2026.2'], ['starts_at' => '2026-08-01', 'ends_at' => '2027-01-31', 'status' => 'planning']);
         $si = Course::updateOrCreate(['code' => 'SI'], ['name' => 'Sistemas de Informação', 'degree' => 'Bacharelado', 'active' => true]);
@@ -90,6 +94,128 @@ class DatabaseSeeder extends Seeder
             Storage::disk('local')->put($path, $html);
             AuditTemplate::updateOrCreate(['code' => 'CCG-FOR-01', 'version' => '08', 'shift' => $shift], ['audit_item_id' => $item->id, 'name' => 'Horário de Aula', 'approved_by' => 'Superintendente Acadêmica', 'approved_at' => '2025-12-22', 'file_path' => $path, 'mime_type' => 'text/html', 'markers' => $renderer->markers($html), 'is_current' => true]);
         }
+    }
+
+    private function seedBaseDocuments(): void
+    {
+        $basePath = base_path('documentos-base');
+        if (! is_dir($basePath)) {
+            return;
+        }
+
+        $files = collect([
+            ...glob($basePath . '/oferta-ubiqua-2026-2/*.xlsx'),
+            ...glob($basePath . '/oferta-ubiqua-2026-2/*.csv'),
+            ...glob($basePath . '/grades/*.xlsx'),
+            ...glob($basePath . '/grades/*.csv'),
+        ])
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($files->isEmpty()) {
+            return;
+        }
+
+        $importer = app(ImportController::class);
+        $files->each(function (string $file) use ($importer) {
+            $termCode = $this->detectTermCodeFromPath($file) ?? '2026.2';
+            $term = AcademicTerm::firstOrCreate(
+                ['code' => $termCode],
+                ['starts_at' => '2026-08-01', 'ends_at' => '2027-01-31', 'status' => 'planning']
+            );
+
+            $rows = $this->extractRowsFromDocument($importer, $file);
+            foreach ($rows as $row) {
+                $normalizeMethod = new ReflectionMethod($importer, 'normalizeRow');
+                $normalizeMethod->setAccessible(true);
+                $normalized = $normalizeMethod->invoke($importer, $row);
+
+                if ($normalized === null) {
+                    continue;
+                }
+
+                $ensureCourse = new ReflectionMethod($importer, 'ensureCourse');
+                $ensureCourse->setAccessible(true);
+                $course = $ensureCourse->invoke($importer, $normalized['curso'] ?? 'Sistemas de Informação', $normalized['codigo_curso'] ?? '');
+
+                $ensureMatrix = new ReflectionMethod($importer, 'ensureMatrix');
+                $ensureMatrix->setAccessible(true);
+                $matrix = $ensureMatrix->invoke($importer, $course, $normalized['matriz'] ?? '');
+
+                $ensureSubject = new ReflectionMethod($importer, 'ensureSubject');
+                $ensureSubject->setAccessible(true);
+                $subject = $ensureSubject->invoke($importer, $normalized['codigo'] ?? '', $normalized['disciplina'] ?? 'Disciplina importada');
+
+                $classCode = trim((string) ($normalized['turma'] ?? '')) ?: (trim((string) ($normalized['codigo'] ?? '')) ?: 'IMPORTADO-' . $subject->id . '-' . $term->id . '-' . ($normalized['periodo'] ?? 1));
+
+                $offering = ClassOffering::updateOrCreate(
+                    [
+                        'academic_term_id' => $term->id,
+                        'course_id' => $course->id,
+                        'class_code' => $classCode,
+                        'subject_id' => $subject->id,
+                    ],
+                    [
+                        'curriculum_matrix_id' => $matrix?->id,
+                        'period' => (int) ($normalized['periodo'] ?? 1),
+                        'shift' => $this->resolveSeedShift($normalized['turno'] ?? 'MANHA'),
+                        'modality' => $this->normalizeSeedModality($normalized['modalidade'] ?? 'PRESENCIAL'),
+                        'occurs' => true,
+                        'weekly_hours' => (float) ($normalized['carga_horaria'] ?? 2),
+                        'totvs_hours' => (float) ($normalized['carga_horaria'] ?? 2),
+                        'status' => 'planned',
+                    ]
+                );
+
+                if (! empty($normalized['professor'])) {
+                    $professor = Professor::firstOrCreate(
+                        ['name' => trim((string) $normalized['professor'])],
+                        ['registration' => null, 'email' => null, 'qualification' => 'Importado', 'active' => true]
+                    );
+
+                    TeachingAssignment::updateOrCreate(
+                        ['class_offering_id' => $offering->id, 'professor_id' => $professor->id],
+                        ['weekly_hours' => (float) ($normalized['carga_horaria'] ?? 2), 'status' => 'planned']
+                    );
+                }
+            }
+        });
+    }
+
+    private function extractRowsFromDocument(ImportController $importer, string $file): array
+    {
+        $extension = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+        $methodName = $extension === 'csv' ? 'parseCsv' : 'parseXlsx';
+        $method = new ReflectionMethod($importer, $methodName);
+        $method->setAccessible(true);
+
+        return $method->invoke($importer, $file);
+    }
+
+    private function detectTermCodeFromPath(string $file): ?string
+    {
+        if (preg_match('/(\d{4}\.\d+)/', $file, $matches)) {
+            return $matches[1];
+        }
+
+        return null;
+    }
+
+    private function resolveSeedShift(string $value): string
+    {
+        $value = strtoupper(trim($value));
+        $map = ['MANHA' => 'MANHÃ', 'MANHÃ' => 'MANHÃ', 'TARDE' => 'TARDE', 'NOITE' => 'NOITE', 'NOTURNO' => 'NOITE'];
+
+        return $map[$value] ?? 'MANHÃ';
+    }
+
+    private function normalizeSeedModality(string $value): string
+    {
+        $value = strtoupper(trim($value));
+        $map = ['PRESENCIAL' => 'PRESENCIAL', 'HÍBRIDA' => 'HÍBRIDA', 'HIBRIDA' => 'HÍBRIDA', 'DOL' => 'DOL', 'NAVEGA' => 'NAVEGA', 'NOTAVEL MESTRE' => 'NOTÁVEL MESTRE', 'NOTÁVEL MESTRE' => 'NOTÁVEL MESTRE', 'EXTENSAO' => 'EXTENSÃO', 'EXTENSÃO' => 'EXTENSÃO'];
+
+        return $map[$value] ?? 'PRESENCIAL';
     }
 
     private function offering($term, $course, $matrix, string $classCode, string $shift, array $row, $professors): void

@@ -80,7 +80,13 @@ class ImportController extends Controller
             $matrix = $this->ensureMatrix($course, $normalized['matriz']);
             $subject = $this->ensureSubject($normalized['codigo'], $normalized['disciplina']);
 
-            $classCode = trim((string) ($normalized['turma'] ?? '')) ?: (trim((string) ($normalized['codigo'] ?? '')) ?: 'IMPORTADO-' . $subject->id . '-' . $term->id . '-' . ($normalized['periodo'] ?? 1));
+            $classCode = $this->resolveClassCode(
+                trim((string) ($normalized['turma'] ?? '')) ?: trim((string) ($normalized['codigo'] ?? '')),
+                $term,
+                $subject,
+                $normalized,
+                $imported + 1
+            );
 
             $offering = ClassOffering::updateOrCreate(
                 [
@@ -437,6 +443,22 @@ class ImportController extends Controller
         return Professor::firstOrCreate(
             ['name' => $cleanName],
             ['registration' => null, 'email' => null, 'qualification' => 'Importado', 'active' => true]
+        );
+    }
+
+    private function resolveClassCode(string $fallbackCode, AcademicTerm $term, Subject $subject, array $normalized, int $rowIndex): string
+    {
+        $candidate = trim($fallbackCode);
+        if ($candidate !== '') {
+            return $candidate;
+        }
+
+        return sprintf(
+            'IMPORTADO-%s-%s-%s-%s',
+            $subject->id,
+            $term->id,
+            (int) ($normalized['periodo'] ?? 1),
+            $rowIndex
         );
     }
 

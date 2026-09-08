@@ -448,6 +448,36 @@ class UserLoginTest extends TestCase
         $this->assertDatabaseHas('class_offerings', ['class_code' => 'CSE0280102NMA']);
     }
 
+    public function test_user_can_import_ubiquitous_sheet_with_repeated_rows_missing_class_code(): void
+    {
+        $user = User::create([
+            'name' => 'Larissa Torres',
+            'email' => 'larissa-repeat@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $filePath = storage_path('framework/testing/ubiqua-repeated-no-turma.csv');
+        $directory = dirname($filePath);
+        if (! is_dir($directory)) {
+            mkdir($directory, 0777, true);
+        }
+
+        $csv = "CURSO;MATRIZ;DISCIPLINA;CODIGO;PERIODO;TURNO;MODALIDADE\nSistemas de Informação;GRA-MAT-0228-F;Banco de Dados;GSER133620;2;MANHA;HÍBRIDA\nSistemas de Informação;GRA-MAT-0228-F;Banco de Dados;GSER133620;2;MANHA;HÍBRIDA\n";
+        file_put_contents($filePath, $csv);
+
+        $response = $this->actingAs($user)->post('/importacoes/oferta-ubiqua', [
+            'arquivo' => new \Illuminate\Http\UploadedFile($filePath, 'ubiqua-repeated-no-turma.csv', 'text/csv', null, true),
+            'academic_term_code' => '2026.2',
+        ]);
+
+        $response->assertRedirect();
+
+        $term = \App\Models\AcademicTerm::where('code', '2026.2')->firstOrFail();
+        $this->assertGreaterThanOrEqual(2, \App\Models\ClassOffering::where('academic_term_id', $term->id)->count());
+    }
+
     public function test_user_can_import_ubiquitous_offering_sheet_without_secretariat_metadata(): void
     {
         $user = User::create([
