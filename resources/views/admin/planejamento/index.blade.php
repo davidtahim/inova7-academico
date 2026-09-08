@@ -76,6 +76,8 @@
                             class="btn btn-outline-primary admin-panel-btn">Cursos</a>
                         <a href="{{ route('admin.matrices.index') }}"
                             class="btn btn-outline-primary admin-panel-btn">Matrizes</a>
+                        <a href="{{ route('admin.import-scopes.index') }}"
+                            class="btn btn-outline-primary admin-panel-btn">Matrizes permitidas</a>
                         <a href="{{ route('admin.subjects.index') }}"
                             class="btn btn-outline-primary admin-panel-btn">Disciplinas</a>
                         <a href="{{ route('admin.professors.index') }}"

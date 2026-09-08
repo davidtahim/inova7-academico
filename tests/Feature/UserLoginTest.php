@@ -109,6 +109,55 @@ class UserLoginTest extends TestCase
         $this->assertSame('/admin/planejamento/cursos', route('admin.courses.index', [], false));
     }
 
+    public function test_admin_can_edit_import_matrix_scope_per_course(): void
+    {
+        $user = User::create([
+            'name' => 'Administrador',
+            'email' => 'admin.import-scope@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $course = Course::create([
+            'code' => 'SI',
+            'name' => 'Sistemas de Informação',
+            'degree' => 'Bacharelado',
+            'active' => true,
+        ]);
+
+        $allowed = CurriculumMatrix::create([
+            'course_id' => $course->id,
+            'code' => 'GRA-MAT-0228-F',
+            'name' => 'Matriz F',
+            'version' => 'F',
+            'status' => 'Atual',
+            'allowed_for_import' => true,
+        ]);
+
+        $blocked = CurriculumMatrix::create([
+            'course_id' => $course->id,
+            'code' => 'GRA-MAT-0228-E',
+            'name' => 'Matriz E',
+            'version' => 'E',
+            'status' => 'Ativa',
+            'allowed_for_import' => true,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.import-scopes.edit', $course));
+        $response->assertOk()->assertSee($allowed->code)->assertSee($blocked->code);
+
+        $this->actingAs($user)->put(route('admin.import-scopes.update', $course), [
+            'matrix_ids' => [$allowed->id],
+        ]);
+
+        $allowed->refresh();
+        $blocked->refresh();
+
+        $this->assertTrue($allowed->allowed_for_import);
+        $this->assertFalse($blocked->allowed_for_import);
+    }
+
     public function test_topbar_allows_selecting_current_academic_term(): void
     {
         $user = User::create([
@@ -419,6 +468,19 @@ class UserLoginTest extends TestCase
 
         $this->assertGreaterThanOrEqual(10, $json['estimated_remaining_seconds']);
         $this->assertLessThanOrEqual(15, $json['estimated_remaining_seconds']);
+    }
+
+    public function test_import_skips_matrix_codes_not_in_allowed_uni7_sheet(): void
+    {
+        $controller = new \App\Http\Controllers\ImportController();
+        $method = new \ReflectionMethod($controller, 'shouldSkipMatrix');
+        $method->setAccessible(true);
+
+        $allowed = ['GRA-MAT-0228-F', 'GRA-MAT-9999-U'];
+
+        $this->assertTrue($method->invoke($controller, ['matriz' => 'OUTRA-MATRIZ'], $allowed));
+        $this->assertFalse($method->invoke($controller, ['matriz' => 'GRA-MAT-0228-F'], $allowed));
+        $this->assertFalse($method->invoke($controller, ['matriz' => ''], $allowed));
     }
 
     public function test_user_can_import_ubiquitous_offering_sheet(): void

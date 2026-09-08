@@ -114,6 +114,15 @@ class ImportController extends Controller
                 continue;
             }
 
+            if ($this->shouldSkipGroup($normalized)) {
+                continue;
+            }
+
+            $allowedMatrixCodes = $this->loadAllowedMatrixCodesForCourse($normalized);
+            if (! empty($allowedMatrixCodes) && $this->shouldSkipMatrix($normalized, $allowedMatrixCodes)) {
+                continue;
+            }
+
             $progress = $totalRows > 0 ? (int) round((($index + 1) / $totalRows) * 100) : 100;
             session([
                 'ubiqua_import_progress' => $progress,
@@ -457,6 +466,59 @@ class ImportController extends Controller
         $matchesUni7 = preg_match('/\buni\s*7\b|\buni7\b|\binova7\b|\buniversidade\s*inova\b|\buni-7\b/i', $grupo) === 1;
 
         return ! $matchesUni7;
+    }
+
+    private function shouldSkipMatrix(array $normalized, ?array $allowedMatrixCodes = null): bool
+    {
+        $matrixCode = strtoupper(trim((string) ($normalized['matriz'] ?? '')));
+        if ($matrixCode === '') {
+            return false;
+        }
+
+        $allowedCodes = array_values(array_unique(array_filter(array_map(function ($value) {
+            return strtoupper(trim((string) $value));
+        }, $allowedMatrixCodes ?? []), fn($value) => $value !== '')));
+
+        if ($allowedCodes === []) {
+            return false;
+        }
+
+        $hasGraMatrixCode = collect($allowedCodes)->contains(fn($code) => preg_match('/^GRA[-_]?MAT/i', $code) === 1);
+        if (! $hasGraMatrixCode) {
+            return false;
+        }
+
+        return ! in_array($matrixCode, $allowedCodes, true);
+    }
+
+    private function loadAllowedMatrixCodesForCourse(array $normalized): array
+    {
+        $courseCode = strtoupper(trim((string) ($normalized['codigo_curso'] ?? '')));
+        $courseName = trim((string) ($normalized['curso'] ?? ''));
+
+        $courseQuery = Course::query();
+
+        if ($courseCode !== '') {
+            $courseQuery->where('code', $courseCode);
+        }
+
+        if ($courseName !== '') {
+            $courseQuery->orWhereRaw('LOWER(name) = ?', [mb_strtolower($courseName)]);
+        }
+
+        $course = $courseQuery->first();
+
+        if (! $course) {
+            return [];
+        }
+
+        return CurriculumMatrix::where('course_id', $course->id)
+            ->where('allowed_for_import', true)
+            ->pluck('code')
+            ->map(fn($code) => strtoupper(trim((string) $code)))
+            ->filter(fn($code) => $code !== '')
+            ->values()
+            ->all();
     }
 
     private function toNumericValue(mixed $value): float

@@ -108,6 +108,47 @@ class AdminCatalogController extends Controller
         ]);
     }
 
+    public function importScopesIndex()
+    {
+        $this->ensureAdmin();
+
+        return view('admin.import-scope.index', [
+            'courses' => Course::with('matrices')->orderBy('name')->get(),
+        ]);
+    }
+
+    public function importScopeEdit(Course $course)
+    {
+        $this->ensureAdmin();
+
+        $course->load('matrices');
+
+        return view('admin.import-scope.form', [
+            'course' => $course,
+            'matrices' => $course->matrices()->orderBy('code')->get(),
+        ]);
+    }
+
+    public function importScopeUpdate(Request $request, Course $course)
+    {
+        $this->ensureAdmin();
+
+        $validated = $request->validate([
+            'matrix_ids' => ['nullable', 'array'],
+            'matrix_ids.*' => ['integer', 'exists:curriculum_matrices,id'],
+        ]);
+
+        $selectedIds = collect($validated['matrix_ids'] ?? [])->map(fn($id) => (int) $id)->all();
+
+        $course->matrices()->update(['allowed_for_import' => false]);
+
+        if (! empty($selectedIds)) {
+            $course->matrices()->whereIn('id', $selectedIds)->update(['allowed_for_import' => true]);
+        }
+
+        return redirect()->route('admin.import-scopes.index')->with('success', 'Matrizes permitidas atualizadas com sucesso!');
+    }
+
     public function matrixCreate()
     {
         $this->ensureAdmin();
@@ -129,7 +170,10 @@ class AdminCatalogController extends Controller
             'version' => ['nullable', 'string', 'max:50'],
             'status' => ['nullable', 'in:Atual,Ativa,Inativa'],
             'effective_from' => ['nullable', 'date'],
+            'allowed_for_import' => ['nullable', 'boolean'],
         ]);
+
+        $validated['allowed_for_import'] = $validated['allowed_for_import'] ?? true;
 
         CurriculumMatrix::create($validated);
 
@@ -157,7 +201,10 @@ class AdminCatalogController extends Controller
             'version' => ['nullable', 'string', 'max:50'],
             'status' => ['nullable', 'in:Atual,Ativa,Inativa'],
             'effective_from' => ['nullable', 'date'],
+            'allowed_for_import' => ['nullable', 'boolean'],
         ]);
+
+        $validated['allowed_for_import'] = $validated['allowed_for_import'] ?? $matrix->allowed_for_import ?? true;
 
         $matrix->update($validated);
 

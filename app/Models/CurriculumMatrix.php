@@ -6,7 +6,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class CurriculumMatrix extends Model
 {
-    protected $fillable = ['course_id', 'code', 'name', 'version', 'status', 'effective_from'];
+    protected $fillable = ['course_id', 'code', 'name', 'version', 'status', 'effective_from', 'allowed_for_import'];
+
+    protected function casts(): array
+    {
+        return [
+            'allowed_for_import' => 'boolean',
+            'effective_from' => 'date',
+        ];
+    }
+
     public function course()
     {
         return $this->belongsTo(Course::class);

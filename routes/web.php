@@ -41,6 +41,9 @@ Route::middleware('auth')->group(function () {
             Route::delete('/cursos/{course}', [\App\Http\Controllers\AdminCatalogController::class, 'courseDestroy'])->name('courses.destroy');
 
             Route::get('/matrizes', [\App\Http\Controllers\AdminCatalogController::class, 'matricesIndex'])->name('matrices.index');
+            Route::get('/matrizes/permitidas', [\App\Http\Controllers\AdminCatalogController::class, 'importScopesIndex'])->name('import-scopes.index');
+            Route::get('/matrizes/permitidas/{course}/editar', [\App\Http\Controllers\AdminCatalogController::class, 'importScopeEdit'])->name('import-scopes.edit');
+            Route::put('/matrizes/permitidas/{course}', [\App\Http\Controllers\AdminCatalogController::class, 'importScopeUpdate'])->name('import-scopes.update');
             Route::get('/matrizes/novo', [\App\Http\Controllers\AdminCatalogController::class, 'matrixCreate'])->name('matrices.create');
             Route::post('/matrizes', [\App\Http\Controllers\AdminCatalogController::class, 'matrixStore'])->name('matrices.store');
             Route::get('/matrizes/{matrix}/editar', [\App\Http\Controllers\AdminCatalogController::class, 'matrixEdit'])->name('matrices.edit');
