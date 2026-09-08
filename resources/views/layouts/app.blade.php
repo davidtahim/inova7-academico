@@ -37,7 +37,7 @@
                             href="{{ route('catalog.students') }}">◍ Alunos</a>
                         @if (Auth::user()->role === 'admin')
                             <a class="nav-link {{ request()->routeIs('admin.*') ? 'active' : '' }}"
-                                href="{{ route('admin.courses.index') }}">⚙ Administração do catálogo</a>
+                                href="{{ route('admin.planejamento.index') }}">⚙ Administração do catálogo</a>
                         @endif
                     @endif
 

@@ -36,7 +36,7 @@
                             </div>
                         </div>
                         <a class="btn btn-light text-primary fw-semibold px-3"
-                            href="{{ route('admin.courses.index') }}">Abrir administração</a>
+                            href="{{ route('admin.planejamento.index') }}">Abrir administração</a>
                     </div>
                 </article>
             </div>

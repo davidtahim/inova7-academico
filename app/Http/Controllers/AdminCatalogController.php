@@ -19,6 +19,18 @@ class AdminCatalogController extends Controller
         }
     }
 
+    public function planejamentoIndex()
+    {
+        $this->ensureAdmin();
+
+        return view('admin.planejamento.index', [
+            'coursesCount' => Course::count(),
+            'subjectsCount' => Subject::count(),
+            'professorsCount' => Professor::count(),
+            'termsCount' => AcademicTerm::count(),
+        ]);
+    }
+
     public function coursesIndex()
     {
         $this->ensureAdmin();

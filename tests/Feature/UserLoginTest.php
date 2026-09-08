@@ -92,6 +92,23 @@ class UserLoginTest extends TestCase
         $response->assertDontSee('Disponibilidade</h5>');
     }
 
+    public function test_admin_routes_follow_the_admin_planejamento_prefix(): void
+    {
+        $user = User::create([
+            'name' => 'Administrador',
+            'email' => 'admin.routes@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('admin.courses.index'))
+            ->assertOk();
+
+        $this->assertSame('/admin/planejamento/cursos', route('admin.courses.index', [], false));
+    }
+
     public function test_topbar_allows_selecting_current_academic_term(): void
     {
         $user = User::create([
@@ -750,8 +767,8 @@ class UserLoginTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->actingAs($admin)->get('/admin/cursos/novo')->assertOk();
-        $this->actingAs($admin)->post('/admin/cursos', [
+        $this->actingAs($admin)->get('/admin/planejamento/cursos/novo')->assertOk();
+        $this->actingAs($admin)->post('/admin/planejamento/cursos', [
             'code' => 'ADS',
             'name' => 'Análise e Desenvolvimento de Sistemas',
             'degree' => 'Tecnólogo',
@@ -760,8 +777,8 @@ class UserLoginTest extends TestCase
 
         $this->assertDatabaseHas('courses', ['code' => 'ADS']);
 
-        $this->actingAs($admin)->get('/admin/disciplinas/novo')->assertOk();
-        $this->actingAs($admin)->post('/admin/disciplinas', [
+        $this->actingAs($admin)->get('/admin/planejamento/disciplinas/novo')->assertOk();
+        $this->actingAs($admin)->post('/admin/planejamento/disciplinas', [
             'code' => 'PROG-01',
             'name' => 'Programação I',
             'total_hours' => 80,
@@ -770,8 +787,8 @@ class UserLoginTest extends TestCase
 
         $this->assertDatabaseHas('subjects', ['code' => 'PROG-01']);
 
-        $this->actingAs($admin)->get('/admin/professores/novo')->assertOk();
-        $this->actingAs($admin)->post('/admin/professores', [
+        $this->actingAs($admin)->get('/admin/planejamento/professores/novo')->assertOk();
+        $this->actingAs($admin)->post('/admin/planejamento/professores', [
             'name' => 'Professor CRUD',
             'email' => 'crud.prof@inova7.local',
             'qualification' => 'Mestre',
@@ -791,8 +808,8 @@ class UserLoginTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->actingAs($admin)->get('/admin/semestres/novo')->assertOk();
-        $this->actingAs($admin)->post('/admin/semestres', [
+        $this->actingAs($admin)->get('/admin/planejamento/semestres/novo')->assertOk();
+        $this->actingAs($admin)->post('/admin/planejamento/semestres', [
             'code' => '2026.7',
             'starts_at' => '2026-09-01',
             'ends_at' => '2027-01-31',
