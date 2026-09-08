@@ -31,12 +31,26 @@ class AdminCatalogController extends Controller
         ]);
     }
 
-    public function coursesIndex()
+    public function coursesIndex(Request $request)
     {
         $this->ensureAdmin();
 
+        $query = trim((string) $request->query('q', ''));
+
+        $courses = Course::query()
+            ->when($query !== '', function ($queryBuilder) use ($query) {
+                $queryBuilder->where(function ($innerQuery) use ($query) {
+                    $innerQuery->where('name', 'like', "%{$query}%")
+                        ->orWhere('code', 'like', "%{$query}%")
+                        ->orWhere('degree', 'like', "%{$query}%");
+                });
+            })
+            ->orderBy('name')
+            ->get();
+
         return view('admin.courses.index', [
-            'courses' => Course::orderBy('name')->get(),
+            'courses' => $courses,
+            'query' => $query,
         ]);
     }
 
@@ -99,21 +113,53 @@ class AdminCatalogController extends Controller
         return redirect()->route('admin.courses.index')->with('success', 'Curso removido com sucesso!');
     }
 
-    public function matricesIndex()
+    public function matricesIndex(Request $request)
     {
         $this->ensureAdmin();
 
+        $query = trim((string) $request->query('q', ''));
+
+        $matrices = CurriculumMatrix::with('course')->when($query !== '', function ($queryBuilder) use ($query) {
+            $queryBuilder->where(function ($innerQuery) use ($query) {
+                $innerQuery->where('name', 'like', "%{$query}%")
+                    ->orWhere('code', 'like', "%{$query}%")
+                    ->orWhere('version', 'like', "%{$query}%")
+                    ->orWhereHas('course', function ($courseQuery) use ($query) {
+                        $courseQuery->where('name', 'like', "%{$query}%")
+                            ->orWhere('code', 'like', "%{$query}%");
+                    });
+            });
+        })->orderBy('name')->get();
+
         return view('admin.matrices.index', [
-            'matrices' => CurriculumMatrix::with('course')->orderBy('name')->get(),
+            'matrices' => $matrices,
+            'query' => $query,
         ]);
     }
 
-    public function importScopesIndex()
+    public function importScopesIndex(Request $request)
     {
         $this->ensureAdmin();
 
+        $query = trim((string) $request->query('q', ''));
+
+        $courses = Course::with('matrices')
+            ->when($query !== '', function ($queryBuilder) use ($query) {
+                $queryBuilder->where(function ($innerQuery) use ($query) {
+                    $innerQuery->where('name', 'like', "%{$query}%")
+                        ->orWhere('code', 'like', "%{$query}%")
+                        ->orWhereHas('matrices', function ($matrixQuery) use ($query) {
+                            $matrixQuery->where('code', 'like', "%{$query}%")
+                                ->orWhere('name', 'like', "%{$query}%");
+                        });
+                });
+            })
+            ->orderBy('name')
+            ->get();
+
         return view('admin.import-scope.index', [
-            'courses' => Course::with('matrices')->orderBy('name')->get(),
+            'courses' => $courses,
+            'query' => $query,
         ]);
     }
 
@@ -220,12 +266,25 @@ class AdminCatalogController extends Controller
         return redirect()->route('admin.matrices.index')->with('success', 'Matriz removida com sucesso!');
     }
 
-    public function termsIndex()
+    public function termsIndex(Request $request)
     {
         $this->ensureAdmin();
 
+        $query = trim((string) $request->query('q', ''));
+
+        $terms = AcademicTerm::query()
+            ->when($query !== '', function ($queryBuilder) use ($query) {
+                $queryBuilder->where(function ($innerQuery) use ($query) {
+                    $innerQuery->where('code', 'like', "%{$query}%")
+                        ->orWhere('status', 'like', "%{$query}%");
+                });
+            })
+            ->orderBy('code', 'desc')
+            ->get();
+
         return view('admin.semesters.index', [
-            'terms' => AcademicTerm::orderBy('code', 'desc')->get(),
+            'terms' => $terms,
+            'query' => $query,
         ]);
     }
 
@@ -288,12 +347,25 @@ class AdminCatalogController extends Controller
         return redirect()->route('admin.semestres.index')->with('success', 'Semestre removido com sucesso!');
     }
 
-    public function subjectsIndex()
+    public function subjectsIndex(Request $request)
     {
         $this->ensureAdmin();
 
+        $query = trim((string) $request->query('q', ''));
+
+        $subjects = Subject::query()
+            ->when($query !== '', function ($queryBuilder) use ($query) {
+                $queryBuilder->where(function ($innerQuery) use ($query) {
+                    $innerQuery->where('name', 'like', "%{$query}%")
+                        ->orWhere('code', 'like', "%{$query}%");
+                });
+            })
+            ->orderBy('name')
+            ->get();
+
         return view('admin.subjects.index', [
-            'subjects' => Subject::orderBy('name')->get(),
+            'subjects' => $subjects,
+            'query' => $query,
         ]);
     }
 
@@ -364,12 +436,27 @@ class AdminCatalogController extends Controller
         return redirect()->route('admin.subjects.index')->with('success', 'Disciplina removida com sucesso!');
     }
 
-    public function professorsIndex()
+    public function professorsIndex(Request $request)
     {
         $this->ensureAdmin();
 
+        $query = trim((string) $request->query('q', ''));
+
+        $professors = Professor::query()
+            ->when($query !== '', function ($queryBuilder) use ($query) {
+                $queryBuilder->where(function ($innerQuery) use ($query) {
+                    $innerQuery->where('name', 'like', "%{$query}%")
+                        ->orWhere('email', 'like', "%{$query}%")
+                        ->orWhere('qualification', 'like', "%{$query}%")
+                        ->orWhere('registration', 'like', "%{$query}%");
+                });
+            })
+            ->orderBy('name')
+            ->get();
+
         return view('admin.professors.index', [
-            'professors' => Professor::orderBy('name')->get(),
+            'professors' => $professors,
+            'query' => $query,
         ]);
     }
 

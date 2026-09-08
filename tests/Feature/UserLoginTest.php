@@ -1420,6 +1420,136 @@ class UserLoginTest extends TestCase
         $this->assertDatabaseHas('professors', ['email' => 'crud.prof@inova7.local']);
     }
 
+    public function test_admin_can_filter_subjects_by_name_or_code(): void
+    {
+        $admin = User::create([
+            'name' => 'Administrador de Disciplinas',
+            'email' => 'admin.subjects.filter@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        \App\Models\Subject::create([
+            'code' => 'BD01',
+            'name' => 'Banco de Dados',
+            'total_hours' => 80,
+            'presential_hours' => 80,
+        ]);
+
+        \App\Models\Subject::create([
+            'code' => 'ALG01',
+            'name' => 'Algoritmos',
+            'total_hours' => 60,
+            'presential_hours' => 60,
+        ]);
+
+        $this->actingAs($admin)
+            ->get('/admin/planejamento/disciplinas?q=Banco')
+            ->assertOk()
+            ->assertSee('Banco de Dados')
+            ->assertDontSee('Algoritmos');
+    }
+
+    public function test_admin_can_filter_course_matrix_and_professor_lists_by_query(): void
+    {
+        $admin = User::create([
+            'name' => 'Administrador de Filtros',
+            'email' => 'admin.filters@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $course = \App\Models\Course::create([
+            'code' => 'ADS',
+            'name' => 'Análise e Desenvolvimento de Sistemas',
+            'degree' => 'Tecnólogo',
+            'active' => true,
+        ]);
+
+        \App\Models\CurriculumMatrix::create([
+            'course_id' => $course->id,
+            'code' => 'ADS-2026',
+            'name' => 'Matriz ADS 2026',
+            'version' => '2026',
+            'status' => 'Atual',
+            'allowed_for_import' => true,
+        ]);
+
+        \App\Models\Professor::create([
+            'registration' => 'P-1001',
+            'name' => 'Maria Silva',
+            'email' => 'maria.silva@inova7.local',
+            'qualification' => 'Mestre',
+            'active' => true,
+        ]);
+
+        $this->actingAs($admin)
+            ->get('/admin/planejamento/cursos?q=ADS')
+            ->assertOk()
+            ->assertSee('Análise e Desenvolvimento de Sistemas')
+            ->assertDontSee('Engenharia');
+
+        $this->actingAs($admin)
+            ->get('/admin/planejamento/matrizes?q=ADS-2026')
+            ->assertOk()
+            ->assertSee('ADS-2026')
+            ->assertDontSee('Matriz Engenharia');
+
+        $this->actingAs($admin)
+            ->get('/admin/planejamento/professores?q=Silva')
+            ->assertOk()
+            ->assertSee('Maria Silva')
+            ->assertDontSee('João Pereira');
+    }
+
+    public function test_admin_can_filter_semesters_and_import_scopes_by_query(): void
+    {
+        $admin = User::create([
+            'name' => 'Administrador de Semestres e importações',
+            'email' => 'admin.filters.semestres@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $course = \App\Models\Course::create([
+            'code' => 'ADS',
+            'name' => 'Análise e Desenvolvimento de Sistemas',
+            'degree' => 'Tecnólogo',
+            'active' => true,
+        ]);
+
+        $matrix = \App\Models\CurriculumMatrix::create([
+            'course_id' => $course->id,
+            'code' => 'ADS-2026',
+            'name' => 'Matriz ADS 2026',
+            'version' => '2026',
+            'status' => 'Atual',
+            'allowed_for_import' => true,
+        ]);
+
+        \App\Models\AcademicTerm::create([
+            'code' => '2026.7',
+            'starts_at' => '2026-09-01',
+            'ends_at' => '2026-12-31',
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($admin)
+            ->get('/admin/planejamento/semestres?q=2026')
+            ->assertOk()
+            ->assertSee('2026.7')
+            ->assertDontSee('2025.2');
+
+        $this->actingAs($admin)
+            ->get('/admin/planejamento/matrizes/permitidas?q=ADS')
+            ->assertOk()
+            ->assertSee('Análise e Desenvolvimento de Sistemas')
+            ->assertSee('ADS-2026');
+    }
+
     public function test_admin_can_manage_academic_terms(): void
     {
         $admin = User::create([

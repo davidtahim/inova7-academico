@@ -12,6 +12,19 @@
             <a href="{{ route('admin.semestres.create') }}" class="btn btn-primary">Novo semestre</a>
         </div>
 
+        <div class="card border-0 shadow-sm mb-3 compact-search-card">
+            <div class="card-body py-2">
+                <form method="GET" action="{{ route('admin.semestres.index') }}" class="d-flex align-items-center gap-2">
+                    <input type="text" name="q" class="form-control form-control-sm"
+                        value="{{ old('q', $query ?? '') }}" placeholder="Buscar por código ou status do semestre">
+                    <button type="submit" class="btn btn-sm btn-primary">Filtrar</button>
+                    @if (($query ?? '') !== '')
+                        <a href="{{ route('admin.semestres.index') }}" class="btn btn-sm btn-outline-secondary">Limpar</a>
+                    @endif
+                </form>
+            </div>
+        </div>
+
         <div class="card border-0 shadow-sm card-soft admin-table-card">
             <div class="card-body p-0">
                 <div class="table-responsive">

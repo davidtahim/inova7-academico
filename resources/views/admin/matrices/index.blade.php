@@ -12,6 +12,20 @@
             <a href="{{ route('admin.matrices.create') }}" class="btn btn-primary">Nova matriz</a>
         </div>
 
+        <div class="card border-0 shadow-sm mb-3 compact-search-card">
+            <div class="card-body py-2">
+                <form method="GET" action="{{ route('admin.matrices.index') }}" class="d-flex align-items-center gap-2">
+                    <input type="text" name="q" class="form-control form-control-sm"
+                        value="{{ old('q', $query ?? '') }}"
+                        placeholder="Buscar por curso, código, nome ou versão da matriz">
+                    <button type="submit" class="btn btn-sm btn-primary">Filtrar</button>
+                    @if (($query ?? '') !== '')
+                        <a href="{{ route('admin.matrices.index') }}" class="btn btn-sm btn-outline-secondary">Limpar</a>
+                    @endif
+                </form>
+            </div>
+        </div>
+
         <div class="card border-0 shadow-sm card-soft admin-table-card">
             <div class="card-body p-0">
                 <div class="table-responsive">

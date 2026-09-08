@@ -12,6 +12,19 @@
             <a href="{{ route('admin.subjects.create') }}" class="btn btn-primary">Nova disciplina</a>
         </div>
 
+        <div class="card border-0 shadow-sm mb-3 compact-search-card">
+            <div class="card-body py-2">
+                <form method="GET" action="{{ route('admin.subjects.index') }}" class="d-flex align-items-center gap-2">
+                    <input type="text" name="q" class="form-control form-control-sm"
+                        value="{{ old('q', $query ?? '') }}" placeholder="Buscar por nome ou código da disciplina">
+                    <button type="submit" class="btn btn-sm btn-primary">Filtrar</button>
+                    @if (($query ?? '') !== '')
+                        <a href="{{ route('admin.subjects.index') }}" class="btn btn-sm btn-outline-secondary">Limpar</a>
+                    @endif
+                </form>
+            </div>
+        </div>
+
         <div class="card border-0 shadow-sm card-soft admin-table-card">
             <div class="card-body p-0">
                 <div class="table-responsive">
