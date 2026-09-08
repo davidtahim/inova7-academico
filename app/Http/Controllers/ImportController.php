@@ -449,17 +449,27 @@ class ImportController extends Controller
     private function resolveClassCode(string $fallbackCode, AcademicTerm $term, Subject $subject, array $normalized, int $rowIndex): string
     {
         $candidate = trim($fallbackCode);
-        if ($candidate !== '') {
+
+        if ($candidate === '') {
+            $candidate = sprintf(
+                'IMPORTADO-%s-%s-%s-%s',
+                $subject->id,
+                $term->id,
+                (int) ($normalized['periodo'] ?? 1),
+                $rowIndex
+            );
+        }
+
+        $exists = ClassOffering::where('academic_term_id', $term->id)
+            ->where('subject_id', $subject->id)
+            ->where('class_code', $candidate)
+            ->exists();
+
+        if (! $exists) {
             return $candidate;
         }
 
-        return sprintf(
-            'IMPORTADO-%s-%s-%s-%s',
-            $subject->id,
-            $term->id,
-            (int) ($normalized['periodo'] ?? 1),
-            $rowIndex
-        );
+        return sprintf('%s-%s', $candidate, $rowIndex);
     }
 
     private function resolveShift(string $value): string
