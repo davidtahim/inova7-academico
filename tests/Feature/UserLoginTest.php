@@ -390,6 +390,37 @@ class UserLoginTest extends TestCase
         $allowed->assertOk();
     }
 
+    public function test_ubiqua_import_progress_route_reports_session_progress(): void
+    {
+        $user = User::create([
+            'name' => 'Larissa Torres',
+            'email' => 'larissa.progress@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        session([
+            'ubiqua_import_progress' => 42,
+            'ubiqua_import_status' => 'Processando linhas...',
+            'ubiqua_import_finished' => false,
+            'ubiqua_import_started_at' => now()->subSeconds(8)->timestamp,
+            'ubiqua_import_total_rows' => 100,
+        ]);
+
+        $response = $this->actingAs($user)->get('/importacoes/oferta-ubiqua/progresso');
+
+        $json = $response->json();
+
+        $response->assertOk()
+            ->assertJsonPath('progress', 42)
+            ->assertJsonPath('status', 'Processando linhas...')
+            ->assertJsonPath('finished', false);
+
+        $this->assertGreaterThanOrEqual(10, $json['estimated_remaining_seconds']);
+        $this->assertLessThanOrEqual(15, $json['estimated_remaining_seconds']);
+    }
+
     public function test_user_can_import_ubiquitous_offering_sheet(): void
     {
         $user = User::create([

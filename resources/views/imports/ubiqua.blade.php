@@ -10,7 +10,8 @@
                 <h5 class="mb-0">Importar planilha de Oferta Ubíqua</h5>
             </div>
             <div class="card-body">
-                <form action="{{ route('imports.ubiqua.store') }}" method="POST" enctype="multipart/form-data">
+                <form id="ubiqua-import-form" action="{{ route('imports.ubiqua.store') }}" method="POST"
+                    enctype="multipart/form-data">
                     @csrf
 
                     <div class="row g-3">
@@ -43,8 +44,140 @@
                         TURNO, MODALIDADE e PROFESSOR.
                     </div>
 
-                    <button type="submit" class="btn btn-primary mt-4">Importar dados</button>
+                    <div id="import-progress" class="mt-4 d-none">
+                        <div class="d-flex justify-content-between small text-muted mb-2">
+                            <span>Status da importação</span>
+                            <strong id="import-progress-value">0%</strong>
+                        </div>
+                        <div class="progress" style="height: 14px;">
+                            <div id="import-progress-bar"
+                                class="progress-bar progress-bar-striped progress-bar-animated bg-primary"
+                                role="progressbar" style="width: 0%" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <div id="import-progress-status" class="small text-muted mt-2">Aguardando início...</div>
+                        <div id="import-progress-eta" class="small text-muted mt-1">Tempo restante: calculando...</div>
+                    </div>
+
+                    <button type="submit" id="import-submit-button" class="btn btn-primary mt-4">Importar dados</button>
                 </form>
+
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const form = document.getElementById('ubiqua-import-form');
+                        const submitButton = document.getElementById('import-submit-button');
+                        const progressWrap = document.getElementById('import-progress');
+                        const progressBar = document.getElementById('import-progress-bar');
+                        const progressValue = document.getElementById('import-progress-value');
+                        const progressStatus = document.getElementById('import-progress-status');
+                        const progressEta = document.getElementById('import-progress-eta');
+
+                        if (!form || !submitButton || !progressWrap || !progressBar || !progressValue || !progressStatus || !
+                            progressEta) {
+                            return;
+                        }
+
+                        const formatRemaining = (seconds) => {
+                            const value = Number(seconds) || 0;
+                            if (value <= 0) {
+                                return 'Tempo restante: concluindo...';
+                            }
+
+                            if (value < 60) {
+                                return 'Tempo restante: aprox. ' + value + 's';
+                            }
+
+                            const minutes = Math.ceil(value / 60);
+                            return 'Tempo restante: aprox. ' + minutes + ' min';
+                        };
+
+                        const pollProgress = () => {
+                            fetch('{{ route('imports.ubiqua.progress') }}', {
+                                    headers: {
+                                        'Accept': 'application/json',
+                                        'X-Requested-With': 'XMLHttpRequest'
+                                    }
+                                })
+                                .then(response => response.ok ? response.json() : null)
+                                .then(data => {
+                                    if (!data) {
+                                        return;
+                                    }
+
+                                    const percent = Math.min(100, Math.max(0, Number(data.progress) || 0));
+                                    progressBar.style.width = percent + '%';
+                                    progressBar.setAttribute('aria-valuenow', String(percent));
+                                    progressValue.textContent = percent + '%';
+                                    progressStatus.textContent = data.status || 'Processando...';
+                                    progressEta.textContent = formatRemaining(data.estimated_remaining_seconds);
+
+                                    if (!data.finished) {
+                                        window.setTimeout(pollProgress, 700);
+                                    } else {
+                                        progressEta.textContent = 'Tempo restante: concluído';
+                                        window.setTimeout(() => {
+                                            window.location.href = '{{ route('imports.ubiqua.index') }}';
+                                        }, 1200);
+                                    }
+                                })
+                                .catch(() => {
+                                    progressStatus.textContent = 'Processando importação...';
+                                    progressEta.textContent = 'Tempo restante: calculando...';
+                                    window.setTimeout(pollProgress, 1000);
+                                });
+                        };
+
+                        form.addEventListener('submit', function(event) {
+                            event.preventDefault();
+
+                            if (!form.querySelector('[name="arquivo"]').files.length) {
+                                return;
+                            }
+
+                            progressWrap.classList.remove('d-none');
+                            submitButton.disabled = true;
+                            submitButton.textContent = 'Importando...';
+                            progressBar.style.width = '0%';
+                            progressValue.textContent = '0%';
+                            progressStatus.textContent = 'Iniciando importação...';
+                            progressEta.textContent = 'Tempo restante: calculando...';
+
+                            const formData = new FormData(form);
+                            fetch(form.action, {
+                                    method: 'POST',
+                                    body: formData,
+                                    headers: {
+                                        'Accept': 'application/json',
+                                        'X-Requested-With': 'XMLHttpRequest',
+                                        'X-CSRF-TOKEN': form.querySelector('input[name="_token"]').value
+                                    }
+                                })
+                                .then(async response => {
+                                    if (!response.ok) {
+                                        const text = await response.text();
+                                        throw new Error(text || 'Erro na importação');
+                                    }
+
+                                    return response.json().catch(() => ({
+                                        success: true
+                                    }));
+                                })
+                                .then((data) => {
+                                    if (data && data.redirect) {
+                                        window.location.href = data.redirect;
+                                        return;
+                                    }
+
+                                    pollProgress();
+                                })
+                                .catch((error) => {
+                                    console.error(error);
+                                    progressStatus.textContent = 'Falha ao importar a planilha. Tente novamente.';
+                                    submitButton.disabled = false;
+                                    submitButton.textContent = 'Importar dados';
+                                });
+                        });
+                    });
+                </script>
             </div>
         </div>
 

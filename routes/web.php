@@ -77,6 +77,7 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('can:access-imports')->group(function () {
         Route::get('/importacoes/oferta-ubiqua', [ImportController::class, 'index'])->name('imports.ubiqua.index');
+        Route::get('/importacoes/oferta-ubiqua/progresso', [ImportController::class, 'progressOfertaUbiqua'])->name('imports.ubiqua.progress');
         Route::post('/importacoes/oferta-ubiqua', [ImportController::class, 'storeOfertaUbiqua'])->name('imports.ubiqua.store');
     });
 

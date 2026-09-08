@@ -42,11 +42,43 @@ class ImportController extends Controller
         ]);
     }
 
+    public function progressOfertaUbiqua()
+    {
+        $progress = min((int) session('ubiqua_import_progress', 0), 100);
+        $startedAt = session('ubiqua_import_started_at');
+        $totalRows = max((int) session('ubiqua_import_total_rows', 0), 1);
+
+        $elapsedSeconds = $startedAt ? max(1, time() - (int) $startedAt) : 1;
+        $estimatedRemaining = 0;
+
+        if ($progress > 0 && $progress < 100) {
+            $remainingPercent = 100 - $progress;
+            $estimatedRemaining = (int) round(($elapsedSeconds / max($progress, 1)) * $remainingPercent);
+        }
+
+        return response()->json([
+            'progress' => $progress,
+            'status' => session('ubiqua_import_status', 'Aguardando início...'),
+            'finished' => (bool) session('ubiqua_import_finished', false),
+            'estimated_remaining_seconds' => $estimatedRemaining,
+            'elapsed_seconds' => $elapsedSeconds,
+            'total_rows' => $totalRows,
+        ]);
+    }
+
     public function storeOfertaUbiqua(Request $request, ProfessorAllocationService $allocationService)
     {
         $validated = $request->validate([
             'arquivo' => ['required', 'file', 'mimetypes:text/csv,text/plain,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
             'academic_term_code' => ['required', 'string'],
+        ]);
+
+        session([
+            'ubiqua_import_progress' => 0,
+            'ubiqua_import_status' => 'Lendo planilha...',
+            'ubiqua_import_finished' => false,
+            'ubiqua_import_started_at' => time(),
+            'ubiqua_import_total_rows' => 0,
         ]);
 
         $term = AcademicTerm::firstOrCreate(
@@ -69,12 +101,25 @@ class ImportController extends Controller
             $rows = $this->parseXlsx($file->getRealPath());
         }
 
+        $totalRows = count($rows);
         $imported = 0;
-        foreach ($rows as $row) {
+
+        session([
+            'ubiqua_import_total_rows' => $totalRows,
+        ]);
+
+        foreach ($rows as $index => $row) {
             $normalized = $this->normalizeRow($row);
             if ($normalized === null) {
                 continue;
             }
+
+            $progress = $totalRows > 0 ? (int) round((($index + 1) / $totalRows) * 100) : 100;
+            session([
+                'ubiqua_import_progress' => $progress,
+                'ubiqua_import_status' => 'Processando linhas da planilha...',
+                'ubiqua_import_finished' => false,
+            ]);
 
             $course = $this->ensureCourse($normalized['curso'], $normalized['codigo_curso'] ?? '');
             $matrix = $this->ensureMatrix($course, $normalized['matriz']);
@@ -126,6 +171,20 @@ class ImportController extends Controller
         }
 
         $allocationService->allocateForTerm($term->id);
+
+        session([
+            'ubiqua_import_progress' => 100,
+            'ubiqua_import_status' => 'Importação concluída.',
+            'ubiqua_import_finished' => true,
+        ]);
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'redirect' => route('imports.ubiqua.index'),
+                'message' => "Importação concluída: {$imported} ofertas processadas.",
+            ]);
+        }
 
         return redirect()->back()->with('success', "Importação concluída: {$imported} ofertas processadas.");
     }
