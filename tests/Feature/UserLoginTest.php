@@ -566,6 +566,29 @@ class UserLoginTest extends TestCase
         $this->assertFalse($method->invoke($controller, ['matriz' => ''], $allowed));
     }
 
+    public function test_invalid_ubiqua_file_returns_structured_error_message(): void
+    {
+        $user = User::create([
+            'name' => 'Larissa Torres',
+            'email' => 'larissa-invalid@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $filePath = storage_path('framework/testing/invalid-ubiqua.xlsx');
+        file_put_contents($filePath, 'not-a-real-spreadsheet');
+
+        $response = $this->actingAs($user)->postJson('/importacoes/oferta-ubiqua', [
+            'arquivo' => new \Illuminate\Http\UploadedFile($filePath, 'invalid-ubiqua.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', null, true),
+            'academic_term_code' => '2026.2',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors('arquivo')
+            ->assertJsonFragment(['A planilha não pôde ser lida. Verifique se o arquivo é um XLSX/CSV válido e tente novamente.']);
+    }
+
     public function test_user_can_import_ubiquitous_offering_sheet(): void
     {
         $user = User::create([
@@ -622,6 +645,49 @@ class UserLoginTest extends TestCase
         $response->assertRedirect();
         $this->assertDatabaseHas('courses', ['code' => 'SI', 'name' => 'Sistemas de Informação']);
         $this->assertDatabaseHas('class_offerings', ['class_code' => 'CSE0280102NMA']);
+    }
+
+    public function test_import_prefers_exact_course_code_before_name_match(): void
+    {
+        $controller = new \App\Http\Controllers\ImportController();
+        $method = new \ReflectionMethod($controller, 'loadAllowedMatrixCodesForCourse');
+        $method->setAccessible(true);
+
+        $courseCode = Course::create([
+            'code' => 'SI',
+            'name' => 'Sistemas de Informação',
+            'degree' => 'Bacharelado',
+            'active' => true,
+        ]);
+
+        $allowed = CurriculumMatrix::create([
+            'course_id' => $courseCode->id,
+            'code' => 'GRA-MAT-0228-F',
+            'name' => 'Matriz F',
+            'version' => 'F',
+            'status' => 'Atual',
+            'allowed_for_import' => true,
+        ]);
+
+        $otherCourse = Course::create([
+            'code' => 'CS',
+            'name' => 'Sistemas de Informação',
+            'degree' => 'Bacharelado',
+            'active' => true,
+        ]);
+
+        CurriculumMatrix::create([
+            'course_id' => $otherCourse->id,
+            'code' => 'GRA-MAT-9999-Z',
+            'name' => 'Matriz Z',
+            'version' => 'Z',
+            'status' => 'Atual',
+            'allowed_for_import' => true,
+        ]);
+
+        $result = $method->invoke($controller, ['codigo_curso' => 'SI', 'curso' => 'Sistemas de Informação']);
+
+        $this->assertSame([$allowed->code], $result);
     }
 
     public function test_user_can_import_ubiquitous_sheet_with_repeated_rows_missing_class_code(): void

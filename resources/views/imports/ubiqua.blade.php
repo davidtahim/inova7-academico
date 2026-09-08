@@ -179,7 +179,13 @@
                             }
                         };
 
+                        let importPollingActive = false;
+
                         const pollProgress = () => {
+                            if (!importPollingActive) {
+                                return;
+                            }
+
                             fetch('{{ route('imports.ubiqua.progress') }}', {
                                     headers: {
                                         'Accept': 'application/json',
@@ -219,6 +225,10 @@
                                     }
                                 })
                                 .catch(() => {
+                                    if (!importPollingActive) {
+                                        return;
+                                    }
+
                                     setStatus('Processando importação...', true);
                                     progressEta.textContent = 'Tempo restante: calculando...';
                                     window.setTimeout(pollProgress, 600);
@@ -232,6 +242,7 @@
                                 return;
                             }
 
+                            importPollingActive = true;
                             progressWrap.classList.remove('d-none');
                             submitButton.disabled = true;
                             setLoadingState('Importando...');
@@ -254,8 +265,10 @@
                                 })
                                 .then(async response => {
                                     if (!response.ok) {
-                                        const text = await response.text();
-                                        throw new Error(text || 'Erro na importação');
+                                        const payload = await response.json().catch(() => null);
+                                        const message = payload?.errors?.arquivo?.[0] || payload?.message ||
+                                            'Falha ao importar a planilha. Tente novamente.';
+                                        throw new Error(message);
                                     }
 
                                     return response.json().catch(() => ({
@@ -264,6 +277,7 @@
                                 })
                                 .then((data) => {
                                     if (data && data.redirect) {
+                                        importPollingActive = false;
                                         window.location.href = data.redirect;
                                         return;
                                     }
@@ -271,8 +285,11 @@
                                     pollProgress();
                                 })
                                 .catch((error) => {
+                                    importPollingActive = false;
                                     console.error(error);
-                                    setStatus('Falha ao importar a planilha. Tente novamente.', false);
+                                    const message = error?.message ||
+                                        'Falha ao importar a planilha. Tente novamente.';
+                                    setStatus(message, false);
                                     submitButton.disabled = false;
                                     setIdleState();
                                 });

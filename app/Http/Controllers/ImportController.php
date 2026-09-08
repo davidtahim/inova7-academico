@@ -138,16 +138,40 @@ class ImportController extends Controller
         $file = $request->file('arquivo');
         $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension());
 
-        if ($extension === 'csv') {
-            $rows = $this->parseCsv($file->getRealPath());
-        } else {
-            if (! class_exists(\ZipArchive::class)) {
-                throw ValidationException::withMessages([
-                    'arquivo' => ['Para importar XLSX/XLS, ative a extensão ZIP do PHP (php_zip.dll no Windows ou php-zip no Linux/macOS) e reinicie o servidor.'],
-                ]);
-            }
+        try {
+            if ($extension === 'csv') {
+                $rows = $this->parseCsv($file->getRealPath());
+            } else {
+                if (! class_exists(\ZipArchive::class)) {
+                    throw ValidationException::withMessages([
+                        'arquivo' => ['Para importar XLSX/XLS, ative a extensão ZIP do PHP (php_zip.dll no Windows ou php-zip no Linux/macOS) e reinicie o servidor.'],
+                    ]);
+                }
 
-            $rows = $this->parseXlsx($file->getRealPath());
+                $rows = $this->parseXlsx($file->getRealPath());
+            }
+        } catch (\Throwable $exception) {
+            session([
+                'ubiqua_import_progress' => 0,
+                'ubiqua_import_status' => 'Falha ao ler a planilha.',
+                'ubiqua_import_finished' => true,
+            ]);
+
+            throw ValidationException::withMessages([
+                'arquivo' => ['A planilha não pôde ser lida. Verifique se o arquivo é um XLSX/CSV válido e tente novamente.'],
+            ]);
+        }
+
+        if (! is_array($rows) || $rows === []) {
+            session([
+                'ubiqua_import_progress' => 0,
+                'ubiqua_import_status' => 'Falha ao ler a planilha.',
+                'ubiqua_import_finished' => true,
+            ]);
+
+            throw ValidationException::withMessages([
+                'arquivo' => ['A planilha não pôde ser lida. Verifique se o arquivo é um XLSX/CSV válido e tente novamente.'],
+            ]);
         }
 
         $totalRows = count($rows);
@@ -549,20 +573,18 @@ class ImportController extends Controller
 
     private function loadAllowedMatrixCodesForCourse(array $normalized): array
     {
-        $courseCode = strtoupper(trim((string) ($normalized['codigo_curso'] ?? '')));
+        $courseCode = $this->normalizeImportCode((string) ($normalized['codigo_curso'] ?? ''));
         $courseName = trim((string) ($normalized['curso'] ?? ''));
 
-        $courseQuery = Course::query();
+        $course = null;
 
         if ($courseCode !== '') {
-            $courseQuery->where('code', $courseCode);
+            $course = Course::query()->whereRaw('UPPER(code) = ?', [$courseCode])->first();
         }
 
-        if ($courseName !== '') {
-            $courseQuery->orWhereRaw('LOWER(name) = ?', [mb_strtolower($courseName)]);
+        if (! $course && $courseName !== '') {
+            $course = Course::query()->whereRaw('LOWER(name) = ?', [mb_strtolower($courseName)])->first();
         }
-
-        $course = $courseQuery->first();
 
         if (! $course) {
             return [];
