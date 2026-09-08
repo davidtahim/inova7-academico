@@ -23,6 +23,35 @@ Route::middleware('auth')->group(function () {
     Route::get('/planejamento', [PlanningController::class, 'index'])->name('planning.index');
 
     Route::middleware('can:access-catalog')->group(function () {
+        Route::prefix('admin')->name('admin.')->group(function () {
+            Route::get('/cursos', [\App\Http\Controllers\AdminCatalogController::class, 'coursesIndex'])->name('courses.index');
+            Route::get('/cursos/novo', [\App\Http\Controllers\AdminCatalogController::class, 'courseCreate'])->name('courses.create');
+            Route::post('/cursos', [\App\Http\Controllers\AdminCatalogController::class, 'courseStore'])->name('courses.store');
+            Route::get('/cursos/{course}/editar', [\App\Http\Controllers\AdminCatalogController::class, 'courseEdit'])->name('courses.edit');
+            Route::put('/cursos/{course}', [\App\Http\Controllers\AdminCatalogController::class, 'courseUpdate'])->name('courses.update');
+            Route::delete('/cursos/{course}', [\App\Http\Controllers\AdminCatalogController::class, 'courseDestroy'])->name('courses.destroy');
+
+            Route::get('/matrizes', [\App\Http\Controllers\AdminCatalogController::class, 'matricesIndex'])->name('matrices.index');
+            Route::get('/matrizes/novo', [\App\Http\Controllers\AdminCatalogController::class, 'matrixCreate'])->name('matrices.create');
+            Route::post('/matrizes', [\App\Http\Controllers\AdminCatalogController::class, 'matrixStore'])->name('matrices.store');
+            Route::get('/matrizes/{matrix}/editar', [\App\Http\Controllers\AdminCatalogController::class, 'matrixEdit'])->name('matrices.edit');
+            Route::put('/matrizes/{matrix}', [\App\Http\Controllers\AdminCatalogController::class, 'matrixUpdate'])->name('matrices.update');
+            Route::delete('/matrizes/{matrix}', [\App\Http\Controllers\AdminCatalogController::class, 'matrixDestroy'])->name('matrices.destroy');
+
+            Route::get('/disciplinas', [\App\Http\Controllers\AdminCatalogController::class, 'subjectsIndex'])->name('subjects.index');
+            Route::get('/disciplinas/novo', [\App\Http\Controllers\AdminCatalogController::class, 'subjectCreate'])->name('subjects.create');
+            Route::post('/disciplinas', [\App\Http\Controllers\AdminCatalogController::class, 'subjectStore'])->name('subjects.store');
+            Route::get('/disciplinas/{subject}/editar', [\App\Http\Controllers\AdminCatalogController::class, 'subjectEdit'])->name('subjects.edit');
+            Route::put('/disciplinas/{subject}', [\App\Http\Controllers\AdminCatalogController::class, 'subjectUpdate'])->name('subjects.update');
+            Route::delete('/disciplinas/{subject}', [\App\Http\Controllers\AdminCatalogController::class, 'subjectDestroy'])->name('subjects.destroy');
+
+            Route::get('/professores', [\App\Http\Controllers\AdminCatalogController::class, 'professorsIndex'])->name('professors.index');
+            Route::get('/professores/novo', [\App\Http\Controllers\AdminCatalogController::class, 'professorCreate'])->name('professors.create');
+            Route::post('/professores', [\App\Http\Controllers\AdminCatalogController::class, 'professorStore'])->name('professors.store');
+            Route::get('/professores/{professor}/editar', [\App\Http\Controllers\AdminCatalogController::class, 'professorEdit'])->name('professors.edit');
+            Route::put('/professores/{professor}', [\App\Http\Controllers\AdminCatalogController::class, 'professorUpdate'])->name('professors.update');
+            Route::delete('/professores/{professor}', [\App\Http\Controllers\AdminCatalogController::class, 'professorDestroy'])->name('professors.destroy');
+        });
         Route::get('/cursos', [CatalogController::class, 'courses'])->name('catalog.courses');
         Route::get('/professores', [CatalogController::class, 'professors'])->name('catalog.professors');
         Route::get('/disciplinas', [CatalogController::class, 'subjects'])->name('catalog.subjects');

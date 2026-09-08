@@ -703,6 +703,47 @@ class UserLoginTest extends TestCase
         $response->assertSee('Compatível');
     }
 
+    public function test_admin_can_manage_core_catalog_crud_forms(): void
+    {
+        $admin = User::create([
+            'name' => 'Administrador de Cadastros',
+            'email' => 'admin.crud@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($admin)->get('/admin/cursos/novo')->assertOk();
+        $this->actingAs($admin)->post('/admin/cursos', [
+            'code' => 'ADS',
+            'name' => 'Análise e Desenvolvimento de Sistemas',
+            'degree' => 'Tecnólogo',
+            'active' => true,
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('courses', ['code' => 'ADS']);
+
+        $this->actingAs($admin)->get('/admin/disciplinas/novo')->assertOk();
+        $this->actingAs($admin)->post('/admin/disciplinas', [
+            'code' => 'PROG-01',
+            'name' => 'Programação I',
+            'total_hours' => 80,
+            'presential_hours' => 80,
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('subjects', ['code' => 'PROG-01']);
+
+        $this->actingAs($admin)->get('/admin/professores/novo')->assertOk();
+        $this->actingAs($admin)->post('/admin/professores', [
+            'name' => 'Professor CRUD',
+            'email' => 'crud.prof@inova7.local',
+            'qualification' => 'Mestre',
+            'active' => true,
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('professors', ['email' => 'crud.prof@inova7.local']);
+    }
+
     public function test_catalog_can_filter_students_and_subjects_by_search(): void
     {
         $admin = User::create([

@@ -35,6 +35,10 @@
                             href="{{ route('catalog.subjects') }}">◌ Disciplinas</a>
                         <a class="nav-link {{ request()->routeIs('catalog.students') ? 'active' : '' }}"
                             href="{{ route('catalog.students') }}">◍ Alunos</a>
+                        @if (Auth::user()->role === 'admin')
+                            <a class="nav-link {{ request()->routeIs('admin.*') ? 'active' : '' }}"
+                                href="{{ route('admin.courses.index') }}">⚙ Administração do catálogo</a>
+                        @endif
                     @endif
 
                     <a class="nav-link {{ request()->routeIs('profile') || request()->routeIs('profile.edit') ? 'active' : '' }}"

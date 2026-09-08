@@ -1,0 +1,306 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Course;
+use App\Models\CurriculumMatrix;
+use App\Models\Professor;
+use App\Models\Subject;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class AdminCatalogController extends Controller
+{
+    private function ensureAdmin(): void
+    {
+        if (! Auth::check() || Auth::user()->role !== 'admin') {
+            abort(403, 'Apenas administradores podem gerenciar o catálogo completo.');
+        }
+    }
+
+    public function coursesIndex()
+    {
+        $this->ensureAdmin();
+
+        return view('admin.courses.index', [
+            'courses' => Course::orderBy('name')->get(),
+        ]);
+    }
+
+    public function courseCreate()
+    {
+        $this->ensureAdmin();
+
+        return view('admin.courses.form', [
+            'course' => new Course(),
+        ]);
+    }
+
+    public function courseStore(Request $request)
+    {
+        $this->ensureAdmin();
+
+        $validated = $request->validate([
+            'code' => ['required', 'string', 'max:50', 'unique:courses,code'],
+            'name' => ['required', 'string', 'max:255'],
+            'degree' => ['nullable', 'string', 'max:255'],
+            'active' => ['nullable', 'boolean'],
+        ]);
+
+        Course::create($validated);
+
+        return redirect()->route('admin.courses.index')->with('success', 'Curso cadastrado com sucesso!');
+    }
+
+    public function courseEdit(Course $course)
+    {
+        $this->ensureAdmin();
+
+        return view('admin.courses.form', [
+            'course' => $course,
+        ]);
+    }
+
+    public function courseUpdate(Request $request, Course $course)
+    {
+        $this->ensureAdmin();
+
+        $validated = $request->validate([
+            'code' => ['required', 'string', 'max:50', 'unique:courses,code,' . $course->id],
+            'name' => ['required', 'string', 'max:255'],
+            'degree' => ['nullable', 'string', 'max:255'],
+            'active' => ['nullable', 'boolean'],
+        ]);
+
+        $course->update($validated);
+
+        return redirect()->route('admin.courses.index')->with('success', 'Curso atualizado com sucesso!');
+    }
+
+    public function courseDestroy(Course $course)
+    {
+        $this->ensureAdmin();
+
+        $course->delete();
+
+        return redirect()->route('admin.courses.index')->with('success', 'Curso removido com sucesso!');
+    }
+
+    public function matricesIndex()
+    {
+        $this->ensureAdmin();
+
+        return view('admin.matrices.index', [
+            'matrices' => CurriculumMatrix::with('course')->orderBy('name')->get(),
+        ]);
+    }
+
+    public function matrixCreate()
+    {
+        $this->ensureAdmin();
+
+        return view('admin.matrices.form', [
+            'matrix' => new CurriculumMatrix(),
+            'courses' => Course::orderBy('name')->get(),
+        ]);
+    }
+
+    public function matrixStore(Request $request)
+    {
+        $this->ensureAdmin();
+
+        $validated = $request->validate([
+            'course_id' => ['required', 'exists:courses,id'],
+            'code' => ['required', 'string', 'max:100'],
+            'name' => ['required', 'string', 'max:255'],
+            'version' => ['nullable', 'string', 'max:50'],
+            'status' => ['nullable', 'in:Atual,Ativa,Inativa'],
+            'effective_from' => ['nullable', 'date'],
+        ]);
+
+        CurriculumMatrix::create($validated);
+
+        return redirect()->route('admin.matrices.index')->with('success', 'Matriz cadastrada com sucesso!');
+    }
+
+    public function matrixEdit(CurriculumMatrix $matrix)
+    {
+        $this->ensureAdmin();
+
+        return view('admin.matrices.form', [
+            'matrix' => $matrix,
+            'courses' => Course::orderBy('name')->get(),
+        ]);
+    }
+
+    public function matrixUpdate(Request $request, CurriculumMatrix $matrix)
+    {
+        $this->ensureAdmin();
+
+        $validated = $request->validate([
+            'course_id' => ['required', 'exists:courses,id'],
+            'code' => ['required', 'string', 'max:100'],
+            'name' => ['required', 'string', 'max:255'],
+            'version' => ['nullable', 'string', 'max:50'],
+            'status' => ['nullable', 'in:Atual,Ativa,Inativa'],
+            'effective_from' => ['nullable', 'date'],
+        ]);
+
+        $matrix->update($validated);
+
+        return redirect()->route('admin.matrices.index')->with('success', 'Matriz atualizada com sucesso!');
+    }
+
+    public function matrixDestroy(CurriculumMatrix $matrix)
+    {
+        $this->ensureAdmin();
+
+        $matrix->delete();
+
+        return redirect()->route('admin.matrices.index')->with('success', 'Matriz removida com sucesso!');
+    }
+
+    public function subjectsIndex()
+    {
+        $this->ensureAdmin();
+
+        return view('admin.subjects.index', [
+            'subjects' => Subject::orderBy('name')->get(),
+        ]);
+    }
+
+    public function subjectCreate()
+    {
+        $this->ensureAdmin();
+
+        return view('admin.subjects.form', [
+            'subject' => new Subject(),
+        ]);
+    }
+
+    public function subjectStore(Request $request)
+    {
+        $this->ensureAdmin();
+
+        $validated = $request->validate([
+            'code' => ['required', 'string', 'max:100'],
+            'name' => ['required', 'string', 'max:255'],
+            'total_hours' => ['nullable', 'integer', 'min:0'],
+            'presential_hours' => ['nullable', 'integer', 'min:0'],
+            'online_hours' => ['nullable', 'integer', 'min:0'],
+            'practice_hours' => ['nullable', 'integer', 'min:0'],
+            'extension_hours' => ['nullable', 'integer', 'min:0'],
+        ]);
+
+        Subject::create($validated);
+
+        return redirect()->route('admin.subjects.index')->with('success', 'Disciplina cadastrada com sucesso!');
+    }
+
+    public function subjectEdit(Subject $subject)
+    {
+        $this->ensureAdmin();
+
+        return view('admin.subjects.form', [
+            'subject' => $subject,
+        ]);
+    }
+
+    public function subjectUpdate(Request $request, Subject $subject)
+    {
+        $this->ensureAdmin();
+
+        $validated = $request->validate([
+            'code' => ['required', 'string', 'max:100'],
+            'name' => ['required', 'string', 'max:255'],
+            'total_hours' => ['nullable', 'integer', 'min:0'],
+            'presential_hours' => ['nullable', 'integer', 'min:0'],
+            'online_hours' => ['nullable', 'integer', 'min:0'],
+            'practice_hours' => ['nullable', 'integer', 'min:0'],
+            'extension_hours' => ['nullable', 'integer', 'min:0'],
+        ]);
+
+        $subject->update($validated);
+
+        return redirect()->route('admin.subjects.index')->with('success', 'Disciplina atualizada com sucesso!');
+    }
+
+    public function subjectDestroy(Subject $subject)
+    {
+        $this->ensureAdmin();
+
+        $subject->delete();
+
+        return redirect()->route('admin.subjects.index')->with('success', 'Disciplina removida com sucesso!');
+    }
+
+    public function professorsIndex()
+    {
+        $this->ensureAdmin();
+
+        return view('admin.professors.index', [
+            'professors' => Professor::orderBy('name')->get(),
+        ]);
+    }
+
+    public function professorCreate()
+    {
+        $this->ensureAdmin();
+
+        return view('admin.professors.form', [
+            'professor' => new Professor(),
+        ]);
+    }
+
+    public function professorStore(Request $request)
+    {
+        $this->ensureAdmin();
+
+        $validated = $request->validate([
+            'registration' => ['nullable', 'string', 'max:50', 'unique:professors,registration'],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255', 'unique:professors,email'],
+            'qualification' => ['nullable', 'string', 'max:255'],
+            'active' => ['nullable', 'boolean'],
+        ]);
+
+        Professor::create($validated);
+
+        return redirect()->route('admin.professors.index')->with('success', 'Professor cadastrado com sucesso!');
+    }
+
+    public function professorEdit(Professor $professor)
+    {
+        $this->ensureAdmin();
+
+        return view('admin.professors.form', [
+            'professor' => $professor,
+        ]);
+    }
+
+    public function professorUpdate(Request $request, Professor $professor)
+    {
+        $this->ensureAdmin();
+
+        $validated = $request->validate([
+            'registration' => ['nullable', 'string', 'max:50', 'unique:professors,registration,' . $professor->id],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255', 'unique:professors,email,' . $professor->id],
+            'qualification' => ['nullable', 'string', 'max:255'],
+            'active' => ['nullable', 'boolean'],
+        ]);
+
+        $professor->update($validated);
+
+        return redirect()->route('admin.professors.index')->with('success', 'Professor atualizado com sucesso!');
+    }
+
+    public function professorDestroy(Professor $professor)
+    {
+        $this->ensureAdmin();
+
+        $professor->delete();
+
+        return redirect()->route('admin.professors.index')->with('success', 'Professor removido com sucesso!');
+    }
+}
