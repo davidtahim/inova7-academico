@@ -7,8 +7,10 @@ use App\Models\Course;
 use App\Models\CurriculumMatrix;
 use App\Models\Professor;
 use App\Models\Subject;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class AdminCatalogController extends Controller
 {
@@ -17,6 +19,77 @@ class AdminCatalogController extends Controller
         if (! Auth::check() || Auth::user()->role !== 'admin') {
             abort(403, 'Apenas administradores podem gerenciar o catálogo completo.');
         }
+    }
+
+    private function resolveProfessorEmail(string $name, ?string $chapa, ?string $email): ?string
+    {
+        $normalizedChapa = trim((string) $chapa);
+
+        if ($normalizedChapa !== '') {
+            return strtolower($normalizedChapa) . '@prof.uni7.edu.br';
+        }
+
+        if (! empty($email)) {
+            return trim((string) $email);
+        }
+
+        $baseName = preg_replace('/[^a-zA-Z0-9]+/', '', strtolower(trim((string) $name))) ?? '';
+
+        return $baseName !== '' ? $baseName . '@prof.uni7.edu.br' : null;
+    }
+
+    private function syncProfessorUser(Professor $professor): void
+    {
+        $email = $this->resolveProfessorEmail($professor->name, $professor->chapa, $professor->email);
+
+        if (empty($email)) {
+            return;
+        }
+
+        $payload = [
+            'name' => $professor->name,
+            'email' => $email,
+            'role' => 'teacher',
+            'password' => 'senha1234',
+        ];
+
+        if (method_exists(User::class, 'query')) {
+            $user = User::query()->where('email', $email)->first();
+        } else {
+            $user = User::where('email', $email)->first();
+        }
+
+        if ($user) {
+            $user->fill([
+                'name' => $professor->name,
+                'role' => 'teacher',
+                'password' => 'senha1234',
+            ]);
+
+            if (Schema::hasColumn('users', 'registration_number') && ! empty($professor->registration)) {
+                $user->registration_number = $professor->registration;
+            }
+
+            if (Schema::hasColumn('users', 'is_active')) {
+                $user->is_active = (bool) $professor->active;
+            }
+
+            $user->save();
+
+            return;
+        }
+
+        $userData = $payload;
+
+        if (Schema::hasColumn('users', 'registration_number') && ! empty($professor->registration)) {
+            $userData['registration_number'] = $professor->registration;
+        }
+
+        if (Schema::hasColumn('users', 'is_active')) {
+            $userData['is_active'] = (bool) $professor->active;
+        }
+
+        User::create($userData);
     }
 
     public function planejamentoIndex()
@@ -478,10 +551,26 @@ class AdminCatalogController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255', 'unique:professors,email'],
             'qualification' => ['nullable', 'string', 'max:255'],
+            'chapa' => ['nullable', 'string', 'max:100'],
+            'lattes' => ['nullable', 'string', 'max:255'],
+            'course_ids' => ['nullable', 'array'],
+            'course_ids.*' => ['nullable', 'integer', 'exists:courses,id'],
             'active' => ['nullable', 'boolean'],
         ]);
 
-        Professor::create($validated);
+        $courseIds = $validated['course_ids'] ?? [];
+        unset($validated['course_ids']);
+
+        $chapa = trim((string) ($validated['chapa'] ?? ''));
+        $generatedEmail = $this->resolveProfessorEmail($validated['name'] ?? '', $chapa, $validated['email'] ?? null);
+
+        if (! empty($generatedEmail)) {
+            $validated['email'] = $generatedEmail;
+        }
+
+        $professor = Professor::create($validated);
+        $this->syncProfessorUser($professor);
+        $professor->courses()->sync($courseIds);
 
         return redirect()->route('admin.professors.index')->with('success', 'Professor cadastrado com sucesso!');
     }
@@ -504,10 +593,26 @@ class AdminCatalogController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255', 'unique:professors,email,' . $professor->id],
             'qualification' => ['nullable', 'string', 'max:255'],
+            'chapa' => ['nullable', 'string', 'max:100'],
+            'lattes' => ['nullable', 'string', 'max:255'],
+            'course_ids' => ['nullable', 'array'],
+            'course_ids.*' => ['nullable', 'integer', 'exists:courses,id'],
             'active' => ['nullable', 'boolean'],
         ]);
 
+        $courseIds = $validated['course_ids'] ?? [];
+        unset($validated['course_ids']);
+
+        $chapa = trim((string) ($validated['chapa'] ?? $professor->chapa ?? ''));
+        $generatedEmail = $this->resolveProfessorEmail($validated['name'] ?? $professor->name, $chapa, $validated['email'] ?? $professor->email);
+
+        if (! empty($generatedEmail)) {
+            $validated['email'] = $generatedEmail;
+        }
+
         $professor->update($validated);
+        $this->syncProfessorUser($professor);
+        $professor->courses()->sync($courseIds);
 
         return redirect()->route('admin.professors.index')->with('success', 'Professor atualizado com sucesso!');
     }

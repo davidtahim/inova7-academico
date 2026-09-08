@@ -67,6 +67,93 @@ class ImportController extends Controller
         ]);
     }
 
+    public function professorsIndex()
+    {
+        return view('imports.professors', [
+            'terms' => AcademicTerm::orderBy('code', 'desc')->get(),
+        ]);
+    }
+
+    public function storeProfessors(Request $request)
+    {
+        $validated = $request->validate([
+            'arquivo' => ['required', 'file', 'mimetypes:text/csv,text/plain,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+        ]);
+
+        $file = $request->file('arquivo');
+        $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension());
+
+        try {
+            if ($extension === 'csv') {
+                $rows = $this->parseCsv($file->getRealPath());
+            } else {
+                if (! class_exists(\ZipArchive::class)) {
+                    throw ValidationException::withMessages([
+                        'arquivo' => ['Para importar XLSX/XLS, ative a extensão ZIP do PHP (php_zip.dll no Windows ou php-zip no Linux/macOS) e reinicie o servidor.'],
+                    ]);
+                }
+
+                $rows = $this->parseXlsx($file->getRealPath());
+            }
+        } catch (\Throwable $exception) {
+            throw ValidationException::withMessages([
+                'arquivo' => ['A planilha de professores não pôde ser lida. Verifique se o arquivo é um CSV/XLSX válido e tente novamente.'],
+            ]);
+        }
+
+        if (! is_array($rows) || $rows === []) {
+            throw ValidationException::withMessages([
+                'arquivo' => ['A planilha de professores não contém linhas válidas. Verifique as colunas e tente novamente.'],
+            ]);
+        }
+
+        $imported = 0;
+
+        foreach ($rows as $row) {
+            $normalized = $this->normalizeProfessorRow($row);
+            if ($normalized === null) {
+                continue;
+            }
+
+            $name = trim((string) ($normalized['professor'] ?? $normalized['nome'] ?? ''));
+            $registration = trim((string) ($normalized['matricula'] ?? ''));
+            $chapa = trim((string) ($normalized['chapa'] ?? ''));
+            $lattes = trim((string) ($normalized['lattes'] ?? ''));
+
+            if ($name === '') {
+                continue;
+            }
+
+            $professor = null;
+            if ($registration !== '') {
+                $professor = Professor::where('registration', $registration)->first();
+            }
+
+            if (! $professor) {
+                $professor = Professor::where('name', $name)->first();
+            }
+
+            if (! $professor) {
+                $professor = new Professor();
+            }
+
+            $professor->fill([
+                'name' => $name,
+                'registration' => $registration !== '' ? $registration : ($professor->registration ?? null),
+                'email' => $professor->email ?? null,
+                'qualification' => $professor->qualification ?? null,
+                'active' => $professor->active ?? true,
+                'chapa' => $chapa !== '' ? $chapa : ($professor->chapa ?? null),
+                'lattes' => $lattes !== '' ? $lattes : ($professor->lattes ?? null),
+            ]);
+
+            $professor->save();
+            $imported++;
+        }
+
+        return redirect()->route('imports.professors.index')->with('success', "Importação concluída: {$imported} professores registrados atualizados.");
+    }
+
     public function resetTotvs(Request $request)
     {
         $validated = $request->validate([
@@ -570,7 +657,7 @@ class ImportController extends Controller
             $matchedHeaders = 0;
             foreach ($values as $value) {
                 $normalized = $this->normalizeHeader((string) $value);
-                if (in_array($normalized, ['curso', 'periodo', 'disciplina', 'matriz', 'carga_horaria', 'modalidade'], true)) {
+                if (in_array($normalized, ['curso', 'periodo', 'disciplina', 'matriz', 'carga_horaria', 'modalidade', 'professor', 'nome', 'matricula', 'chapa', 'lattes'], true)) {
                     $matchedHeaders++;
                 }
             }
@@ -658,6 +745,13 @@ class ImportController extends Controller
             'CH' => 'carga_horaria',
             'HABILITACAO' => 'habilitacao',
             'HABILITAÇÃO' => 'habilitacao',
+            'PROFESSOR' => 'professor',
+            'NOME' => 'nome',
+            'NOME_PROFESSOR' => 'professor',
+            'MATRICULA' => 'matricula',
+            'MATRICULA_PROFESSOR' => 'matricula',
+            'CHAPA' => 'chapa',
+            'LATTES' => 'lattes',
         ];
 
         if (isset($aliases[$normalized])) {
@@ -691,6 +785,45 @@ class ImportController extends Controller
         ];
 
         return $variantMatches[$normalized] ?? Str::lower($normalized);
+    }
+
+    private function normalizeProfessorRow(?array $row): ?array
+    {
+        if (! is_array($row) || empty($row)) {
+            return null;
+        }
+
+        $keys = [
+            'professor' => ['professor', 'PROFESSOR', 'nome', 'NOME', 'nome_professor', 'NOME_PROFESSOR'],
+            'matricula' => ['matricula', 'MATRICULA', 'matrícula', 'MATRICULA_PROFESSOR', 'registration'],
+            'chapa' => ['chapa', 'CHAPA', 'numero_chapa', 'NUMERO_CHAPA'],
+            'lattes' => ['lattes', 'LATTES', 'url_lattes', 'URL_LATTES'],
+        ];
+
+        $normalized = [];
+        foreach ($keys as $key => $candidates) {
+            foreach ($candidates as $candidate) {
+                if (array_key_exists($candidate, $row)) {
+                    $value = trim((string) $row[$candidate]);
+                    if ($value !== '') {
+                        $normalized[$key] = $value;
+                        break;
+                    }
+                }
+            }
+        }
+
+        $name = trim((string) ($normalized['professor'] ?? ''));
+        if ($name === '') {
+            return null;
+        }
+
+        return [
+            'professor' => $name,
+            'matricula' => trim((string) ($normalized['matricula'] ?? '')),
+            'chapa' => trim((string) ($normalized['chapa'] ?? '')),
+            'lattes' => trim((string) ($normalized['lattes'] ?? '')),
+        ];
     }
 
     private function normalizeTotvsRow(?array $row): ?array

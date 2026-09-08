@@ -32,7 +32,8 @@
                         <thead>
                             <tr>
                                 <th>Nome</th>
-                                <th>E-mail</th>
+                                <th>Matrícula</th>
+                                <th>Chapa</th>
                                 <th>Formação</th>
                                 <th>Status</th>
                                 <th class="text-end">Ações</th>
@@ -42,7 +43,8 @@
                             @forelse ($professors as $professor)
                                 <tr>
                                     <td><span class="matrix-name-cell">{{ $professor->name }}</span></td>
-                                    <td>{{ $professor->email ?? '—' }}</td>
+                                    <td>{{ $professor->registration ?? '—' }}</td>
+                                    <td>{{ $professor->chapa ?? '—' }}</td>
                                     <td>{{ $professor->qualification ?? '—' }}</td>
                                     <td>
                                         <span class="status-badge {{ $professor->active ? 'ativa' : 'inativa' }}">
@@ -65,7 +67,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-center text-muted py-4">Nenhum professor cadastrado.</td>
+                                    <td colspan="6" class="text-center text-muted py-4">Nenhum professor cadastrado.</td>
                                 </tr>
                             @endforelse
                         </tbody>

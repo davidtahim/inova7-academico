@@ -22,9 +22,11 @@ class LoginController extends Controller
             'password' => ['required'],
         ]);
 
-        $user = User::where('email', $credentials['email'])->first();
+        $email = strtolower(trim($credentials['email']));
 
-        if (! $user || ! Auth::attempt(['email' => $credentials['email'], 'password' => $credentials['password']])) {
+        $user = User::whereRaw('LOWER(email) = ?', [$email])->first();
+
+        if (! $user || ! Auth::attempt(['email' => $email, 'password' => $credentials['password']])) {
             return back()->withErrors([
                 'email' => 'Credenciais inválidas.',
             ])->onlyInput('email');

@@ -43,10 +43,10 @@
                                 href="{{ route('admin.planejamento.index') }}">⚙ Administração do catálogo</a>
 
                             <details
-                                class="nav-subsection-group {{ request()->routeIs('imports.ubiqua.*') || request()->routeIs('imports.totvs.*') ? 'open' : '' }}"
+                                class="nav-subsection-group {{ request()->routeIs('imports.ubiqua.*') || request()->routeIs('imports.totvs.*') || request()->routeIs('imports.professors.*') ? 'open' : '' }}"
                                 open>
                                 <summary
-                                    class="nav-link nav-link-admin nav-link-subsection {{ request()->routeIs('imports.ubiqua.*') || request()->routeIs('imports.totvs.*') ? 'active' : '' }}">
+                                    class="nav-link nav-link-admin nav-link-subsection {{ request()->routeIs('imports.ubiqua.*') || request()->routeIs('imports.totvs.*') || request()->routeIs('imports.professors.*') ? 'active' : '' }}">
                                     <span>⇧ Importações</span>
                                     <span class="nav-caret">▾</span>
                                 </summary>
@@ -54,6 +54,8 @@
                                     href="{{ route('imports.ubiqua.index') }}">• Oferta Ubíqua</a>
                                 <a class="nav-link nav-link-admin nav-link-child {{ request()->routeIs('imports.totvs.*') ? 'active' : '' }}"
                                     href="{{ route('imports.totvs.index') }}">• Base TOTVS</a>
+                                <a class="nav-link nav-link-admin nav-link-child {{ request()->routeIs('imports.professors.*') ? 'active' : '' }}"
+                                    href="{{ route('imports.professors.index') }}">• Professores</a>
                             </details>
 
                             <a class="nav-link nav-link-admin {{ request()->routeIs('audit.*') ? 'active' : '' }}"

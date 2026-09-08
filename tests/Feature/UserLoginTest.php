@@ -13,11 +13,45 @@ use App\Models\Subject;
 use App\Models\TeachingAssignment;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 class UserLoginTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_admin_can_import_professor_file_with_name_registration_chapa_and_lattes(): void
+    {
+        $user = User::create([
+            'name' => 'Administrador',
+            'email' => 'admin.import-professores@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $file = UploadedFile::fake()->createWithContent('professores.csv', "Professor;Matrícula;Chapa;Lattes\nAna Souza;12345;CH-101;http://lattes.cnpq.br/ana\nBruno Lima;54321;CH-202;http://lattes.cnpq.br/bruno\n");
+
+        $this->actingAs($user)
+            ->post(route('imports.professors.store'), [
+                'arquivo' => $file,
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('professors', [
+            'name' => 'Ana Souza',
+            'registration' => '12345',
+            'chapa' => 'CH-101',
+            'lattes' => 'http://lattes.cnpq.br/ana',
+        ]);
+
+        $this->assertDatabaseHas('professors', [
+            'name' => 'Bruno Lima',
+            'registration' => '54321',
+            'chapa' => 'CH-202',
+            'lattes' => 'http://lattes.cnpq.br/bruno',
+        ]);
+    }
 
     public function test_user_can_login_with_valid_credentials(): void
     {
@@ -107,6 +141,81 @@ class UserLoginTest extends TestCase
             ->assertOk();
 
         $this->assertSame('/admin/planejamento/cursos', route('admin.courses.index', [], false));
+    }
+
+    public function test_admin_can_assign_a_professor_to_a_course(): void
+    {
+        $user = User::create([
+            'name' => 'Administrador',
+            'email' => 'admin.assign-professor-course@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $course = Course::create([
+            'code' => 'ADS',
+            'name' => 'Análise e Desenvolvimento de Sistemas',
+            'degree' => 'Tecnólogo',
+            'active' => true,
+        ]);
+
+        $response = $this->actingAs($user)->post(route('admin.professors.store'), [
+            'name' => 'Prof. Carla Martins',
+            'registration' => 'P-9001',
+            'qualification' => 'Mestre',
+            'active' => true,
+            'course_ids' => [$course->id],
+        ]);
+
+        $response->assertRedirect(route('admin.professors.index'));
+
+        $professor = Professor::where('registration', 'P-9001')->first();
+        $this->assertNotNull($professor);
+        $this->assertTrue($professor->courses()->whereKey($course->id)->exists());
+    }
+
+    public function test_professor_login_accepts_generated_chapa_email_format(): void
+    {
+        $user = User::create([
+            'name' => 'Prof. Débora Souza',
+            'email' => '7788@prof.uni7.edu.br',
+            'password' => 'senha1234',
+            'role' => 'teacher',
+            'is_active' => true,
+        ]);
+
+        $response = $this->post(route('login.submit'), [
+            'email' => '7788@PROF.UNI7.EDU.BR',
+            'password' => 'senha1234',
+        ]);
+
+        $response->assertRedirect(route('dashboard'));
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_admin_creates_a_teacher_user_with_email_based_on_chapa_when_creating_a_professor(): void
+    {
+        $admin = User::create([
+            'name' => 'Administrador do Cadastro',
+            'email' => 'admin.professor-user@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('admin.professors.store'), [
+            'name' => 'Prof. Débora Souza',
+            'registration' => 'P-7788',
+            'chapa' => '7788',
+            'qualification' => 'Doutora',
+            'active' => true,
+        ]);
+
+        $response->assertRedirect(route('admin.professors.index'));
+
+        $this->assertDatabaseHas('professors', ['chapa' => '7788', 'email' => '7788@prof.uni7.edu.br']);
+        $this->assertDatabaseHas('users', ['email' => '7788@prof.uni7.edu.br', 'role' => 'teacher']);
     }
 
     public function test_admin_can_edit_import_matrix_scope_per_course(): void

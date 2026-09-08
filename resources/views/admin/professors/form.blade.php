@@ -41,11 +41,46 @@
                                     <div class="form-text">Ex.: matrícula interna ou código funcional do docente.</div>
                                 </div>
                                 <div class="col-md-6">
+                                    <label class="form-label">Chapa</label>
+                                    <input type="text" name="chapa" class="form-control"
+                                        value="{{ old('chapa', $professor->chapa ?? '') }}">
+                                    <div class="form-text">Ex.: CH-101.</div>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
                                     <label class="form-label">Qualificação</label>
                                     <input type="text" name="qualification" class="form-control"
                                         value="{{ old('qualification', $professor->qualification ?? '') }}">
                                     <div class="form-text">Ex.: Mestre, Doutor, Especialista.</div>
                                 </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Lattes</label>
+                                    <input type="url" name="lattes" class="form-control"
+                                        value="{{ old('lattes', $professor->lattes ?? '') }}">
+                                    <div class="form-text">URL do Currículo Lattes.</div>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label">Cursos vinculados</label>
+                                <div class="border rounded p-3 bg-light">
+                                    @php $selectedCourseIds = old('course_ids', $professor->courses->pluck('id')->all()); @endphp
+                                    @forelse (\App\Models\Course::orderBy('name')->get() as $course)
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="course_ids[]"
+                                                value="{{ $course->id }}" id="course_{{ $course->id }}"
+                                                {{ in_array((string) $course->id, array_map('strval', $selectedCourseIds), true) ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="course_{{ $course->id }}">
+                                                {{ $course->name }} ({{ $course->code }})
+                                            </label>
+                                        </div>
+                                    @empty
+                                        <div class="text-muted small">Nenhum curso cadastrado.</div>
+                                    @endforelse
+                                </div>
+                                <div class="form-text">Selecione os cursos aos quais este professor está vinculado.</div>
                             </div>
 
                             <div class="form-check form-switch mb-4">

@@ -88,6 +88,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/importacoes/base-totvs/progresso', [ImportController::class, 'progressTotvs'])->name('imports.totvs.progress');
         Route::post('/importacoes/base-totvs', [ImportController::class, 'storeTotvs'])->name('imports.totvs.store');
         Route::post('/importacoes/base-totvs/zerar', [ImportController::class, 'resetTotvs'])->name('imports.totvs.reset');
+
+        Route::get('/importacoes/professores', [ImportController::class, 'professorsIndex'])->name('imports.professors.index');
+        Route::post('/importacoes/professores', [ImportController::class, 'storeProfessors'])->name('imports.professors.store');
     });
 
     Route::middleware('can:access-audit')->group(function () {
