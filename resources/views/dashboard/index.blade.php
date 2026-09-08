@@ -41,6 +41,38 @@
                 </article>
             </div>
         </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <article class="card card-soft h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="badge badge-soft-blue">Importação</span>
+                            <span class="text-muted small">Oferta Ubíqua</span>
+                        </div>
+                        <h3 class="h5 mb-2">Importar oferta do semestre</h3>
+                        <p class="text-secondary small mb-3">Carrega a base acadêmica da oferta Ubíqua e valida matrizes,
+                            cursos e grupos permitidos.</p>
+                        <a class="btn btn-primary" href="{{ route('imports.ubiqua.index') }}">Abrir importação</a>
+                    </div>
+                </article>
+            </div>
+
+            <div class="col-md-6">
+                <article class="card card-soft h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="badge badge-soft-purple">Base acadêmica</span>
+                            <span class="text-muted small">TOTVS</span>
+                        </div>
+                        <h3 class="h5 mb-2">Importar base TOTVS</h3>
+                        <p class="text-secondary small mb-3">Atualiza disciplinas, matrizes, cursos e códigos acadêmicos da
+                            base do TOTVS.</p>
+                        <a class="btn btn-outline-primary" href="{{ route('imports.totvs.index') }}">Abrir base</a>
+                    </div>
+                </article>
+            </div>
+        </div>
     @endif
 
     <div class="row g-3">
@@ -53,7 +85,8 @@
                 <div class="card-body p-0">
                     @forelse($conflicts->take(6) as $conflict)
                         <div class="p-3 border-bottom"><strong>{{ $conflict['message'] }}</strong>
-                            <div class="small text-secondary mt-1">{{ $conflict['professor'] }} • {{ $conflict['left'] }} ×
+                            <div class="small text-secondary mt-1">{{ $conflict['professor'] }} • {{ $conflict['left'] }}
+                                ×
                                 {{ $conflict['right'] }}</div>
                     </div>@empty<div class="empty">Nenhum conflito detectado.</div>
                     @endforelse

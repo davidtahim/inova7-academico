@@ -41,8 +41,10 @@
                             </summary>
                             <a class="nav-link nav-link-admin {{ request()->routeIs('admin.*') ? 'active' : '' }}"
                                 href="{{ route('admin.planejamento.index') }}">⚙ Administração do catálogo</a>
-                            <a class="nav-link nav-link-admin {{ request()->routeIs('imports.*') ? 'active' : '' }}"
+                            <a class="nav-link nav-link-admin {{ request()->routeIs('imports.ubiqua.*') || request()->routeIs('imports.totvs.*') ? 'active' : '' }}"
                                 href="{{ route('imports.ubiqua.index') }}">⇧ Importações</a>
+                            <a class="nav-link nav-link-admin {{ request()->routeIs('imports.totvs.*') ? 'active' : '' }}"
+                                href="{{ route('imports.totvs.index') }}">▣ Base TOTVS</a>
                             <a class="nav-link nav-link-admin {{ request()->routeIs('audit.*') ? 'active' : '' }}"
                                 href="{{ route('audit.index') }}">✓ Auditoria</a>
                         </details>

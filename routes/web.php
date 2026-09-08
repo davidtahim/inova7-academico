@@ -83,6 +83,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/importacoes/oferta-ubiqua/progresso', [ImportController::class, 'progressOfertaUbiqua'])->name('imports.ubiqua.progress');
         Route::post('/importacoes/oferta-ubiqua', [ImportController::class, 'storeOfertaUbiqua'])->name('imports.ubiqua.store');
         Route::post('/importacoes/oferta-ubiqua/zerar', [ImportController::class, 'resetOfertaUbiqua'])->name('imports.ubiqua.reset');
+
+        Route::get('/importacoes/base-totvs', [ImportController::class, 'totvsIndex'])->name('imports.totvs.index');
+        Route::get('/importacoes/base-totvs/progresso', [ImportController::class, 'progressTotvs'])->name('imports.totvs.progress');
+        Route::post('/importacoes/base-totvs', [ImportController::class, 'storeTotvs'])->name('imports.totvs.store');
     });
 
     Route::middleware('can:access-audit')->group(function () {

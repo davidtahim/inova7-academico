@@ -43,6 +43,129 @@ class ImportController extends Controller
         ]);
     }
 
+    public function totvsIndex()
+    {
+        return view('imports.totvs', [
+            'terms' => AcademicTerm::orderBy('code', 'desc')->get(),
+        ]);
+    }
+
+    public function storeTotvs(Request $request)
+    {
+        $validated = $request->validate([
+            'arquivo' => ['required', 'file', 'mimetypes:text/csv,text/plain,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+            'academic_term_code' => ['required', 'string'],
+        ]);
+
+        session([
+            'totvs_import_progress' => 0,
+            'totvs_import_status' => 'Lendo planilha...',
+            'totvs_import_finished' => false,
+            'totvs_import_started_at' => time(),
+            'totvs_import_total_rows' => 0,
+        ]);
+
+        $term = AcademicTerm::firstOrCreate(
+            ['code' => $validated['academic_term_code']],
+            ['starts_at' => now()->startOfMonth(), 'ends_at' => now()->addMonths(5), 'status' => 'planning']
+        );
+
+        $file = $request->file('arquivo');
+        $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension());
+
+        try {
+            if ($extension === 'csv') {
+                $rows = $this->parseCsv($file->getRealPath());
+            } else {
+                if (! class_exists(\ZipArchive::class)) {
+                    throw ValidationException::withMessages([
+                        'arquivo' => ['Para importar XLSX/XLS, ative a extensão ZIP do PHP (php_zip.dll no Windows ou php-zip no Linux/macOS) e reinicie o servidor.'],
+                    ]);
+                }
+
+                $rows = $this->parseXlsx($file->getRealPath());
+            }
+        } catch (\Throwable $exception) {
+            session([
+                'totvs_import_progress' => 0,
+                'totvs_import_status' => 'Falha ao ler a planilha.',
+                'totvs_import_finished' => true,
+            ]);
+
+            throw ValidationException::withMessages([
+                'arquivo' => ['A base TOTVS não pôde ser lida. Verifique se o arquivo é um CSV/XLSX válido e tente novamente.'],
+            ]);
+        }
+
+        if (! is_array($rows) || $rows === []) {
+            session([
+                'totvs_import_progress' => 0,
+                'totvs_import_status' => 'Falha ao ler a planilha.',
+                'totvs_import_finished' => true,
+            ]);
+
+            throw ValidationException::withMessages([
+                'arquivo' => ['A base TOTVS não contém linhas válidas. Verifique a estrutura da planilha e tente novamente.'],
+            ]);
+        }
+
+        $totalRows = count($rows);
+        $imported = 0;
+
+        session([
+            'totvs_import_total_rows' => $totalRows,
+        ]);
+
+        foreach ($rows as $index => $row) {
+            $normalized = $this->normalizeTotvsRow($row);
+            if ($normalized === null) {
+                continue;
+            }
+
+            $progress = $totalRows > 0 ? (int) round((($index + 1) / $totalRows) * 100) : 100;
+            session([
+                'totvs_import_progress' => $progress,
+                'totvs_import_status' => 'Processando linhas da planilha...',
+                'totvs_import_finished' => false,
+            ]);
+
+            $course = $this->ensureCourse($normalized['curso'], $normalized['codigo_curso'] ?? '');
+            $matrix = $this->ensureMatrix($course, $normalized['matriz']);
+            $subject = $this->ensureSubject($normalized['codigo'] ?? $normalized['disciplina'], $normalized['disciplina']);
+
+            $classCode = $this->resolveTotvsClassCode($normalized, $term, $subject, $index);
+
+            ClassOffering::updateOrCreate(
+                [
+                    'academic_term_id' => $term->id,
+                    'course_id' => $course->id,
+                    'subject_id' => $subject->id,
+                    'class_code' => $classCode,
+                ],
+                [
+                    'curriculum_matrix_id' => $matrix?->id,
+                    'period' => (int) ($normalized['periodo'] ?? 1),
+                    'shift' => $this->resolveShift($normalized['turno'] ?? 'MANHA'),
+                    'modality' => $this->normalizeModality($normalized['modalidade'] ?? 'PRESENCIAL'),
+                    'occurs' => true,
+                    'weekly_hours' => (float) ($normalized['carga_horaria'] ?? 2),
+                    'totvs_hours' => (float) ($normalized['carga_horaria'] ?? 2),
+                    'status' => 'planned',
+                ]
+            );
+
+            $imported++;
+        }
+
+        session([
+            'totvs_import_progress' => 100,
+            'totvs_import_status' => 'Importação concluída.',
+            'totvs_import_finished' => true,
+        ]);
+
+        return redirect()->back()->with('success', "Base TOTVS importada com sucesso. {$imported} registros processados para o semestre {$term->code}.");
+    }
+
     public function progressOfertaUbiqua()
     {
         $progress = min((int) session('ubiqua_import_progress', 0), 100);
@@ -61,6 +184,30 @@ class ImportController extends Controller
             'progress' => $progress,
             'status' => session('ubiqua_import_status', 'Aguardando início...'),
             'finished' => (bool) session('ubiqua_import_finished', false),
+            'estimated_remaining_seconds' => $estimatedRemaining,
+            'elapsed_seconds' => $elapsedSeconds,
+            'total_rows' => $totalRows,
+        ]);
+    }
+
+    public function progressTotvs()
+    {
+        $progress = min((int) session('totvs_import_progress', 0), 100);
+        $startedAt = session('totvs_import_started_at');
+        $totalRows = max((int) session('totvs_import_total_rows', 0), 1);
+
+        $elapsedSeconds = $startedAt ? max(1, time() - (int) $startedAt) : 1;
+        $estimatedRemaining = 0;
+
+        if ($progress > 0 && $progress < 100) {
+            $remainingPercent = 100 - $progress;
+            $estimatedRemaining = (int) round(($elapsedSeconds / max($progress, 1)) * $remainingPercent);
+        }
+
+        return response()->json([
+            'progress' => $progress,
+            'status' => session('totvs_import_status', 'Aguardando início...'),
+            'finished' => (bool) session('totvs_import_finished', false),
             'estimated_remaining_seconds' => $estimatedRemaining,
             'elapsed_seconds' => $elapsedSeconds,
             'total_rows' => $totalRows,
@@ -412,12 +559,20 @@ class ImportController extends Controller
             'PERIODO' => 'periodo',
             'DISCIPLINA' => 'disciplina',
             'CODIGO' => 'codigo',
+            'COD_DA_DISCIPLINA' => 'codigo',
+            'COD_DISCIPLINA' => 'codigo',
             'CODIGO_DA_DISCIPLINA' => 'codigo',
             'CODIGO_DISCIPLINA' => 'codigo',
             'DISCIPLINA_CODIGO' => 'codigo',
             'CODIGO_DO_CURSO' => 'codigo_curso',
             'CODIGO_CURSO' => 'codigo_curso',
             'CURSO_CODIGO' => 'codigo_curso',
+            'CODIGO_DA_TURMA' => 'codigo_turma',
+            'CODIGO_TURMA' => 'codigo_turma',
+            'COD_DA_TURMA' => 'codigo_turma',
+            'TURMA_CODIGO' => 'codigo_turma',
+            'CLASS_CODE' => 'codigo_turma',
+            'TURMA' => 'turma',
             'MATRIZ' => 'matriz',
             'GRUPO' => 'grupo',
             'GRUPO_ACADEMICO' => 'grupo',
@@ -432,9 +587,12 @@ class ImportController extends Controller
             'MODALIDADE' => 'modalidade',
             'NOME_DO_CURSO' => 'curso',
             'NOME_DA_DISCIPLINA' => 'disciplina',
+            'NOME_DISCIPLINA' => 'disciplina',
             'NOME_DA_MATRIZ' => 'matriz',
             'CARGA_HORARIA' => 'carga_horaria',
             'CH' => 'carga_horaria',
+            'HABILITACAO' => 'habilitacao',
+            'HABILITAÇÃO' => 'habilitacao',
         ];
 
         if (isset($aliases[$normalized])) {
@@ -459,9 +617,67 @@ class ImportController extends Controller
             'HA_CLASSIS_PAGAMENTO' => 'carga_horaria',
             'H_A_CLASSIS' => 'carga_horaria',
             'HA_CLASSIS' => 'carga_horaria',
+            'COD_DISCIPLINA' => 'codigo',
+            'COD_DA_DISCIPLINA' => 'codigo',
+            'COD_DA_TURMA' => 'codigo_turma',
+            'COD_TURMA' => 'codigo_turma',
+            'NOME_DA_TURMA' => 'turma',
+            'HABILITACAO' => 'habilitacao',
         ];
 
         return $variantMatches[$normalized] ?? Str::lower($normalized);
+    }
+
+    private function normalizeTotvsRow(?array $row): ?array
+    {
+        if (! is_array($row) || empty($row)) {
+            return null;
+        }
+
+        $normalized = $this->normalizeRow($row);
+        if ($normalized === null) {
+            return null;
+        }
+
+        $normalized['codigo_curso'] = trim((string) ($row['codigo_curso'] ?? $row['CODIGO_CURSO'] ?? $row['CODIGO_DO_CURSO'] ?? $row['CURSO_CODIGO'] ?? ''));
+        $normalized['turma'] = trim((string) ($row['turma'] ?? $row['TURMA'] ?? $row['codigo_turma'] ?? $row['CODIGO_TURMA'] ?? $row['CODIGO_DA_TURMA'] ?? $row['CLASS_CODE'] ?? $normalized['turma'] ?? ''));
+        $normalized['turno'] = trim((string) ($row['turno'] ?? $row['TURNO'] ?? $row['SHIFT'] ?? ''));
+        $normalized['modalidade'] = trim((string) ($row['modalidade'] ?? $row['MODALIDADE'] ?? ''));
+
+        if ($normalized['curso'] === '') {
+            return null;
+        }
+
+        if ($normalized['disciplina'] === '') {
+            return null;
+        }
+
+        return $normalized;
+    }
+
+    private function resolveTotvsClassCode(array $normalized, AcademicTerm $term, Subject $subject, int $rowIndex): string
+    {
+        $candidate = trim((string) ($normalized['turma'] ?? ''));
+
+        if ($candidate === '' || $this->looksLikeCourseName($candidate)) {
+            $candidate = sprintf(
+                'TOTVS-%s-%s-%s',
+                $term->code,
+                $subject->id,
+                $rowIndex + 1
+            );
+        }
+
+        $exists = ClassOffering::where('academic_term_id', $term->id)
+            ->where('subject_id', $subject->id)
+            ->where('class_code', $candidate)
+            ->exists();
+
+        if (! $exists) {
+            return $candidate;
+        }
+
+        return sprintf('%s-%s', $candidate, $rowIndex + 1);
     }
 
     private function normalizeRow(?array $row): ?array
@@ -475,12 +691,17 @@ class ImportController extends Controller
             return null;
         }
 
+        $codigoTurma = trim((string) ($row['codigo_turma'] ?? $row['CODIGO_TURMA'] ?? $row['CODIGO_DA_TURMA'] ?? $row['CLASS_CODE'] ?? ''));
+        if ($codigoTurma !== '') {
+            $row['turma'] = $codigoTurma;
+        }
+
         $curso = trim((string) ($row['curso'] ?? $row['CURSO'] ?? ''));
         $codigoCurso = trim((string) ($row['codigo_curso'] ?? $row['CODIGO_CURSO'] ?? $row['CODIGO_DO_CURSO'] ?? $row['CURSO_CODIGO'] ?? ''));
         $disciplina = trim((string) ($row['disciplina'] ?? $row['DISCIPLINA'] ?? ''));
         $codigo = trim((string) ($row['codigo'] ?? $row['CODIGO'] ?? ''));
         $matriz = trim((string) ($row['matriz'] ?? $row['MATRIZ'] ?? ''));
-        $turma = trim((string) ($row['turma'] ?? $row['TURMA'] ?? ''));
+        $turma = trim((string) ($row['turma'] ?? $row['TURMA'] ?? $row['codigo_turma'] ?? $row['CODIGO_TURMA'] ?? $row['CODIGO_DA_TURMA'] ?? $row['CLASS_CODE'] ?? ''));
         $turno = trim((string) ($row['turno'] ?? $row['TURNO'] ?? ''));
         $modalidade = trim((string) ($row['modalidade'] ?? $row['MODALIDADE'] ?? ''));
         $professor = trim((string) ($row['professor'] ?? $row['PROFESSOR'] ?? ''));
@@ -617,7 +838,7 @@ class ImportController extends Controller
     private function ensureCourse(string $name, string $codeFromSheet = ''): Course
     {
         $explicitCode = strtoupper(trim($codeFromSheet));
-        $code = $explicitCode !== '' ? $explicitCode : (strtoupper(Str::slug($name, '')) ?: 'SI');
+        $code = $explicitCode !== '' ? $explicitCode : $this->deriveCourseCodeFromName($name);
 
         $course = Course::firstOrCreate(['code' => $code], [
             'name' => $name ?: 'Sistemas de Informação',
@@ -631,6 +852,21 @@ class ImportController extends Controller
         }
 
         return $course;
+    }
+
+    private function deriveCourseCodeFromName(string $name): string
+    {
+        $slug = strtoupper(Str::slug($name, ''));
+
+        if ($slug === '') {
+            return 'SI';
+        }
+
+        if (preg_match('/^[A-Z]+$/', $slug) === 1 && strlen($slug) >= 8) {
+            return 'SI';
+        }
+
+        return $slug ?: 'SI';
     }
 
     private function ensureMatrix(Course $course, string $matrixCode): ?CurriculumMatrix
@@ -671,7 +907,7 @@ class ImportController extends Controller
     {
         $candidate = trim($fallbackCode);
 
-        if ($candidate === '') {
+        if ($candidate === '' || $this->looksLikeCourseName($candidate)) {
             $candidate = sprintf(
                 'IMPORTADO-%s-%s-%s-%s',
                 $subject->id,
@@ -691,6 +927,21 @@ class ImportController extends Controller
         }
 
         return sprintf('%s-%s', $candidate, $rowIndex);
+    }
+
+    private function looksLikeCourseName(string $value): bool
+    {
+        $value = strtoupper(trim($value));
+
+        if ($value === '') {
+            return true;
+        }
+
+        if (preg_match('/[0-9]/', $value) === 1) {
+            return false;
+        }
+
+        return preg_match('/^[A-Z]+$/', $value) === 1 && strlen($value) >= 8;
     }
 
     private function resolveShift(string $value): string

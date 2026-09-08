@@ -589,6 +589,135 @@ class UserLoginTest extends TestCase
             ->assertJsonFragment(['A planilha não pôde ser lida. Verifique se o arquivo é um XLSX/CSV válido e tente novamente.']);
     }
 
+    public function test_import_does_not_use_course_name_as_turma_code(): void
+    {
+        $user = User::create([
+            'name' => 'Larissa Torres',
+            'email' => 'larissa-course-name@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $filePath = storage_path('framework/testing/ubiqua-course-name-as-turma.csv');
+        $directory = dirname($filePath);
+        if (! is_dir($directory)) {
+            mkdir($directory, 0777, true);
+        }
+
+        $csv = "CURSO;MATRIZ;DISCIPLINA;CODIGO;PERIODO;TURMA;TURNO;MODALIDADE\nSistemas de Informação;GRA-MAT-0228-F;Banco de Dados;GSER133620;2;SISTEMASDEINFORMACAO;MANHA;HÍBRIDA\n";
+        file_put_contents($filePath, $csv);
+
+        $response = $this->actingAs($user)->post('/importacoes/oferta-ubiqua', [
+            'arquivo' => new \Illuminate\Http\UploadedFile($filePath, 'ubiqua-course-name-as-turma.csv', 'text/csv', null, true),
+            'academic_term_code' => '2026.2',
+        ]);
+
+        $response->assertRedirect();
+
+        $term = \App\Models\AcademicTerm::where('code', '2026.2')->firstOrFail();
+        $offerings = \App\Models\ClassOffering::where('academic_term_id', $term->id)->get();
+
+        $this->assertNotEmpty($offerings);
+        foreach ($offerings as $offering) {
+            $this->assertStringNotContainsString('SISTEMASDEINFORMACAO', $offering->class_code);
+            $this->assertMatchesRegularExpression('/^IMPORTADO-[0-9]+-[0-9]+-[0-9]+-[0-9]+$/', $offering->class_code);
+        }
+    }
+
+    public function test_admin_can_import_totvs_discipline_base_and_keep_real_class_code(): void
+    {
+        $user = User::create([
+            'name' => 'Larissa Torres',
+            'email' => 'larissa-totvs-base@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $filePath = storage_path('framework/testing/totvs-base.csv');
+        $directory = dirname($filePath);
+        if (! is_dir($directory)) {
+            mkdir($directory, 0777, true);
+        }
+
+        $csv = "CURSO;PERIODO;DISCIPLINA;MATRIZ;H/A CLASSIS (PAGAMENTO);MODALIDADE;CODIGO;CODIGO_DA_TURMA;TURNO\nAdministração;1;Desenvolvimento Sustentável e Direitos Individuais;GRA-MAT-0202-H;;60;DSDI-001;MANAHA\n";
+        file_put_contents($filePath, $csv);
+
+        $response = $this->actingAs($user)->post('/importacoes/base-totvs', [
+            'arquivo' => new \Illuminate\Http\UploadedFile($filePath, 'totvs-base.csv', 'text/csv', null, true),
+            'academic_term_code' => '2026.2',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('courses', ['name' => 'Administração']);
+        $this->assertDatabaseHas('curriculum_matrices', ['code' => 'GRA-MAT-0202-H']);
+        $this->assertDatabaseHas('subjects', ['name' => 'Desenvolvimento Sustentável e Direitos Individuais']);
+    }
+
+    public function test_import_keeps_real_totvs_turma_code_when_present(): void
+    {
+        $user = User::create([
+            'name' => 'Larissa Torres',
+            'email' => 'larissa-totvs-turma@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $filePath = storage_path('framework/testing/ubiqua-totvs-turma.csv');
+        $directory = dirname($filePath);
+        if (! is_dir($directory)) {
+            mkdir($directory, 0777, true);
+        }
+
+        $csv = "CURSO;MATRIZ;DISCIPLINA;CODIGO;PERIODO;CODIGO_DA_TURMA;TURNO;MODALIDADE\nSistemas de Informação;GRA-MAT-0228-F;Banco de Dados;GSER133620;2;TURMA-2026-001;MANHA;HÍBRIDA\n";
+        file_put_contents($filePath, $csv);
+
+        $response = $this->actingAs($user)->post('/importacoes/oferta-ubiqua', [
+            'arquivo' => new \Illuminate\Http\UploadedFile($filePath, 'ubiqua-totvs-turma.csv', 'text/csv', null, true),
+            'academic_term_code' => '2026.2',
+        ]);
+
+        $response->assertRedirect();
+
+        $term = \App\Models\AcademicTerm::where('code', '2026.2')->firstOrFail();
+        $offering = \App\Models\ClassOffering::where('academic_term_id', $term->id)->first();
+
+        $this->assertNotNull($offering);
+        $this->assertSame('TURMA-2026-001', $offering->class_code);
+    }
+
+    public function test_admin_can_import_totvs_sheet_with_real_column_layout(): void
+    {
+        $user = User::create([
+            'name' => 'Larissa Torres',
+            'email' => 'larissa-totvs-layout@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $filePath = storage_path('framework/testing/totvs-layout.csv');
+        $directory = dirname($filePath);
+        if (! is_dir($directory)) {
+            mkdir($directory, 0777, true);
+        }
+
+        $csv = "Codigo da Turma;Cód Disciplina;Nome Disciplina;Curso;Habilitação;Matriz;Turno\nTURMA-2026-001;GSER133620;Banco de Dados;Sistemas de Informação;Sistemas de Informação;GRA-MAT-0228-F;MANHA\n";
+        file_put_contents($filePath, $csv);
+
+        $response = $this->actingAs($user)->post('/importacoes/base-totvs', [
+            'arquivo' => new \Illuminate\Http\UploadedFile($filePath, 'totvs-layout.csv', 'text/csv', null, true),
+            'academic_term_code' => '2026.2',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('subjects', ['code' => 'GSER133620', 'name' => 'Banco de Dados']);
+        $this->assertDatabaseHas('courses', ['code' => 'SI', 'name' => 'Sistemas de Informação']);
+        $this->assertDatabaseHas('class_offerings', ['class_code' => 'TURMA-2026-001']);
+    }
+
     public function test_user_can_import_ubiquitous_offering_sheet(): void
     {
         $user = User::create([
