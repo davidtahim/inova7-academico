@@ -20,8 +20,25 @@ class ImportController extends Controller
 {
     public function index()
     {
+        $recentLoads = AcademicTerm::select('academic_terms.*')
+            ->leftJoin('class_offerings', 'class_offerings.academic_term_id', '=', 'academic_terms.id')
+            ->selectRaw('MAX(class_offerings.created_at) as last_imported_at, COUNT(DISTINCT class_offerings.id) as offering_count')
+            ->groupBy(
+                'academic_terms.id',
+                'academic_terms.code',
+                'academic_terms.starts_at',
+                'academic_terms.ends_at',
+                'academic_terms.status',
+                'academic_terms.created_at',
+                'academic_terms.updated_at'
+            )
+            ->orderByDesc('last_imported_at')
+            ->orderByDesc('academic_terms.id')
+            ->get();
+
         return view('imports.ubiqua', [
             'terms' => AcademicTerm::orderBy('code', 'desc')->get(),
+            'recentLoads' => $recentLoads,
         ]);
     }
 

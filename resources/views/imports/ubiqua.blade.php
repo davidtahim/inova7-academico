@@ -47,5 +47,44 @@
                 </form>
             </div>
         </div>
+
+        <div class="card shadow-sm border-0 mt-4">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">Últimas cargas por semestre</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Semestre</th>
+                                <th>Ofertas importadas</th>
+                                <th>Última carga</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($recentLoads as $load)
+                                <tr>
+                                    <td>{{ $load->code }}</td>
+                                    <td>{{ (int) $load->offering_count }}</td>
+                                    <td>
+                                        @if ($load->last_imported_at)
+                                            {{ \Illuminate\Support\Carbon::parse($load->last_imported_at)->format('d/m/Y H:i') }}
+                                        @else
+                                            <span class="text-muted">Sem carga</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted py-3">Nenhuma carga registrada até o
+                                        momento.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 @endsection

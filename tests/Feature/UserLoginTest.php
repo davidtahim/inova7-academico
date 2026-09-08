@@ -497,6 +497,58 @@ class UserLoginTest extends TestCase
         $this->assertDatabaseHas('class_offerings', ['academic_term_id' => AcademicTerm::where('code', '2026.2')->value('id'), 'class_code' => 'CSE0280102NMA']);
     }
 
+    public function test_import_page_shows_recent_load_history_by_academic_term(): void
+    {
+        $user = User::create([
+            'name' => 'Larissa Torres',
+            'email' => 'larissa6@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $term = AcademicTerm::create([
+            'code' => '2026.2',
+            'starts_at' => '2026-08-01',
+            'ends_at' => '2026-12-15',
+            'status' => 'active',
+        ]);
+
+        $course = Course::create([
+            'code' => 'SI',
+            'name' => 'Sistemas de Informação',
+            'degree' => 'Bacharelado',
+            'active' => true,
+        ]);
+
+        $subject = Subject::create([
+            'code' => 'BDA-01',
+            'name' => 'Banco de Dados',
+            'total_hours' => 40,
+            'presential_hours' => 40,
+        ]);
+
+        ClassOffering::create([
+            'academic_term_id' => $term->id,
+            'course_id' => $course->id,
+            'subject_id' => $subject->id,
+            'class_code' => 'BDA-01',
+            'period' => 2,
+            'shift' => 'MANHÃ',
+            'modality' => 'PRESENCIAL',
+            'occurs' => true,
+            'weekly_hours' => 4,
+            'totvs_hours' => 4,
+            'status' => 'planned',
+        ]);
+
+        $response = $this->actingAs($user)->get('/importacoes/oferta-ubiqua');
+
+        $response->assertOk();
+        $response->assertSee('Últimas cargas por semestre');
+        $response->assertSee('2026.2');
+    }
+
     public function test_allocation_prefers_professor_with_matching_subject_and_preferred_availability(): void
     {
         $term = AcademicTerm::create([
