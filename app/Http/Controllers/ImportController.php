@@ -112,7 +112,22 @@ class ImportController extends Controller
         $rows = [];
         $handle = fopen($path, 'r');
 
-        while (($data = fgetcsv($handle, 0, ';')) !== false) {
+        $firstLine = fgets($handle);
+        $delimiter = ';';
+
+        if ($firstLine !== false) {
+            $score = [
+                ';' => substr_count($firstLine, ';'),
+                ',' => substr_count($firstLine, ','),
+                '\t' => substr_count($firstLine, "\t"),
+            ];
+
+            $delimiter = array_search(max($score), $score, true) ?: ';';
+        }
+
+        rewind($handle);
+
+        while (($data = fgetcsv($handle, 0, $delimiter)) !== false) {
             if ($data === [null] || count($data) === 1 && trim((string) $data[0]) === '') {
                 continue;
             }
@@ -177,7 +192,7 @@ class ImportController extends Controller
             $matchedHeaders = 0;
             foreach ($values as $value) {
                 $normalized = $this->normalizeHeader((string) $value);
-                if (in_array($normalized, ['curso', 'periodo', 'disciplina', 'codigo', 'matriz', 'turma', 'turno', 'modalidade', 'professor', 'carga_horaria'], true)) {
+                if (in_array($normalized, ['curso', 'periodo', 'disciplina', 'matriz', 'carga_horaria', 'modalidade'], true)) {
                     $matchedHeaders++;
                 }
             }
@@ -228,31 +243,23 @@ class ImportController extends Controller
 
         $aliases = [
             'CURSO' => 'curso',
-            'NOME_DO_CURSO' => 'curso',
-            'MATRIZ' => 'matriz',
-            'NOME_DA_MATRIZ' => 'matriz',
+            'PERIODO' => 'periodo',
             'DISCIPLINA' => 'disciplina',
-            'NOME_DA_DISCIPLINA' => 'disciplina',
             'CODIGO' => 'codigo',
             'CODIGO_DA_DISCIPLINA' => 'codigo',
-            'COD_DISCIPLINA' => 'codigo',
-            'PERIODO' => 'periodo',
-            'PERIODO_ACADEMICO' => 'periodo',
-            'TURMA' => 'turma',
-            'TURNO' => 'turno',
+            'CODIGO_DISCIPLINA' => 'codigo',
+            'DISCIPLINA_CODIGO' => 'codigo',
+            'MATRIZ' => 'matriz',
+            'H_A_CLASSIS_PAGAMENTO' => 'carga_horaria',
+            'HA_CLASSIS_PAGAMENTO' => 'carga_horaria',
+            'HA_CLASSIS' => 'carga_horaria',
+            'H_A_CLASSIS' => 'carga_horaria',
             'MODALIDADE' => 'modalidade',
-            'PROFESSOR' => 'professor',
-            'NOME_DO_PROFESSOR' => 'professor',
-            'DIA' => 'dia',
-            'HORARIO' => 'horario',
-            'VAGAS' => 'vagas',
+            'NOME_DO_CURSO' => 'curso',
+            'NOME_DA_DISCIPLINA' => 'disciplina',
+            'NOME_DA_MATRIZ' => 'matriz',
             'CARGA_HORARIA' => 'carga_horaria',
             'CH' => 'carga_horaria',
-            'CARGA_HORARIA_TOTAL' => 'carga_horaria',
-            'HA_CLASSIS_PAGAMENTO' => 'carga_horaria',
-            'H_A_CLASSIS_PAGAMENTO' => 'carga_horaria',
-            'H_A' => 'carga_horaria',
-            'HA' => 'carga_horaria',
         ];
 
         if (isset($aliases[$normalized])) {
@@ -263,15 +270,17 @@ class ImportController extends Controller
             'NOME_DA_DISCIPLINA' => 'disciplina',
             'DISCIPLINA_NOME' => 'disciplina',
             'NOME_DISCIPLINA' => 'disciplina',
-            'CODIGO_DISCIPLINA' => 'codigo',
-            'COD_DISCIP' => 'codigo',
             'NOME_CURSO' => 'curso',
             'CURSO_NOME' => 'curso',
-            'NOME_PROFESSOR' => 'professor',
-            'PROFESSOR_NOME' => 'professor',
             'NOME_MATRIZ' => 'matriz',
             'MATRIZ_NOME' => 'matriz',
             'PERIODO_DISCIPLINA' => 'periodo',
+            'PERIODO_DA_DISCIPLINA' => 'periodo',
+            'PERIODO_CURSO' => 'periodo',
+            'H_A_CLASSIS_PAGAMENTO' => 'carga_horaria',
+            'HA_CLASSIS_PAGAMENTO' => 'carga_horaria',
+            'H_A_CLASSIS' => 'carga_horaria',
+            'HA_CLASSIS' => 'carga_horaria',
         ];
 
         return $variantMatches[$normalized] ?? Str::lower($normalized);
@@ -296,6 +305,26 @@ class ImportController extends Controller
         $turno = trim((string) ($row['turno'] ?? $row['TURNO'] ?? ''));
         $modalidade = trim((string) ($row['modalidade'] ?? $row['MODALIDADE'] ?? ''));
         $professor = trim((string) ($row['professor'] ?? $row['PROFESSOR'] ?? ''));
+
+        if ($periodo = ($row['periodo'] ?? $row['PERIODO'] ?? null)) {
+            $row['periodo'] = $periodo;
+        }
+        if ($cargaHoraria = ($row['carga_horaria'] ?? $row['CARGA_HORARIA'] ?? $row['HA_CLASSIS_PAGAMENTO'] ?? $row['H_A_CLASSIS_PAGAMENTO'] ?? null)) {
+            $row['carga_horaria'] = $cargaHoraria;
+        }
+
+        if ($curso === '' && isset($row['CURSO'])) {
+            $curso = trim((string) $row['CURSO']);
+        }
+        if ($disciplina === '' && isset($row['DISCIPLINA'])) {
+            $disciplina = trim((string) $row['DISCIPLINA']);
+        }
+        if ($codigo === '' && isset($row['CODIGO'])) {
+            $codigo = trim((string) $row['CODIGO']);
+        }
+        if ($matriz === '' && isset($row['MATRIZ'])) {
+            $matriz = trim((string) $row['MATRIZ']);
+        }
 
         if ($curso === '' && $disciplina === '' && $codigo === '' && $matriz === '') {
             return null;

@@ -127,6 +127,14 @@
                                         disponível, a equipe de TI pode cadastrar e corrigir os dados manualmente.
                                     </div>
 
+                                    <div class="alert alert-light border mb-3">
+                                        <strong>Turnos padrão da disponibilidade:</strong>
+                                        <div class="mt-2 small text-secondary">
+                                            <div>Manhã: 07:30 às 08:20 | 10:50 às 11:40</div>
+                                            <div>Noite: 18:30 às 19:20 | 21:00 às 21:50</div>
+                                        </div>
+                                    </div>
+
                                     @if ($availability->isEmpty())
                                         <div class="alert alert-secondary mb-0">
                                             Nenhuma disponibilidade registrada para o semestre atual. Verifique a importação

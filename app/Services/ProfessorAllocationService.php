@@ -89,10 +89,24 @@ class ProfessorAllocationService
             ->whereIn('id', $professorIds)
             ->get();
 
-        $candidates = $candidates->filter(fn(Professor $professor) => $this->isAvailableForOffering($professor, $offering));
+        $eligible = $candidates->filter(fn(Professor $professor) => $this->isAvailableForOffering($professor, $offering));
 
-        return $candidates
-            ->sortByDesc(fn(Professor $professor) => $this->scoreProfessorAvailability($professor, $offering))
+        if ($eligible->isEmpty()) {
+            return null;
+        }
+
+        $subjectId = (int) $offering->subject_id;
+
+        return $eligible
+            ->sortByDesc(function (Professor $professor) use ($subjectId, $offering) {
+                $scores = [
+                    'subject_match' => $professor->subjects()->whereKey($subjectId)->exists() ? 100 : 0,
+                    'preference' => $this->scoreProfessorAvailability($professor, $offering),
+                    'availability' => $this->countMatchingAvailabilityWindows($professor, $offering),
+                ];
+
+                return $scores['subject_match'] + $scores['preference'] + $scores['availability'];
+            })
             ->first();
     }
 
@@ -129,10 +143,31 @@ class ProfessorAllocationService
                 ->first();
 
             if ($availability) {
-                $score += $availability->preference === 'preferred' ? 10 : 5;
+                $score += match ($availability->preference) {
+                    'preferred' => 20,
+                    'available' => 10,
+                    default => 0,
+                };
             }
         }
 
         return $score;
+    }
+
+    protected function countMatchingAvailabilityWindows(Professor $professor, ClassOffering $offering): int
+    {
+        return ProfessorAvailability::query()
+            ->where('professor_id', $professor->id)
+            ->where('academic_term_id', $offering->academic_term_id)
+            ->where(function ($query) use ($offering) {
+                foreach ($offering->slots as $slot) {
+                    $query->orWhere(function ($subQuery) use ($slot) {
+                        $subQuery->where('weekday', $slot->weekday)
+                            ->where('starts_at', '<', $slot->ends_at)
+                            ->where('ends_at', '>', $slot->starts_at);
+                    });
+                }
+            })
+            ->count();
     }
 }

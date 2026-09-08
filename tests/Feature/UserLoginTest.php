@@ -7,6 +7,8 @@ use App\Models\ClassOffering;
 use App\Models\Course;
 use App\Models\CurriculumMatrix;
 use App\Models\Professor;
+use App\Models\ProfessorAvailability;
+use App\Models\ScheduleSlot;
 use App\Models\Subject;
 use App\Models\TeachingAssignment;
 use App\Models\User;
@@ -404,6 +406,106 @@ class UserLoginTest extends TestCase
         $response->assertRedirect();
         $this->assertDatabaseHas('subjects', ['code' => 'GSER133620']);
         $this->assertDatabaseHas('class_offerings', ['class_code' => 'CSE0280102NMA']);
+    }
+
+    public function test_allocation_prefers_professor_with_matching_subject_and_preferred_availability(): void
+    {
+        $term = AcademicTerm::create([
+            'code' => '2026.3',
+            'starts_at' => '2026-08-01',
+            'ends_at' => '2026-12-15',
+            'status' => 'active',
+        ]);
+
+        $course = Course::create([
+            'code' => 'SI',
+            'name' => 'Sistemas de Informação',
+            'degree' => 'Bacharelado',
+            'active' => true,
+        ]);
+
+        $matrix = CurriculumMatrix::create([
+            'course_id' => $course->id,
+            'code' => 'MTR-900',
+            'name' => 'Matriz 2026',
+            'status' => 'Atual',
+        ]);
+
+        $subject = Subject::create([
+            'code' => 'BDA-01',
+            'name' => 'Banco de Dados',
+            'total_hours' => 40,
+            'presential_hours' => 40,
+        ]);
+
+        $generalistProfessor = Professor::create([
+            'name' => 'Professor Geralista',
+            'email' => 'geralista@inova7.local',
+            'qualification' => 'Mestre',
+            'active' => true,
+        ]);
+
+        $specialistProfessor = Professor::create([
+            'name' => 'Professor Especialista',
+            'email' => 'especialista@inova7.local',
+            'qualification' => 'Doutor',
+            'active' => true,
+        ]);
+
+        $specialistProfessor->subjects()->sync([$subject->id]);
+
+        $offering = ClassOffering::create([
+            'academic_term_id' => $term->id,
+            'course_id' => $course->id,
+            'curriculum_matrix_id' => $matrix->id,
+            'subject_id' => $subject->id,
+            'class_code' => 'BDA-01',
+            'period' => 2,
+            'shift' => 'MANHÃ',
+            'modality' => 'PRESENCIAL',
+            'occurs' => true,
+            'weekly_hours' => 4,
+            'totvs_hours' => 4,
+            'status' => 'planned',
+        ]);
+
+        ScheduleSlot::create([
+            'class_offering_id' => $offering->id,
+            'professor_id' => null,
+            'weekday' => 2,
+            'starts_at' => '09:10:00',
+            'ends_at' => '10:50:00',
+            'room' => 'LI31',
+            'block' => '4º ANDAR',
+        ]);
+
+        ProfessorAvailability::create([
+            'academic_term_id' => $term->id,
+            'professor_id' => $generalistProfessor->id,
+            'weekday' => 2,
+            'starts_at' => '09:00:00',
+            'ends_at' => '11:00:00',
+            'preference' => 'available',
+            'notes' => 'Disponível em geral',
+        ]);
+
+        ProfessorAvailability::create([
+            'academic_term_id' => $term->id,
+            'professor_id' => $specialistProfessor->id,
+            'weekday' => 2,
+            'starts_at' => '09:00:00',
+            'ends_at' => '11:00:00',
+            'preference' => 'preferred',
+            'notes' => 'Preferência para banco de dados',
+        ]);
+
+        $service = new \App\Services\ProfessorAllocationService();
+        $service->allocateForTerm($term->id);
+
+        $this->assertDatabaseHas('teaching_assignments', [
+            'class_offering_id' => $offering->id,
+            'professor_id' => $specialistProfessor->id,
+        ]);
     }
 
     public function test_catalog_can_filter_students_and_subjects_by_search(): void
