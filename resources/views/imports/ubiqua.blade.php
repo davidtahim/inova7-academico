@@ -49,22 +49,55 @@
                         TURNO, MODALIDADE e PROFESSOR.
                     </div>
 
-                    <div id="import-progress" class="mt-4 d-none">
-                        <div class="d-flex justify-content-between small text-muted mb-2">
-                            <span>Status da importação</span>
-                            <strong id="import-progress-value">0%</strong>
+                    <div id="import-progress" class="mt-4 d-none p-3 rounded-4 border import-progress-shell">
+                        <div class="d-flex justify-content-between align-items-center small text-secondary mb-2">
+                            <span class="fw-semibold">Status da importação</span>
+                            <strong id="import-progress-value" class="fs-6 text-dark">0%</strong>
                         </div>
-                        <div class="progress" style="height: 14px;">
+                        <div class="progress rounded-pill" style="height: 18px; background-color: #e9ecef; overflow: hidden;">
                             <div id="import-progress-bar"
-                                class="progress-bar progress-bar-striped progress-bar-animated bg-primary"
+                                class="progress-bar progress-bar-striped progress-bar-animated bg-primary rounded-pill"
                                 role="progressbar" style="width: 0%" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
-                        <div id="import-progress-status" class="small text-muted mt-2">Aguardando início...</div>
+                        <div id="import-progress-status" class="small text-muted mt-3 d-flex align-items-center gap-2">
+                            <span class="spinner-border spinner-border-sm text-primary" role="status"
+                                aria-hidden="true"></span>
+                            <span>Aguardando início...</span>
+                        </div>
                         <div id="import-progress-eta" class="small text-muted mt-1">Tempo restante: calculando...</div>
                     </div>
 
-                    <button type="submit" id="import-submit-button" class="btn btn-primary mt-4">Importar dados</button>
+                    <button type="submit" id="import-submit-button"
+                        class="btn btn-primary mt-4 px-4 py-3 fw-semibold rounded-3 import-submit-button">
+                        <span class="btn-label">Importar dados</span>
+                    </button>
                 </form>
+
+                <style>
+                    .import-progress-shell {
+                        background: linear-gradient(180deg, rgba(255,255,255,0.75), rgba(233,236,239,0.85));
+                        border-color: #dfe3e8 !important;
+                        box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+                    }
+
+                    .import-submit-button {
+                        background: linear-gradient(135deg, #5aa9f8 0%, #4a9ae8 100%);
+                        border: 0;
+                        box-shadow: 0 8px 18px rgba(74, 154, 232, 0.28);
+                        transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+                    }
+
+                    .import-submit-button:hover:not(:disabled) {
+                        transform: translateY(-1px);
+                        box-shadow: 0 10px 20px rgba(74, 154, 232, 0.32);
+                        filter: brightness(1.02);
+                    }
+
+                    .import-submit-button:disabled {
+                        opacity: 0.9;
+                        cursor: wait;
+                    }
+                </style>
 
                 <script>
                     document.addEventListener('DOMContentLoaded', function() {
@@ -95,6 +128,31 @@
                             return 'Tempo restante: aprox. ' + minutes + ' min';
                         };
 
+                        const setLoadingState = (label) => {
+                            const spinner =
+                                '<span class="spinner-border spinner-border-sm text-light me-2" role="status" aria-hidden="true"></span>';
+                            const buttonLabel = document.querySelector('#import-submit-button .btn-label');
+                            submitButton.innerHTML = spinner + '<span class="btn-label">' + label + '</span>';
+                            if (buttonLabel) {
+                                buttonLabel.textContent = label;
+                            }
+                        };
+
+                        const setIdleState = () => {
+                            submitButton.innerHTML = '<span class="btn-label">Importar dados</span>';
+                        };
+
+                        const setStatus = (message, showSpinner = true) => {
+                            const spinner = progressStatus.querySelector('.spinner-border');
+                            if (spinner) {
+                                spinner.style.visibility = showSpinner ? 'visible' : 'hidden';
+                            }
+                            const content = progressStatus.querySelector('span:last-child');
+                            if (content) {
+                                content.textContent = message;
+                            }
+                        };
+
                         const pollProgress = () => {
                             fetch('{{ route('imports.ubiqua.progress') }}', {
                                     headers: {
@@ -112,12 +170,13 @@
                                     progressBar.style.width = percent + '%';
                                     progressBar.setAttribute('aria-valuenow', String(percent));
                                     progressValue.textContent = percent + '%';
-                                    progressStatus.textContent = data.status || 'Processando...';
+                                    setStatus(data.status || 'Processando importação...', true);
                                     progressEta.textContent = formatRemaining(data.estimated_remaining_seconds);
 
                                     if (!data.finished) {
-                                        window.setTimeout(pollProgress, 700);
+                                        window.setTimeout(pollProgress, 400);
                                     } else {
+                                        setStatus('Importação concluída', false);
                                         progressEta.textContent = 'Tempo restante: concluído';
                                         window.setTimeout(() => {
                                             window.location.href = '{{ route('imports.ubiqua.index') }}';
@@ -125,9 +184,9 @@
                                     }
                                 })
                                 .catch(() => {
-                                    progressStatus.textContent = 'Processando importação...';
+                                    setStatus('Processando importação...', true);
                                     progressEta.textContent = 'Tempo restante: calculando...';
-                                    window.setTimeout(pollProgress, 1000);
+                                    window.setTimeout(pollProgress, 600);
                                 });
                         };
 
@@ -140,11 +199,13 @@
 
                             progressWrap.classList.remove('d-none');
                             submitButton.disabled = true;
-                            submitButton.textContent = 'Importando...';
+                            setLoadingState('Importando...');
                             progressBar.style.width = '0%';
                             progressValue.textContent = '0%';
-                            progressStatus.textContent = 'Iniciando importação...';
+                            setStatus('Iniciando importação...', true);
                             progressEta.textContent = 'Tempo restante: calculando...';
+
+                            pollProgress();
 
                             const formData = new FormData(form);
                             fetch(form.action, {
@@ -176,9 +237,9 @@
                                 })
                                 .catch((error) => {
                                     console.error(error);
-                                    progressStatus.textContent = 'Falha ao importar a planilha. Tente novamente.';
+                                    setStatus('Falha ao importar a planilha. Tente novamente.', false);
                                     submitButton.disabled = false;
-                                    submitButton.textContent = 'Importar dados';
+                                    setIdleState();
                                 });
                         });
                     });
