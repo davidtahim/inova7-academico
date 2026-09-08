@@ -20,7 +20,7 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Curso</label>
-                                <select name="course_id" class="form-select" required>
+                                <select id="matrix_course_id" name="course_id" class="form-select" required>
                                     <option value="">Selecione</option>
                                     @foreach ($courses as $course)
                                         <option value="{{ $course->id }}"
@@ -32,20 +32,20 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Código</label>
-                                <input type="text" name="code" class="form-control"
+                                <input id="matrix_code" type="text" name="code" class="form-control"
                                     value="{{ old('code', $matrix->code ?? '') }}" required>
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Nome</label>
-                                <input type="text" name="name" class="form-control"
+                                <input id="matrix_name" type="text" name="name" class="form-control"
                                     value="{{ old('name', $matrix->name ?? '') }}" required>
                             </div>
 
                             <div class="row g-3 mb-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Versão</label>
-                                    <input type="text" name="version" class="form-control"
+                                    <input id="matrix_version" type="text" name="version" class="form-control"
                                         value="{{ old('version', $matrix->version ?? '') }}">
                                 </div>
                                 <div class="col-md-6">
@@ -77,4 +77,41 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const courseSelect = document.getElementById('matrix_course_id');
+            const versionInput = document.getElementById('matrix_version');
+            const nameInput = document.getElementById('matrix_name');
+
+            if (!courseSelect || !versionInput || !nameInput) {
+                return;
+            }
+
+            const applyMatrixNameTemplate = () => {
+                const courseName = courseSelect.options[courseSelect.selectedIndex]?.text?.trim();
+                const version = versionInput.value.trim();
+
+                if (!courseName) {
+                    return;
+                }
+
+                if (version) {
+                    nameInput.value = `Matriz ${version} - ${courseName}`;
+                    return;
+                }
+
+                if (!nameInput.value.trim()) {
+                    nameInput.value = `Matriz - ${courseName}`;
+                }
+            };
+
+            courseSelect.addEventListener('change', applyMatrixNameTemplate);
+            versionInput.addEventListener('input', applyMatrixNameTemplate);
+
+            if (!nameInput.value.trim()) {
+                applyMatrixNameTemplate();
+            }
+        });
+    </script>
 @endsection

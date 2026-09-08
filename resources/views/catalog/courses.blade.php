@@ -14,36 +14,35 @@
         <div class="row g-3">
             @forelse ($courses as $course)
                 <div class="col-lg-6">
-                    <div class="card border-0 shadow-sm h-100">
+                    <article class="card border-0 shadow-sm h-100">
                         <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
                                 <div>
-                                    <div class="text-uppercase small text-secondary">{{ $course->code }}</div>
+                                    <div class="text-uppercase small text-secondary fw-semibold">{{ $course->code }}</div>
                                     <h5 class="mb-0">{{ $course->name }}</h5>
                                 </div>
-                                <span class="badge bg-light text-dark border">{{ $course->degree ?? 'Curso' }}</span>
+                                <a href="{{ route('admin.courses.edit', $course) }}" class="btn btn-sm btn-outline-primary">
+                                    Editar em admin/cursos
+                                </a>
                             </div>
+                            <div class="small text-secondary mb-3">{{ $course->degree ?? 'Curso' }}</div>
 
                             @if ($course->matrices->isNotEmpty())
-                                <ul class="list-group list-group-flush">
+                                <div class="d-grid gap-2">
                                     @foreach ($course->matrices as $matrix)
-                                        <li class="list-group-item px-0 py-2">
-                                            <div class="d-flex justify-content-between gap-3 align-items-center">
-                                                <div>
-                                                    <strong>{{ $matrix->name }}</strong>
-                                                    <div class="small text-muted">{{ $matrix->code }}</div>
-                                                </div>
-                                                <span
-                                                    class="badge text-bg-light border">{{ $matrix->status ?? 'ativa' }}</span>
+                                        <div class="border rounded-3 px-3 py-2 bg-light-subtle">
+                                            <div>
+                                                <strong>{{ $matrix->name ?: 'Matriz ' . ($matrix->version ?? $loop->iteration) . ' - ' . $course->name }}</strong>
                                             </div>
-                                        </li>
+                                            <div class="small text-muted mt-1">{{ $matrix->code }}</div>
+                                        </div>
                                     @endforeach
-                                </ul>
+                                </div>
                             @else
-                                <div class="text-muted small mt-3">Nenhuma matriz cadastrada para este curso.</div>
+                                <div class="text-muted small mt-2">Nenhuma matriz cadastrada para este curso.</div>
                             @endif
                         </div>
-                    </div>
+                    </article>
                 </div>
             @empty
                 <div class="col-12">

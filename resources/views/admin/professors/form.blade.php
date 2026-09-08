@@ -22,12 +22,15 @@
                                 <label class="form-label">Nome</label>
                                 <input type="text" name="name" class="form-control"
                                     value="{{ old('name', $professor->name ?? '') }}" required>
+                                <div class="form-text">Cadastre o nome completo do professor conforme consta no quadro
+                                    docente.</div>
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">E-mail</label>
                                 <input type="email" name="email" class="form-control"
                                     value="{{ old('email', $professor->email ?? '') }}">
+                                <div class="form-text">Use o e-mail institucional do docente, quando houver.</div>
                             </div>
 
                             <div class="row g-3 mb-3">
@@ -35,11 +38,13 @@
                                     <label class="form-label">Matrícula</label>
                                     <input type="text" name="registration" class="form-control"
                                         value="{{ old('registration', $professor->registration ?? '') }}">
+                                    <div class="form-text">Ex.: matrícula interna ou código funcional do docente.</div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Qualificação</label>
                                     <input type="text" name="qualification" class="form-control"
                                         value="{{ old('qualification', $professor->qualification ?? '') }}">
+                                    <div class="form-text">Ex.: Mestre, Doutor, Especialista.</div>
                                 </div>
                             </div>
 

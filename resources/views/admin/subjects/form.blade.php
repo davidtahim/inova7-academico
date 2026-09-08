@@ -22,12 +22,14 @@
                                 <label class="form-label">Código</label>
                                 <input type="text" name="code" class="form-control"
                                     value="{{ old('code', $subject->code ?? '') }}" required>
+                                <div class="form-text">Use o código oficial da disciplina, por exemplo: GSER133620.</div>
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Nome</label>
                                 <input type="text" name="name" class="form-control"
                                     value="{{ old('name', $subject->name ?? '') }}" required>
+                                <div class="form-text">Cadastre o nome completo da disciplina, como Banco de Dados.</div>
                             </div>
 
                             <div class="row g-3 mb-3">

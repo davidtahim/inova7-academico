@@ -30,7 +30,8 @@
                                 <tr>
                                     <td>{{ $matrix->course?->name ?? '—' }}</td>
                                     <td><strong>{{ $matrix->code }}</strong></td>
-                                    <td>{{ $matrix->name }}</td>
+                                    <td>{{ $matrix->name ?: 'Matriz ' . ($matrix->version ?? '—') . ' - ' . ($matrix->course?->name ?? 'Curso') }}
+                                    </td>
                                     <td><span class="badge text-bg-light border">{{ $matrix->status ?? 'Ativa' }}</span>
                                     </td>
                                     <td class="text-end">

@@ -22,18 +22,23 @@
                                 <label class="form-label">Código</label>
                                 <input type="text" name="code" class="form-control"
                                     value="{{ old('code', $course->code ?? '') }}" required>
+                                <div class="form-text">Use o padrão institucional do curso, como SI, ADS ou outros códigos
+                                    oficiais.</div>
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Nome</label>
                                 <input type="text" name="name" class="form-control"
                                     value="{{ old('name', $course->name ?? '') }}" required>
+                                <div class="form-text">Cadastre o nome completo do curso, por exemplo: Sistemas de
+                                    Informação.</div>
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Grau</label>
                                 <input type="text" name="degree" class="form-control"
                                     value="{{ old('degree', $course->degree ?? '') }}">
+                                <div class="form-text">Ex.: Bacharelado, Licenciatura, Tecnólogo.</div>
                             </div>
 
                             <div class="form-check form-switch mb-4">
