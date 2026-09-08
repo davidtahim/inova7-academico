@@ -16,52 +16,68 @@
                 <a class="brand" href="{{ route('dashboard') }}"><span
                         class="brand-mark">7</span><span><strong>INOVA7</strong><small>Gestão Acadêmica</small></span></a>
                 <nav class="nav flex-column gap-1 mt-4">
-                    <div class="nav-section">Geral</div>
-                    <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
-                        href="{{ route('dashboard') }}">▦ Painel</a>
+                    <details class="nav-section-group" open>
+                        <summary class="nav-section">
+                            <span>Geral</span>
+                            <span class="nav-caret">▾</span>
+                        </summary>
+                        <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
+                            href="{{ route('dashboard') }}">▦ Painel</a>
 
-                    @if (in_array(Auth::user()->role, ['student', 'teacher', 'coordinator', 'staff', 'admin'], true))
-                        <a class="nav-link {{ request()->routeIs('planning.*') ? 'active' : '' }}"
-                            href="{{ route('planning.index') }}">▤ Planejamento</a>
+                        @if (in_array(Auth::user()->role, ['student', 'teacher', 'coordinator', 'staff', 'admin'], true))
+                            <a class="nav-link {{ request()->routeIs('planning.*') ? 'active' : '' }}"
+                                href="{{ route('planning.index') }}">▤ Planejamento</a>
+                        @endif
+
+                        <a class="nav-link {{ request()->routeIs('profile') || request()->routeIs('profile.edit') ? 'active' : '' }}"
+                            href="{{ route('profile') }}">◉ Meu perfil</a>
+                    </details>
+
+                    @if (Auth::user()->role === 'admin')
+                        <details class="nav-section-group nav-section-group-admin" open>
+                            <summary class="nav-section nav-section-admin">
+                                <span>Administração</span>
+                                <span class="nav-caret">▾</span>
+                            </summary>
+                            <a class="nav-link nav-link-admin {{ request()->routeIs('admin.*') ? 'active' : '' }}"
+                                href="{{ route('admin.planejamento.index') }}">⚙ Administração do catálogo</a>
+                            <a class="nav-link nav-link-admin {{ request()->routeIs('imports.*') ? 'active' : '' }}"
+                                href="{{ route('imports.ubiqua.index') }}">⇧ Importações</a>
+                            <a class="nav-link nav-link-admin {{ request()->routeIs('audit.*') ? 'active' : '' }}"
+                                href="{{ route('audit.index') }}">✓ Auditoria</a>
+                        </details>
                     @endif
 
                     @if (in_array(Auth::user()->role, ['coordinator', 'staff', 'admin'], true))
-                        <div class="nav-section">Catálogo</div>
-                        <a class="nav-link {{ request()->routeIs('catalog.courses') ? 'active' : '' }}"
-                            href="{{ route('catalog.courses') }}">◫ Cursos e matrizes</a>
-                        <a class="nav-link {{ request()->routeIs('catalog.professors') ? 'active' : '' }}"
-                            href="{{ route('catalog.professors') }}">♙ Professores</a>
-                        <a class="nav-link {{ request()->routeIs('catalog.subjects') ? 'active' : '' }}"
-                            href="{{ route('catalog.subjects') }}">◌ Disciplinas</a>
-                        <a class="nav-link {{ request()->routeIs('catalog.students') ? 'active' : '' }}"
-                            href="{{ route('catalog.students') }}">◍ Alunos</a>
-                        @if (Auth::user()->role === 'admin')
-                            <a class="nav-link {{ request()->routeIs('admin.*') ? 'active' : '' }}"
-                                href="{{ route('admin.planejamento.index') }}">⚙ Administração do catálogo</a>
-                        @endif
+                        <details class="nav-section-group" open>
+                            <summary class="nav-section">
+                                <span>Catálogo</span>
+                                <span class="nav-caret">▾</span>
+                            </summary>
+                            <a class="nav-link {{ request()->routeIs('catalog.courses') ? 'active' : '' }}"
+                                href="{{ route('catalog.courses') }}">◫ Cursos e matrizes</a>
+                            <a class="nav-link {{ request()->routeIs('catalog.professors') ? 'active' : '' }}"
+                                href="{{ route('catalog.professors') }}">♙ Professores</a>
+                            <a class="nav-link {{ request()->routeIs('catalog.subjects') ? 'active' : '' }}"
+                                href="{{ route('catalog.subjects') }}">◌ Disciplinas</a>
+                            <a class="nav-link {{ request()->routeIs('catalog.students') ? 'active' : '' }}"
+                                href="{{ route('catalog.students') }}">◍ Alunos</a>
+                        </details>
                     @endif
-
-                    <a class="nav-link {{ request()->routeIs('profile') || request()->routeIs('profile.edit') ? 'active' : '' }}"
-                        href="{{ route('profile') }}">◉ Meu perfil</a>
 
                     @if (Auth::user()->role === 'teacher')
-                        <div class="nav-section">Professor</div>
-                        <a class="nav-link {{ request()->routeIs('profile.edit') ? 'active' : '' }}"
-                            href="{{ route('profile.edit') }}#disciplinas">◌ Minhas disciplinas</a>
-                        <a class="nav-link {{ request()->routeIs('profile.edit') ? 'active' : '' }}"
-                            href="{{ route('profile.edit') }}#disponibilidade">◔ Minha disponibilidade</a>
+                        <details class="nav-section-group" open>
+                            <summary class="nav-section">
+                                <span>Professor</span>
+                                <span class="nav-caret">▾</span>
+                            </summary>
+                            <a class="nav-link {{ request()->routeIs('profile.edit') ? 'active' : '' }}"
+                                href="{{ route('profile.edit') }}#disciplinas">◌ Minhas disciplinas</a>
+                            <a class="nav-link {{ request()->routeIs('profile.edit') ? 'active' : '' }}"
+                                href="{{ route('profile.edit') }}#disponibilidade">◔ Minha disponibilidade</a>
+                        </details>
                     @endif
 
-                    @if (in_array(Auth::user()->role, ['coordinator', 'staff', 'admin'], true))
-                        <div class="nav-section">Operação</div>
-                        <a class="nav-link {{ request()->routeIs('audit.*') ? 'active' : '' }}"
-                            href="{{ route('audit.index') }}">✓ Auditoria</a>
-                    @endif
-
-                    @if (in_array(Auth::user()->role, ['admin', 'staff'], true))
-                        <a class="nav-link {{ request()->routeIs('imports.*') ? 'active' : '' }}"
-                            href="{{ route('imports.ubiqua.index') }}">⇧ Importações</a>
-                    @endif
                 </nav>
                 <div class="sidebar-footer">
                     <a href="{{ route('profile') }}"
