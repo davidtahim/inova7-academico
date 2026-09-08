@@ -54,7 +54,8 @@
                             <span class="fw-semibold">Status da importação</span>
                             <strong id="import-progress-value" class="fs-6 text-dark">0%</strong>
                         </div>
-                        <div class="progress rounded-pill" style="height: 18px; background-color: #e9ecef; overflow: hidden;">
+                        <div class="progress rounded-pill"
+                            style="height: 18px; background-color: #e9ecef; overflow: hidden;">
                             <div id="import-progress-bar"
                                 class="progress-bar progress-bar-striped progress-bar-animated bg-primary rounded-pill"
                                 role="progressbar" style="width: 0%" aria-valuemin="0" aria-valuemax="100"></div>
@@ -75,9 +76,9 @@
 
                 <style>
                     .import-progress-shell {
-                        background: linear-gradient(180deg, rgba(255,255,255,0.75), rgba(233,236,239,0.85));
+                        background: linear-gradient(180deg, rgba(255, 255, 255, 0.75), rgba(233, 236, 239, 0.85));
                         border-color: #dfe3e8 !important;
-                        box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+                        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
                     }
 
                     .import-submit-button {
