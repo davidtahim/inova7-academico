@@ -76,7 +76,7 @@ class ImportController extends Controller
                 continue;
             }
 
-            $course = $this->ensureCourse($normalized['curso']);
+            $course = $this->ensureCourse($normalized['curso'], $normalized['codigo_curso'] ?? '');
             $matrix = $this->ensureMatrix($course, $normalized['matriz']);
             $subject = $this->ensureSubject($normalized['codigo'], $normalized['disciplina']);
 
@@ -266,6 +266,9 @@ class ImportController extends Controller
             'CODIGO_DA_DISCIPLINA' => 'codigo',
             'CODIGO_DISCIPLINA' => 'codigo',
             'DISCIPLINA_CODIGO' => 'codigo',
+            'CODIGO_DO_CURSO' => 'codigo_curso',
+            'CODIGO_CURSO' => 'codigo_curso',
+            'CURSO_CODIGO' => 'codigo_curso',
             'MATRIZ' => 'matriz',
             'H_A_CLASSIS_PAGAMENTO' => 'carga_horaria',
             'HA_CLASSIS_PAGAMENTO' => 'carga_horaria',
@@ -294,6 +297,9 @@ class ImportController extends Controller
             'PERIODO_DISCIPLINA' => 'periodo',
             'PERIODO_DA_DISCIPLINA' => 'periodo',
             'PERIODO_CURSO' => 'periodo',
+            'CODIGO_DO_CURSO' => 'codigo_curso',
+            'CODIGO_CURSO' => 'codigo_curso',
+            'CURSO_CODIGO' => 'codigo_curso',
             'H_A_CLASSIS_PAGAMENTO' => 'carga_horaria',
             'HA_CLASSIS_PAGAMENTO' => 'carga_horaria',
             'H_A_CLASSIS' => 'carga_horaria',
@@ -315,6 +321,7 @@ class ImportController extends Controller
         }
 
         $curso = trim((string) ($row['curso'] ?? $row['CURSO'] ?? ''));
+        $codigoCurso = trim((string) ($row['codigo_curso'] ?? $row['CODIGO_CURSO'] ?? $row['CODIGO_DO_CURSO'] ?? $row['CURSO_CODIGO'] ?? ''));
         $disciplina = trim((string) ($row['disciplina'] ?? $row['DISCIPLINA'] ?? ''));
         $codigo = trim((string) ($row['codigo'] ?? $row['CODIGO'] ?? ''));
         $matriz = trim((string) ($row['matriz'] ?? $row['MATRIZ'] ?? ''));
@@ -352,6 +359,7 @@ class ImportController extends Controller
 
         return [
             'curso' => $curso,
+            'codigo_curso' => $codigoCurso,
             'matriz' => $matriz,
             'disciplina' => $disciplina ?: $codigo,
             'codigo' => $codigo,
@@ -379,14 +387,21 @@ class ImportController extends Controller
         return (float) str_replace(',', '.', $clean);
     }
 
-    private function ensureCourse(string $name): Course
+    private function ensureCourse(string $name, string $codeFromSheet = ''): Course
     {
-        $code = strtoupper(Str::slug($name, '')) ?: 'SI';
+        $explicitCode = strtoupper(trim($codeFromSheet));
+        $code = $explicitCode !== '' ? $explicitCode : (strtoupper(Str::slug($name, '')) ?: 'SI');
+
         $course = Course::firstOrCreate(['code' => $code], [
             'name' => $name ?: 'Sistemas de Informação',
             'degree' => 'Bacharelado',
             'active' => true,
         ]);
+
+        if ($course->name !== $name && trim($name) !== '') {
+            $course->name = $name;
+            $course->save();
+        }
 
         return $course;
     }

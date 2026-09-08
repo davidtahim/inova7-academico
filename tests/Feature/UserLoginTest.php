@@ -419,6 +419,35 @@ class UserLoginTest extends TestCase
         $this->assertDatabaseHas('subjects', ['code' => 'GSER133620']);
     }
 
+    public function test_user_can_import_ubiquitous_offering_sheet_with_explicit_course_code(): void
+    {
+        $user = User::create([
+            'name' => 'Larissa Torres',
+            'email' => 'larissa-code@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $filePath = storage_path('framework/testing/ubiqua-course-code.csv');
+        $directory = dirname($filePath);
+        if (! is_dir($directory)) {
+            mkdir($directory, 0777, true);
+        }
+
+        $csv = "CURSO;CODIGO_CURSO;DISCIPLINA;CODIGO;PERIODO;TURMA;TURNO;MODALIDADE\nSistemas de Informação;SI;Banco de Dados;GSER133620;2;CSE0280102NMA;MANHA;HÍBRIDA\n";
+        file_put_contents($filePath, $csv);
+
+        $response = $this->actingAs($user)->post('/importacoes/oferta-ubiqua', [
+            'arquivo' => new \Illuminate\Http\UploadedFile($filePath, 'ubiqua-course-code.csv', 'text/csv', null, true),
+            'academic_term_code' => '2026.2',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('courses', ['code' => 'SI', 'name' => 'Sistemas de Informação']);
+        $this->assertDatabaseHas('class_offerings', ['class_code' => 'CSE0280102NMA']);
+    }
+
     public function test_user_can_import_ubiquitous_offering_sheet_without_secretariat_metadata(): void
     {
         $user = User::create([
