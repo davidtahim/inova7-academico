@@ -5,6 +5,10 @@
 
 @section('content')
     <div class="container py-4">
+        <div class="alert alert-warning border-0 shadow-sm" role="alert">
+            <strong>Atenção:</strong> a importação é limitada ao grupo Uni7. Registros de outros grupos são ignorados.
+        </div>
+
         <div class="card shadow-sm border-0">
             <div class="card-header bg-dark text-white">
                 <h5 class="mb-0">Importar planilha de Oferta Ubíqua</h5>
@@ -36,6 +40,7 @@
                     <div class="mt-3 text-muted small">
                         A importação da Oferta Ubíqua é por semestre. Ela carrega a base acadêmica do período selecionado
                         e pode ser reimportada em outro semestre sem sobrescrever dados de períodos anteriores.
+                        A importação é limitada ao grupo Uni7. Registros de outros grupos são ignorados.
                         O administrador continua livre para cadastrar ou editar qualquer informação manualmente.
                     </div>
 

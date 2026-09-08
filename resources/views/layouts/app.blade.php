@@ -136,6 +136,9 @@
                 @if (session('success'))
                     <div class="alert alert-success mt-3">{{ session('success') }}</div>
                 @endif
+                @if (session('warning'))
+                    <div class="alert alert-warning mt-3">{{ session('warning') }}</div>
+                @endif
                 @yield('content')
             </main>
         </div>

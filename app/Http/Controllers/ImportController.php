@@ -178,15 +178,17 @@ class ImportController extends Controller
             'ubiqua_import_finished' => true,
         ]);
 
+        $message = "Importação concluída: {$imported} ofertas processadas. A importação foi limitada ao grupo Uni7; registros de outros grupos foram ignorados.";
+
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
                 'redirect' => route('imports.ubiqua.index'),
-                'message' => "Importação concluída: {$imported} ofertas processadas.",
+                'message' => $message,
             ]);
         }
 
-        return redirect()->back()->with('success', "Importação concluída: {$imported} ofertas processadas.");
+        return redirect()->back()->with('warning', $message);
     }
 
     private function parseCsv(string $path): array
