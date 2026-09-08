@@ -179,6 +179,14 @@ body {
     letter-spacing: .1em
 }
 
+.topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
 .topbar-semester-form {
     display: inline-flex;
     align-items: center;
@@ -212,6 +220,20 @@ body {
 .topbar-semester-select:focus {
     box-shadow: 0 0 0 0.2rem rgba(18, 100, 163, 0.12);
     border-color: rgba(18, 100, 163, 0.4);
+}
+
+.topbar-credit {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .02em;
+    color: #697788;
+    white-space: nowrap;
+}
+
+.topbar-logout {
+    border-radius: 999px;
+    min-width: 72px;
+    font-weight: 600;
 }
 
 .page-head {

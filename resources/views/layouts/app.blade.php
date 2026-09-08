@@ -87,7 +87,7 @@
                     <div><small class="text-uppercase text-secondary">Inova7 Acadêmico</small>
                         <h1>@yield('page-title', 'Painel')</h1>
                     </div>
-                    <div class="d-flex align-items-center gap-2">
+                    <div class="topbar-actions">
                         @php
                             $academicTerms = \App\Models\AcademicTerm::orderByDesc('id')->get();
                             $selectedAcademicTermId = session('selected_academic_term_id');
@@ -110,10 +110,10 @@
                                 </select>
                             </form>
                         @endif
-                        <span class="badge text-bg-light border">Laravel 12 • MySQL</span>
+                        <span class="topbar-credit">desenvolvido por Inova7</span>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
-                            <button type="submit" class="btn btn-outline-secondary btn-sm">Sair</button>
+                            <button type="submit" class="btn btn-outline-secondary btn-sm topbar-logout">Sair</button>
                         </form>
                     </div>
                 </header>
