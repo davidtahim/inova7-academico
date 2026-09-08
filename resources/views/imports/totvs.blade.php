@@ -44,8 +44,23 @@
                     </div>
 
                     <div class="mt-3 text-muted small">
-                        Arquivos esperados: CSV ou XLSX com colunas como CURSO, PERÍODO, DISCIPLINA, MATRIZ, CÓDIGO,
-                        MODALIDADE, CÓDIGO_DA_TURMA e TURNO.
+                        Arquivos esperados: CSV ou XLSX com colunas como Código da Turma, Cód Disciplina, Nome Disciplina,
+                        Curso, Matriz e Turno. O período do importador é selecionado na tela e não precisa constar na
+                        planilha.
+                    </div>
+
+                    <div class="mt-3">
+                        <div class="small fw-semibold text-secondary mb-2">Colunas esperadas</div>
+                        <div class="border rounded-3 bg-light p-3">
+                            <div class="d-flex flex-wrap gap-2">
+                                <span class="badge text-bg-light border">Código da Turma</span>
+                                <span class="badge text-bg-light border">Cód Disciplina</span>
+                                <span class="badge text-bg-light border">Nome Disciplina</span>
+                                <span class="badge text-bg-light border">Curso</span>
+                                <span class="badge text-bg-light border">Matriz</span>
+                                <span class="badge text-bg-light border">Turno</span>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="d-flex flex-wrap align-items-center gap-2 mt-4">
@@ -76,6 +91,56 @@
                         </div>
                     </div>
                 </form>
+
+                <form id="totvs-reset-form" action="{{ route('imports.totvs.reset') }}" method="POST"
+                    class="d-inline-block mt-3">
+                    @csrf
+                    <input type="hidden" id="totvs-reset-academic-term-code" name="academic_term_code"
+                        value="{{ $terms->first()?->code ?? '' }}">
+                    <button type="submit" class="btn btn-outline-danger px-3 py-2 fw-semibold rounded-3"
+                        onclick="return confirm('Deseja apagar toda a base TOTVS importada deste semestre? Esta ação não pode ser desfeita.')">
+                        Zerar base TOTVS
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 mt-4">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">Últimas cargas por semestre</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Semestre</th>
+                                <th>Ofertas importadas</th>
+                                <th>Última carga</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($recentLoads as $load)
+                                <tr>
+                                    <td>{{ $load->code }}</td>
+                                    <td>{{ (int) $load->offering_count }}</td>
+                                    <td>
+                                        @if ($load->last_imported_at)
+                                            {{ \Illuminate\Support\Carbon::parse($load->last_imported_at)->format('d/m/Y H:i') }}
+                                        @else
+                                            <span class="text-muted">Sem carga</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted py-3">Nenhuma carga registrada até o
+                                        momento.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -115,6 +180,17 @@
             const progressValue = document.getElementById('totvs-import-progress-value');
             const progressStatus = document.getElementById('totvs-import-progress-status');
             const progressEta = document.getElementById('totvs-import-progress-eta');
+            const semesterSelect = document.getElementById('academic_term_code');
+            const resetSemesterInput = document.getElementById('totvs-reset-academic-term-code');
+
+            if (semesterSelect && resetSemesterInput) {
+                const syncResetSemester = () => {
+                    resetSemesterInput.value = semesterSelect.value;
+                };
+
+                semesterSelect.addEventListener('change', syncResetSemester);
+                syncResetSemester();
+            }
 
             if (!form || !submitButton || !progressWrap || !progressBar || !progressValue || !progressStatus || !
                 progressEta) {

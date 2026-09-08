@@ -118,7 +118,7 @@ body {
 .sidebar .nav-subsection-group {
     margin: 4px 0 0 8px;
     padding-left: 6px;
-    border-left: 1px solid rgba(248, 215, 122, .28);
+    border-left: 1px solid rgba(248, 215, 122, .22);
 }
 
 .sidebar .nav-subsection-group summary {
@@ -132,22 +132,27 @@ body {
     justify-content: space-between;
     gap: 8px;
     margin: 0;
-    padding: 10px 12px;
-    border-radius: 10px 10px 10px 0;
+    padding: 8px 10px;
+    border-radius: 8px 8px 8px 0;
+    background: rgba(255, 255, 255, .03);
+    border: 1px solid rgba(228, 185, 79, .1);
 }
 
 .sidebar .nav-link-child {
-    margin: 4px 0 0 14px;
-    padding: 9px 12px;
-    border-left: 2px solid rgba(228, 185, 79, .35);
-    font-size: 13px;
+    margin: 4px 0 0 12px;
+    padding: 7px 10px;
+    border-left: 2px solid rgba(228, 185, 79, .28);
+    font-size: 12.5px;
     color: #f7f3d2;
-    background: rgba(255, 255, 255, .03);
+    background: rgba(255, 255, 255, .02);
+    border-radius: 7px 0 0 7px;
+    text-decoration: none;
+    display: block;
 }
 
 .sidebar .nav-link-child:hover,
 .sidebar .nav-link-child.active {
-    background: rgba(228, 185, 79, .14);
+    background: rgba(228, 185, 79, .12);
     border-left-color: var(--gold);
     color: #fff;
     transform: none;

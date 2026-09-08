@@ -45,9 +45,74 @@ class ImportController extends Controller
 
     public function totvsIndex()
     {
+        $recentLoads = AcademicTerm::select('academic_terms.*')
+            ->leftJoin('class_offerings', 'class_offerings.academic_term_id', '=', 'academic_terms.id')
+            ->selectRaw('MAX(class_offerings.created_at) as last_imported_at, COUNT(DISTINCT class_offerings.id) as offering_count')
+            ->groupBy(
+                'academic_terms.id',
+                'academic_terms.code',
+                'academic_terms.starts_at',
+                'academic_terms.ends_at',
+                'academic_terms.status',
+                'academic_terms.created_at',
+                'academic_terms.updated_at'
+            )
+            ->orderByDesc('last_imported_at')
+            ->orderByDesc('academic_terms.id')
+            ->get();
+
         return view('imports.totvs', [
             'terms' => AcademicTerm::orderBy('code', 'desc')->get(),
+            'recentLoads' => $recentLoads,
         ]);
+    }
+
+    public function resetTotvs(Request $request)
+    {
+        $validated = $request->validate([
+            'academic_term_code' => ['required', 'string'],
+        ]);
+
+        $term = AcademicTerm::where('code', $validated['academic_term_code'])->firstOrFail();
+
+        DB::transaction(function () use ($term) {
+            $offeringIds = ClassOffering::where('academic_term_id', $term->id)->pluck('id');
+            $courseIds = ClassOffering::where('academic_term_id', $term->id)->pluck('course_id')->unique();
+            $subjectIds = ClassOffering::where('academic_term_id', $term->id)->pluck('subject_id')->unique();
+
+            if ($offeringIds->isNotEmpty()) {
+                ScheduleSlot::whereIn('class_offering_id', $offeringIds)->delete();
+                TeachingAssignment::whereIn('class_offering_id', $offeringIds)->delete();
+                ClassOffering::where('academic_term_id', $term->id)->delete();
+            }
+
+            $courseIdsToDelete = $courseIds->filter(function ($courseId) {
+                return ! ClassOffering::where('course_id', $courseId)->exists();
+            })->values();
+
+            $subjectIdsToDelete = $subjectIds->filter(function ($subjectId) {
+                return ! ClassOffering::where('subject_id', $subjectId)->exists();
+            })->values();
+
+            if ($courseIdsToDelete->isNotEmpty()) {
+                CurriculumMatrix::whereIn('course_id', $courseIdsToDelete)->delete();
+                Course::whereIn('id', $courseIdsToDelete)->delete();
+            }
+
+            if ($subjectIdsToDelete->isNotEmpty()) {
+                Subject::whereIn('id', $subjectIdsToDelete)->delete();
+            }
+        });
+
+        session([
+            'totvs_import_progress' => 0,
+            'totvs_import_status' => 'Base TOTVS zerada para o semestre selecionado.',
+            'totvs_import_finished' => true,
+            'totvs_import_started_at' => time(),
+            'totvs_import_total_rows' => 0,
+        ]);
+
+        return redirect()->route('imports.totvs.index')->with('success', 'Base TOTVS do semestre ' . $term->code . ' zerada com sucesso.');
     }
 
     public function storeTotvs(Request $request)

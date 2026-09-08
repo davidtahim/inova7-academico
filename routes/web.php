@@ -87,6 +87,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/importacoes/base-totvs', [ImportController::class, 'totvsIndex'])->name('imports.totvs.index');
         Route::get('/importacoes/base-totvs/progresso', [ImportController::class, 'progressTotvs'])->name('imports.totvs.progress');
         Route::post('/importacoes/base-totvs', [ImportController::class, 'storeTotvs'])->name('imports.totvs.store');
+        Route::post('/importacoes/base-totvs/zerar', [ImportController::class, 'resetTotvs'])->name('imports.totvs.reset');
     });
 
     Route::middleware('can:access-audit')->group(function () {

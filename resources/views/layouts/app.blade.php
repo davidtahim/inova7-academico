@@ -42,8 +42,11 @@
                             <a class="nav-link nav-link-admin {{ request()->routeIs('admin.*') ? 'active' : '' }}"
                                 href="{{ route('admin.planejamento.index') }}">⚙ Administração do catálogo</a>
 
-                            <details class="nav-subsection-group {{ request()->routeIs('imports.ubiqua.*') || request()->routeIs('imports.totvs.*') ? 'open' : '' }}" open>
-                                <summary class="nav-link nav-link-admin nav-link-subsection {{ request()->routeIs('imports.ubiqua.*') || request()->routeIs('imports.totvs.*') ? 'active' : '' }}">
+                            <details
+                                class="nav-subsection-group {{ request()->routeIs('imports.ubiqua.*') || request()->routeIs('imports.totvs.*') ? 'open' : '' }}"
+                                open>
+                                <summary
+                                    class="nav-link nav-link-admin nav-link-subsection {{ request()->routeIs('imports.ubiqua.*') || request()->routeIs('imports.totvs.*') ? 'active' : '' }}">
                                     <span>⇧ Importações</span>
                                     <span class="nav-caret">▾</span>
                                 </summary>
