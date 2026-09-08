@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page-title', 'Editar perfil')
+@section('page-title', $user->role === 'teacher' ? 'Meu perfil' : 'Editar perfil')
 
 @section('content')
     <div class="container py-4">
@@ -8,7 +8,7 @@
             <div class="col-xl-9">
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-primary text-white py-3">
-                        <h5 class="mb-0 fw-bold">Editar perfil</h5>
+                        <h5 class="mb-0 fw-bold">{{ $user->role === 'teacher' ? 'Meu perfil' : 'Editar perfil' }}</h5>
                     </div>
                     <div class="card-body p-4">
                         @if ($user->role === 'teacher')
@@ -18,8 +18,12 @@
                                     <div class="text-uppercase text-secondary small fw-semibold">Semestre ativo</div>
                                     <h5 class="mb-0 mt-1">{{ $term?->code ?? 'Semestre não selecionado' }}</h5>
                                 </div>
-                                <a href="{{ route('profile') }}" class="btn btn-outline-secondary btn-sm">Voltar ao
-                                    perfil</a>
+                                <span class="badge bg-light text-secondary border">Acesso somente leitura</span>
+                            </div>
+
+                            <div class="alert alert-light border mb-4">
+                                Este espaço exibe apenas os dados do professor para o semestre ativo. Não é possível editar,
+                                criar ou excluir informações neste módulo.
                             </div>
 
                             <div class="row g-3 mb-4">

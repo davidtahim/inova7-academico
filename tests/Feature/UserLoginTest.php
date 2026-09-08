@@ -145,6 +145,25 @@ class UserLoginTest extends TestCase
         $response->assertDontSee('Disponibilidade</h5>');
     }
 
+    public function test_teacher_profile_page_is_read_only_without_edit_create_or_delete_actions(): void
+    {
+        $user = User::create([
+            'name' => 'Prof. Marcos',
+            'email' => 'marcos.prof@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'teacher',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($user)->get('/perfil');
+
+        $response->assertOk();
+        $response->assertSee('Acesso somente leitura');
+        $response->assertDontSee('Editar perfil');
+        $response->assertDontSee('Novo professor');
+        $response->assertDontSee('Excluir');
+    }
+
     public function test_admin_routes_follow_the_admin_planejamento_prefix(): void
     {
         $user = User::create([

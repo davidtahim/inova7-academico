@@ -29,10 +29,12 @@
                                     <p class="text-muted mb-0">{{ $user->email }}</p>
                                 </div>
                             </div>
-                            <div class="d-flex flex-wrap gap-2">
-                                <a href="{{ route('profile.edit') }}" class="btn btn-outline-primary btn-sm">Editar
-                                    perfil</a>
-                                @if ($user->role === 'teacher')
+                            <div class="d-flex flex-wrap gap-2 align-items-center">
+                                @if ($user->role !== 'teacher')
+                                    <a href="{{ route('profile.edit') }}" class="btn btn-outline-primary btn-sm">Editar
+                                        perfil</a>
+                                @else
+                                    <span class="badge bg-light text-secondary border">Acesso somente leitura</span>
                                     <a href="{{ route('teacher.availability.pdf') }}"
                                         class="btn btn-outline-success btn-sm">Gerar CCG-FOR-02</a>
                                 @endif
