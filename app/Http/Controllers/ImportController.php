@@ -7,6 +7,7 @@ use App\Models\ClassOffering;
 use App\Models\Course;
 use App\Models\CurriculumMatrix;
 use App\Models\Professor;
+use App\Models\ScheduleSlot;
 use App\Models\Subject;
 use App\Models\TeachingAssignment;
 use App\Services\ProfessorAllocationService;
@@ -76,10 +77,30 @@ class ImportController extends Controller
 
         DB::transaction(function () use ($term) {
             $offeringIds = ClassOffering::where('academic_term_id', $term->id)->pluck('id');
+            $courseIds = ClassOffering::where('academic_term_id', $term->id)->pluck('course_id')->unique();
+            $subjectIds = ClassOffering::where('academic_term_id', $term->id)->pluck('subject_id')->unique();
 
             if ($offeringIds->isNotEmpty()) {
+                ScheduleSlot::whereIn('class_offering_id', $offeringIds)->delete();
                 TeachingAssignment::whereIn('class_offering_id', $offeringIds)->delete();
                 ClassOffering::where('academic_term_id', $term->id)->delete();
+            }
+
+            $courseIdsToDelete = $courseIds->filter(function ($courseId) {
+                return ! ClassOffering::where('course_id', $courseId)->exists();
+            })->values();
+
+            $subjectIdsToDelete = $subjectIds->filter(function ($subjectId) {
+                return ! ClassOffering::where('subject_id', $subjectId)->exists();
+            })->values();
+
+            if ($courseIdsToDelete->isNotEmpty()) {
+                CurriculumMatrix::whereIn('course_id', $courseIdsToDelete)->delete();
+                Course::whereIn('id', $courseIdsToDelete)->delete();
+            }
+
+            if ($subjectIdsToDelete->isNotEmpty()) {
+                Subject::whereIn('id', $subjectIdsToDelete)->delete();
             }
         });
 
@@ -498,25 +519,32 @@ class ImportController extends Controller
 
     private function shouldSkipMatrix(array $normalized, ?array $allowedMatrixCodes = null): bool
     {
-        $matrixCode = strtoupper(trim((string) ($normalized['matriz'] ?? '')));
+        $matrixCode = $this->normalizeImportCode((string) ($normalized['matriz'] ?? ''));
         if ($matrixCode === '') {
             return false;
         }
 
         $allowedCodes = array_values(array_unique(array_filter(array_map(function ($value) {
-            return strtoupper(trim((string) $value));
+            return $this->normalizeImportCode((string) $value);
         }, $allowedMatrixCodes ?? []), fn($value) => $value !== '')));
 
         if ($allowedCodes === []) {
             return false;
         }
 
-        $hasGraMatrixCode = collect($allowedCodes)->contains(fn($code) => preg_match('/^GRA[-_]?MAT/i', $code) === 1);
+        $hasGraMatrixCode = collect($allowedCodes)->contains(fn($code) => preg_match('/^GRA.*MAT/i', $code) === 1);
         if (! $hasGraMatrixCode) {
             return false;
         }
 
         return ! in_array($matrixCode, $allowedCodes, true);
+    }
+
+    private function normalizeImportCode(string $value): string
+    {
+        $normalized = Str::upper(trim($value));
+
+        return preg_replace('/[^A-Z0-9]+/', '', $normalized) ?? '';
     }
 
     private function loadAllowedMatrixCodesForCourse(array $normalized): array

@@ -219,12 +219,25 @@ class UserLoginTest extends TestCase
             'status' => 'planned',
         ]);
 
+        ScheduleSlot::create([
+            'class_offering_id' => $offering->id,
+            'professor_id' => $professor->id,
+            'weekday' => 1,
+            'starts_at' => '08:00:00',
+            'ends_at' => '09:30:00',
+            'room' => 'A1',
+            'block' => 'MANHÃ',
+        ]);
+
         $this->actingAs($user)
             ->post(route('imports.ubiqua.reset'), ['academic_term_code' => $term->code])
             ->assertRedirect(route('imports.ubiqua.index'));
 
         $this->assertDatabaseMissing('class_offerings', ['id' => $offering->id]);
         $this->assertDatabaseMissing('teaching_assignments', ['class_offering_id' => $offering->id]);
+        $this->assertDatabaseMissing('schedule_slots', ['class_offering_id' => $offering->id]);
+        $this->assertDatabaseMissing('courses', ['id' => $course->id]);
+        $this->assertDatabaseMissing('subjects', ['id' => $subject->id]);
     }
 
     public function test_topbar_allows_selecting_current_academic_term(): void
@@ -549,6 +562,7 @@ class UserLoginTest extends TestCase
 
         $this->assertTrue($method->invoke($controller, ['matriz' => 'OUTRA-MATRIZ'], $allowed));
         $this->assertFalse($method->invoke($controller, ['matriz' => 'GRA-MAT-0228-F'], $allowed));
+        $this->assertFalse($method->invoke($controller, ['matriz' => 'GRA MAT 0228 F'], $allowed));
         $this->assertFalse($method->invoke($controller, ['matriz' => ''], $allowed));
     }
 
