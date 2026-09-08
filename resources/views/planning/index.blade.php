@@ -31,6 +31,52 @@
         </div>
         <div class="col-md-2 d-flex align-items-end"><button class="btn btn-primary w-100">Filtrar</button></div>
     </form>
+    <div class="card card-soft mb-3">
+        <div class="card-body">
+            <div class="d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-3">
+                <div>
+                    <div class="small text-uppercase text-secondary fw-semibold mb-1">Alocação em lote</div>
+                    <div class="fw-semibold">Atribuir professor por turno ou curso</div>
+                </div>
+                <form action="{{ route('planning.confirm-professor-bulk') }}" method="post"
+                    class="row g-2 align-items-end w-100 w-lg-auto">
+                    @csrf
+                    <input type="hidden" name="academic_term_id" value="{{ $term?->id ?? '' }}">
+                    <div class="col-md-4">
+                        <label class="form-label small mb-1">Turno</label>
+                        <select name="shift" class="form-select form-select-sm">
+                            <option value="">Todos</option>
+                            @foreach (['MANHÃ', 'TARDE', 'NOITE'] as $shift)
+                                <option value="{{ $shift }}" @selected(request('shift') === $shift)>{{ $shift }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small mb-1">Curso</label>
+                        <select name="course_id" class="form-select form-select-sm">
+                            <option value="">Todos</option>
+                            @foreach ($courses as $course)
+                                <option value="{{ $course->id }}" @selected(request('course') == $course->id)>{{ $course->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small mb-1">Professor</label>
+                        <select name="professor_id" class="form-select form-select-sm">
+                            @foreach ($professors as $professor)
+                                <option value="{{ $professor->id }}">{{ $professor->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-1 d-grid">
+                        <button type="submit" class="btn btn-primary btn-sm">Aplicar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     <article class="card card-soft">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
@@ -68,6 +114,26 @@
                                 @else
                                     <span class="text-muted">Pendente</span>
                                 @endif
+
+                                <form action="{{ route('planning.confirm-professor', $offering) }}" method="post"
+                                    class="mt-2">
+                                    @csrf
+                                    <select name="professor_id" class="form-select form-select-sm mb-2">
+                                        @if ($professors->isEmpty())
+                                            <option value="">Nenhum professor disponível</option>
+                                        @else
+                                            @foreach ($professors as $professor)
+                                                <option value="{{ $professor->id }}" @selected(($offering->assignments->first()?->professor_id ?? $offering->suggested_professor?->id) == $professor->id)>
+                                                    {{ $professor->name }}
+                                                </option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                    <button type="submit"
+                                        class="btn btn-sm {{ $offering->assignments->isNotEmpty() ? 'btn-outline-success' : 'btn-primary' }}">
+                                        Confirmar
+                                    </button>
+                                </form>
                             </td>
                             <td>
                                 @foreach ($offering->slots as $slot)

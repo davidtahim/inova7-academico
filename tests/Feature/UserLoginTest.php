@@ -888,6 +888,345 @@ class UserLoginTest extends TestCase
         $response->assertSee('Compatível');
     }
 
+    public function test_coordinator_can_confirm_or_override_suggested_professor_for_an_offering(): void
+    {
+        $term = AcademicTerm::create([
+            'code' => '2026.8',
+            'starts_at' => '2026-08-01',
+            'ends_at' => '2026-12-15',
+            'status' => 'active',
+        ]);
+
+        $course = Course::create([
+            'code' => 'SI',
+            'name' => 'Sistemas de Informação',
+            'degree' => 'Bacharelado',
+            'active' => true,
+        ]);
+
+        $matrix = CurriculumMatrix::create([
+            'course_id' => $course->id,
+            'code' => 'MTR-800',
+            'name' => 'Matriz 2026',
+            'status' => 'Atual',
+        ]);
+
+        $subject = Subject::create([
+            'code' => 'DBA-08',
+            'name' => 'Banco de Dados',
+            'total_hours' => 40,
+            'presential_hours' => 40,
+        ]);
+
+        $professor = Professor::create([
+            'name' => 'Professor Confirmado',
+            'email' => 'confirmado@inova7.local',
+            'qualification' => 'Doutor',
+            'active' => true,
+        ]);
+
+        $professor->subjects()->sync([$subject->id]);
+
+        $offering = ClassOffering::create([
+            'academic_term_id' => $term->id,
+            'course_id' => $course->id,
+            'curriculum_matrix_id' => $matrix->id,
+            'subject_id' => $subject->id,
+            'class_code' => 'DBA-08',
+            'period' => 2,
+            'shift' => 'MANHÃ',
+            'modality' => 'PRESENCIAL',
+            'occurs' => true,
+            'weekly_hours' => 4,
+            'totvs_hours' => 4,
+            'status' => 'planned',
+        ]);
+
+        ScheduleSlot::create([
+            'class_offering_id' => $offering->id,
+            'professor_id' => null,
+            'weekday' => 1,
+            'starts_at' => '09:10:00',
+            'ends_at' => '10:50:00',
+            'room' => 'LI31',
+            'block' => '4º ANDAR',
+        ]);
+
+        ProfessorAvailability::create([
+            'academic_term_id' => $term->id,
+            'professor_id' => $professor->id,
+            'weekday' => 1,
+            'starts_at' => '09:00:00',
+            'ends_at' => '11:00:00',
+            'preference' => 'preferred',
+            'notes' => 'Disponível',
+        ]);
+
+        $coordinator = User::create([
+            'name' => 'Coordenador',
+            'email' => 'coord.confirmacao@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'coordinator',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($coordinator)->post('/planejamento/alocar/' . $offering->id, [
+            'professor_id' => $professor->id,
+        ]);
+
+        $response->assertRedirect(route('planning.index', ['term' => $term->id]));
+        $this->assertDatabaseHas('teaching_assignments', [
+            'class_offering_id' => $offering->id,
+            'professor_id' => $professor->id,
+            'status' => 'confirmed',
+        ]);
+        $this->assertDatabaseHas('schedule_slots', [
+            'class_offering_id' => $offering->id,
+            'professor_id' => $professor->id,
+        ]);
+    }
+
+    public function test_planning_page_exposes_dropdown_to_change_professor_for_each_offering(): void
+    {
+        $term = AcademicTerm::create([
+            'code' => '2026.9',
+            'starts_at' => '2026-08-01',
+            'ends_at' => '2026-12-15',
+            'status' => 'active',
+        ]);
+
+        $course = Course::create([
+            'code' => 'SI',
+            'name' => 'Sistemas de Informação',
+            'degree' => 'Bacharelado',
+            'active' => true,
+        ]);
+
+        $matrix = CurriculumMatrix::create([
+            'course_id' => $course->id,
+            'code' => 'MTR-900',
+            'name' => 'Matriz 2026',
+            'status' => 'Atual',
+        ]);
+
+        $subject = Subject::create([
+            'code' => 'DBA-09',
+            'name' => 'Banco de Dados',
+            'total_hours' => 40,
+            'presential_hours' => 40,
+        ]);
+
+        $professorA = Professor::create([
+            'name' => 'Professor A',
+            'email' => 'professor-a@inova7.local',
+            'qualification' => 'Doutor',
+            'active' => true,
+        ]);
+
+        $professorB = Professor::create([
+            'name' => 'Professor B',
+            'email' => 'professor-b@inova7.local',
+            'qualification' => 'Mestre',
+            'active' => true,
+        ]);
+
+        $offering = ClassOffering::create([
+            'academic_term_id' => $term->id,
+            'course_id' => $course->id,
+            'curriculum_matrix_id' => $matrix->id,
+            'subject_id' => $subject->id,
+            'class_code' => 'DBA-09',
+            'period' => 2,
+            'shift' => 'MANHÃ',
+            'modality' => 'PRESENCIAL',
+            'occurs' => true,
+            'weekly_hours' => 4,
+            'totvs_hours' => 4,
+            'status' => 'planned',
+        ]);
+
+        ScheduleSlot::create([
+            'class_offering_id' => $offering->id,
+            'professor_id' => null,
+            'weekday' => 1,
+            'starts_at' => '09:10:00',
+            'ends_at' => '10:50:00',
+            'room' => 'LI31',
+            'block' => '4º ANDAR',
+        ]);
+
+        ProfessorAvailability::create([
+            'academic_term_id' => $term->id,
+            'professor_id' => $professorA->id,
+            'weekday' => 1,
+            'starts_at' => '09:00:00',
+            'ends_at' => '11:00:00',
+            'preference' => 'preferred',
+            'notes' => 'Disponível',
+        ]);
+
+        ProfessorAvailability::create([
+            'academic_term_id' => $term->id,
+            'professor_id' => $professorB->id,
+            'weekday' => 1,
+            'starts_at' => '09:00:00',
+            'ends_at' => '11:00:00',
+            'preference' => 'available',
+            'notes' => 'Também disponível',
+        ]);
+
+        $coordinator = User::create([
+            'name' => 'Coordenador',
+            'email' => 'coord.dropdown@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'coordinator',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($coordinator)->get('/planejamento?term=' . $term->id);
+
+        $response->assertOk();
+        $response->assertSee('professor_id');
+        $response->assertSee('Professor A');
+        $response->assertSee('Professor B');
+    }
+
+    public function test_coordinator_can_assign_professor_in_bulk_for_selected_shift(): void
+    {
+        $term = AcademicTerm::create([
+            'code' => '2026.10',
+            'starts_at' => '2026-08-01',
+            'ends_at' => '2026-12-15',
+            'status' => 'active',
+        ]);
+
+        $course = Course::create([
+            'code' => 'SI',
+            'name' => 'Sistemas de Informação',
+            'degree' => 'Bacharelado',
+            'active' => true,
+        ]);
+
+        $otherCourse = Course::create([
+            'code' => 'ADS',
+            'name' => 'Análise e Desenvolvimento de Sistemas',
+            'degree' => 'Tecnólogo',
+            'active' => true,
+        ]);
+
+        $matrix = CurriculumMatrix::create([
+            'course_id' => $course->id,
+            'code' => 'MTR-1000',
+            'name' => 'Matriz 2026',
+            'status' => 'Atual',
+        ]);
+
+        $otherMatrix = CurriculumMatrix::create([
+            'course_id' => $otherCourse->id,
+            'code' => 'MTR-1001',
+            'name' => 'Matriz 2026 ADS',
+            'status' => 'Atual',
+        ]);
+
+        $professor = Professor::create([
+            'name' => 'Professor em Lote',
+            'email' => 'lote@inova7.local',
+            'qualification' => 'Doutor',
+            'active' => true,
+        ]);
+
+        $subjectA = Subject::create([
+            'code' => 'DBA-10A',
+            'name' => 'Banco de Dados A',
+            'total_hours' => 40,
+            'presential_hours' => 40,
+        ]);
+
+        $subjectB = Subject::create([
+            'code' => 'DBA-10B',
+            'name' => 'Banco de Dados B',
+            'total_hours' => 40,
+            'presential_hours' => 40,
+        ]);
+
+        $firstOffering = ClassOffering::create([
+            'academic_term_id' => $term->id,
+            'course_id' => $course->id,
+            'curriculum_matrix_id' => $matrix->id,
+            'subject_id' => $subjectA->id,
+            'class_code' => 'DBA-10A',
+            'period' => 2,
+            'shift' => 'MANHÃ',
+            'modality' => 'PRESENCIAL',
+            'occurs' => true,
+            'weekly_hours' => 4,
+            'totvs_hours' => 4,
+            'status' => 'planned',
+        ]);
+
+        $secondOffering = ClassOffering::create([
+            'academic_term_id' => $term->id,
+            'course_id' => $course->id,
+            'curriculum_matrix_id' => $matrix->id,
+            'subject_id' => $subjectB->id,
+            'class_code' => 'DBA-10B',
+            'period' => 2,
+            'shift' => 'MANHÃ',
+            'modality' => 'PRESENCIAL',
+            'occurs' => true,
+            'weekly_hours' => 4,
+            'totvs_hours' => 4,
+            'status' => 'planned',
+        ]);
+
+        $otherCourseOffering = ClassOffering::create([
+            'academic_term_id' => $term->id,
+            'course_id' => $otherCourse->id,
+            'curriculum_matrix_id' => $otherMatrix->id,
+            'subject_id' => $subjectB->id,
+            'class_code' => 'ADS-10',
+            'period' => 2,
+            'shift' => 'MANHÃ',
+            'modality' => 'PRESENCIAL',
+            'occurs' => true,
+            'weekly_hours' => 4,
+            'totvs_hours' => 4,
+            'status' => 'planned',
+        ]);
+
+        foreach ([$firstOffering, $secondOffering, $otherCourseOffering] as $offering) {
+            ScheduleSlot::create([
+                'class_offering_id' => $offering->id,
+                'professor_id' => null,
+                'weekday' => 1,
+                'starts_at' => '09:10:00',
+                'ends_at' => '10:50:00',
+                'room' => 'LI31',
+                'block' => '4º ANDAR',
+            ]);
+        }
+
+        $coordinator = User::create([
+            'name' => 'Coordenador',
+            'email' => 'coord.lote@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'coordinator',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($coordinator)->post('/planejamento/alocar-lote', [
+            'academic_term_id' => $term->id,
+            'course_id' => $course->id,
+            'shift' => 'MANHÃ',
+            'professor_id' => $professor->id,
+        ]);
+
+        $response->assertRedirect(route('planning.index', ['term' => $term->id]));
+        $this->assertDatabaseHas('teaching_assignments', ['class_offering_id' => $firstOffering->id, 'professor_id' => $professor->id, 'status' => 'confirmed']);
+        $this->assertDatabaseHas('teaching_assignments', ['class_offering_id' => $secondOffering->id, 'professor_id' => $professor->id, 'status' => 'confirmed']);
+        $this->assertDatabaseMissing('teaching_assignments', ['class_offering_id' => $otherCourseOffering->id, 'professor_id' => $professor->id]);
+    }
+
     public function test_admin_can_manage_core_catalog_crud_forms(): void
     {
         $admin = User::create([

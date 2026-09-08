@@ -22,6 +22,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
     Route::post('/semestre/selecionar', [DashboardController::class, 'selectAcademicTerm'])->name('academic-term.select');
     Route::get('/planejamento', [PlanningController::class, 'index'])->name('planning.index');
+    Route::post('/planejamento/alocar/{offering}', [PlanningController::class, 'confirmProfessor'])->name('planning.confirm-professor');
+    Route::post('/planejamento/alocar-lote', [PlanningController::class, 'confirmProfessorBulk'])->name('planning.confirm-professor-bulk');
 
     Route::middleware('can:access-catalog')->group(function () {
         Route::get('/admin', function () {
