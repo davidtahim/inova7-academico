@@ -6,8 +6,8 @@
     <div class="container py-4">
         <div class="row justify-content-center">
             <div class="col-lg-7">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-primary text-white">
+                <div class="card border-0 shadow-sm admin-form-card">
+                    <div class="card-header admin-form-header">
                         <h5 class="mb-0">{{ isset($course->id) ? 'Editar curso' : 'Novo curso' }}</h5>
                     </div>
                     <div class="card-body p-4">

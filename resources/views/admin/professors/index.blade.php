@@ -12,10 +12,10 @@
             <a href="{{ route('admin.professors.create') }}" class="btn btn-primary">Novo professor</a>
         </div>
 
-        <div class="card border-0 shadow-sm card-soft">
+        <div class="card border-0 shadow-sm card-soft admin-table-card">
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0 align-middle">
+                    <table class="table table-hover mb-0 align-middle admin-matrix-table">
                         <thead>
                             <tr>
                                 <th>Nome</th>
@@ -28,25 +28,26 @@
                         <tbody>
                             @forelse ($professors as $professor)
                                 <tr>
-                                    <td>{{ $professor->name }}</td>
+                                    <td><span class="matrix-name-cell">{{ $professor->name }}</span></td>
                                     <td>{{ $professor->email ?? '—' }}</td>
                                     <td>{{ $professor->qualification ?? '—' }}</td>
                                     <td>
-                                        <span
-                                            class="badge {{ $professor->active ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary' }} border">
+                                        <span class="status-badge {{ $professor->active ? 'ativa' : 'inativa' }}">
                                             {{ $professor->active ? 'Ativo' : 'Inativo' }}
                                         </span>
                                     </td>
                                     <td class="text-end">
-                                        <a href="{{ route('admin.professors.edit', $professor) }}"
-                                            class="btn btn-sm btn-outline-primary">Editar</a>
-                                        <form action="{{ route('admin.professors.destroy', $professor) }}" method="POST"
-                                            class="d-inline-block">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                onclick="return confirm('Deseja remover este professor?')">Excluir</button>
-                                        </form>
+                                        <div class="table-actions">
+                                            <a href="{{ route('admin.professors.edit', $professor) }}"
+                                                class="btn btn-sm btn-outline-primary">Editar</a>
+                                            <form action="{{ route('admin.professors.destroy', $professor) }}"
+                                                method="POST" class="d-inline-block">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                    onclick="return confirm('Deseja remover este professor?')">Excluir</button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty

@@ -6,8 +6,8 @@
     <div class="container py-4">
         <div class="row justify-content-center">
             <div class="col-lg-8">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-primary text-white">
+                <div class="card border-0 shadow-sm admin-form-card">
+                    <div class="card-header admin-form-header">
                         <h5 class="mb-0">{{ isset($subject->id) ? 'Editar disciplina' : 'Nova disciplina' }}</h5>
                     </div>
                     <div class="card-body p-4">
@@ -34,7 +34,8 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Ementa</label>
-                                <textarea name="syllabus" class="form-control" rows="5" placeholder="Descreva os objetivos, conteúdos e competências da disciplina...">{{ old('syllabus', $subject->syllabus ?? '') }}</textarea>
+                                <textarea name="syllabus" class="form-control" rows="5"
+                                    placeholder="Descreva os objetivos, conteúdos e competências da disciplina...">{{ old('syllabus', $subject->syllabus ?? '') }}</textarea>
                             </div>
 
                             <div class="row g-3 mb-3">
@@ -67,7 +68,8 @@
                             </div>
 
                             <div class="d-flex justify-content-end gap-2">
-                                <a href="{{ route('admin.subjects.index') }}" class="btn btn-outline-secondary">Cancelar</a>
+                                <a href="{{ route('admin.subjects.index') }}"
+                                    class="btn btn-outline-secondary">Cancelar</a>
                                 <button type="submit" class="btn btn-primary">Salvar</button>
                             </div>
                         </form>

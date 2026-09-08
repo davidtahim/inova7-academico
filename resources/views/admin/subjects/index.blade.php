@@ -12,10 +12,10 @@
             <a href="{{ route('admin.subjects.create') }}" class="btn btn-primary">Nova disciplina</a>
         </div>
 
-        <div class="card border-0 shadow-sm card-soft">
+        <div class="card border-0 shadow-sm card-soft admin-table-card">
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0 align-middle">
+                    <table class="table table-hover mb-0 align-middle admin-matrix-table">
                         <thead>
                             <tr>
                                 <th>Código</th>
@@ -28,20 +28,22 @@
                         <tbody>
                             @forelse ($subjects as $subject)
                                 <tr>
-                                    <td><strong>{{ $subject->code ?? '—' }}</strong></td>
-                                    <td>{{ $subject->name }}</td>
+                                    <td><strong class="matrix-code-pill">{{ $subject->code ?? '—' }}</strong></td>
+                                    <td><span class="matrix-name-cell">{{ $subject->name }}</span></td>
                                     <td>{{ $subject->total_hours ?? 0 }}h</td>
                                     <td>{{ $subject->presential_hours ?? 0 }}h</td>
                                     <td class="text-end">
-                                        <a href="{{ route('admin.subjects.edit', $subject) }}"
-                                            class="btn btn-sm btn-outline-primary">Editar</a>
-                                        <form action="{{ route('admin.subjects.destroy', $subject) }}" method="POST"
-                                            class="d-inline-block">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                onclick="return confirm('Deseja remover esta disciplina?')">Excluir</button>
-                                        </form>
+                                        <div class="table-actions">
+                                            <a href="{{ route('admin.subjects.edit', $subject) }}"
+                                                class="btn btn-sm btn-outline-primary">Editar</a>
+                                            <form action="{{ route('admin.subjects.destroy', $subject) }}" method="POST"
+                                                class="d-inline-block">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                    onclick="return confirm('Deseja remover esta disciplina?')">Excluir</button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty

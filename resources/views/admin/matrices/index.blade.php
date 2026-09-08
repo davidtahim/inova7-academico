@@ -12,10 +12,10 @@
             <a href="{{ route('admin.matrices.create') }}" class="btn btn-primary">Nova matriz</a>
         </div>
 
-        <div class="card border-0 shadow-sm card-soft">
+        <div class="card border-0 shadow-sm card-soft admin-table-card">
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0 align-middle">
+                    <table class="table table-hover mb-0 align-middle admin-matrix-table">
                         <thead>
                             <tr>
                                 <th>Curso</th>
@@ -28,22 +28,31 @@
                         <tbody>
                             @forelse ($matrices as $matrix)
                                 <tr>
-                                    <td>{{ $matrix->course?->name ?? '—' }}</td>
-                                    <td><strong>{{ $matrix->code }}</strong></td>
-                                    <td>{{ $matrix->name ?: 'Matriz ' . ($matrix->version ?? '—') . ' - ' . ($matrix->course?->name ?? 'Curso') }}
+                                    <td>
+                                        <span class="matrix-course-name">{{ $matrix->course?->name ?? '—' }}</span>
                                     </td>
-                                    <td><span class="badge text-bg-light border">{{ $matrix->status ?? 'Ativa' }}</span>
+                                    <td><strong class="matrix-code-pill">{{ $matrix->code }}</strong></td>
+                                    <td>
+                                        <span
+                                            class="matrix-name-cell">{{ $matrix->name ?: 'Matriz ' . ($matrix->version ?? '—') . ' - ' . ($matrix->course?->name ?? 'Curso') }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="status-badge {{ strtolower($matrix->status ?? 'ativa') }}">
+                                            {{ $matrix->status ?? 'Ativa' }}
+                                        </span>
                                     </td>
                                     <td class="text-end">
-                                        <a href="{{ route('admin.matrices.edit', $matrix) }}"
-                                            class="btn btn-sm btn-outline-primary">Editar</a>
-                                        <form action="{{ route('admin.matrices.destroy', $matrix) }}" method="POST"
-                                            class="d-inline-block">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                onclick="return confirm('Deseja remover esta matriz?')">Excluir</button>
-                                        </form>
+                                        <div class="table-actions">
+                                            <a href="{{ route('admin.matrices.edit', $matrix) }}"
+                                                class="btn btn-sm btn-outline-primary">Editar</a>
+                                            <form action="{{ route('admin.matrices.destroy', $matrix) }}" method="POST"
+                                                class="d-inline-block">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                    onclick="return confirm('Deseja remover esta matriz?')">Excluir</button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
