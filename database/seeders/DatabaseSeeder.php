@@ -104,8 +104,6 @@ class DatabaseSeeder extends Seeder
         }
 
         $files = collect([
-            ...glob($basePath . '/oferta-ubiqua-2026-2/*.xlsx'),
-            ...glob($basePath . '/oferta-ubiqua-2026-2/*.csv'),
             ...glob($basePath . '/grades/*.xlsx'),
             ...glob($basePath . '/grades/*.csv'),
         ])

@@ -335,6 +335,12 @@ class ImportController extends Controller
             'CODIGO_CURSO' => 'codigo_curso',
             'CURSO_CODIGO' => 'codigo_curso',
             'MATRIZ' => 'matriz',
+            'GRUPO' => 'grupo',
+            'GRUPO_ACADEMICO' => 'grupo',
+            'NOME_DO_GRUPO' => 'grupo',
+            'UNIDADE' => 'grupo',
+            'UNIDADE_ACADEMICA' => 'grupo',
+            'NOME_DA_UNIDADE' => 'grupo',
             'H_A_CLASSIS_PAGAMENTO' => 'carga_horaria',
             'HA_CLASSIS_PAGAMENTO' => 'carga_horaria',
             'HA_CLASSIS' => 'carga_horaria',
@@ -394,6 +400,7 @@ class ImportController extends Controller
         $turno = trim((string) ($row['turno'] ?? $row['TURNO'] ?? ''));
         $modalidade = trim((string) ($row['modalidade'] ?? $row['MODALIDADE'] ?? ''));
         $professor = trim((string) ($row['professor'] ?? $row['PROFESSOR'] ?? ''));
+        $grupo = trim((string) ($row['grupo'] ?? $row['GRUPO'] ?? $row['UNIDADE'] ?? $row['UNIDADE_ACADEMICA'] ?? $row['NOME_DO_GRUPO'] ?? ''));
 
         if ($periodo = ($row['periodo'] ?? $row['PERIODO'] ?? null)) {
             $row['periodo'] = $periodo;
@@ -433,8 +440,21 @@ class ImportController extends Controller
             'turno' => $turno,
             'modalidade' => $modalidade,
             'professor' => $professor,
+            'grupo' => $grupo,
             'carga_horaria' => (float) $cargaHoraria,
         ];
+    }
+
+    private function shouldSkipGroup(array $normalized): bool
+    {
+        $grupo = strtolower(trim((string) ($normalized['grupo'] ?? '')));
+        if ($grupo === '') {
+            return false;
+        }
+
+        $matchesUni7 = preg_match('/\buni\s*7\b|\buni7\b|\binova7\b|\buniversidade\s*inova\b|\buni-7\b/i', $grupo) === 1;
+
+        return ! $matchesUni7;
     }
 
     private function toNumericValue(mixed $value): float
