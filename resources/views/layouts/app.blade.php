@@ -41,10 +41,18 @@
                             </summary>
                             <a class="nav-link nav-link-admin {{ request()->routeIs('admin.*') ? 'active' : '' }}"
                                 href="{{ route('admin.planejamento.index') }}">⚙ Administração do catálogo</a>
-                            <a class="nav-link nav-link-admin {{ request()->routeIs('imports.ubiqua.*') || request()->routeIs('imports.totvs.*') ? 'active' : '' }}"
-                                href="{{ route('imports.ubiqua.index') }}">⇧ Importações</a>
-                            <a class="nav-link nav-link-admin {{ request()->routeIs('imports.totvs.*') ? 'active' : '' }}"
-                                href="{{ route('imports.totvs.index') }}">▣ Base TOTVS</a>
+
+                            <details class="nav-subsection-group {{ request()->routeIs('imports.ubiqua.*') || request()->routeIs('imports.totvs.*') ? 'open' : '' }}" open>
+                                <summary class="nav-link nav-link-admin nav-link-subsection {{ request()->routeIs('imports.ubiqua.*') || request()->routeIs('imports.totvs.*') ? 'active' : '' }}">
+                                    <span>⇧ Importações</span>
+                                    <span class="nav-caret">▾</span>
+                                </summary>
+                                <a class="nav-link nav-link-admin nav-link-child {{ request()->routeIs('imports.ubiqua.*') ? 'active' : '' }}"
+                                    href="{{ route('imports.ubiqua.index') }}">• Oferta Ubíqua</a>
+                                <a class="nav-link nav-link-admin nav-link-child {{ request()->routeIs('imports.totvs.*') ? 'active' : '' }}"
+                                    href="{{ route('imports.totvs.index') }}">• Base TOTVS</a>
+                            </details>
+
                             <a class="nav-link nav-link-admin {{ request()->routeIs('audit.*') ? 'active' : '' }}"
                                 href="{{ route('audit.index') }}">✓ Auditoria</a>
                         </details>
