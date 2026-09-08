@@ -38,6 +38,13 @@ Route::middleware('auth')->group(function () {
             Route::put('/matrizes/{matrix}', [\App\Http\Controllers\AdminCatalogController::class, 'matrixUpdate'])->name('matrices.update');
             Route::delete('/matrizes/{matrix}', [\App\Http\Controllers\AdminCatalogController::class, 'matrixDestroy'])->name('matrices.destroy');
 
+            Route::get('/semestres', [\App\Http\Controllers\AdminCatalogController::class, 'termsIndex'])->name('semestres.index');
+            Route::get('/semestres/novo', [\App\Http\Controllers\AdminCatalogController::class, 'termCreate'])->name('semestres.create');
+            Route::post('/semestres', [\App\Http\Controllers\AdminCatalogController::class, 'termStore'])->name('semestres.store');
+            Route::get('/semestres/{term}/editar', [\App\Http\Controllers\AdminCatalogController::class, 'termEdit'])->name('semestres.edit');
+            Route::put('/semestres/{term}', [\App\Http\Controllers\AdminCatalogController::class, 'termUpdate'])->name('semestres.update');
+            Route::delete('/semestres/{term}', [\App\Http\Controllers\AdminCatalogController::class, 'termDestroy'])->name('semestres.destroy');
+
             Route::get('/disciplinas', [\App\Http\Controllers\AdminCatalogController::class, 'subjectsIndex'])->name('subjects.index');
             Route::get('/disciplinas/novo', [\App\Http\Controllers\AdminCatalogController::class, 'subjectCreate'])->name('subjects.create');
             Route::post('/disciplinas', [\App\Http\Controllers\AdminCatalogController::class, 'subjectStore'])->name('subjects.store');

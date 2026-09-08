@@ -744,6 +744,27 @@ class UserLoginTest extends TestCase
         $this->assertDatabaseHas('professors', ['email' => 'crud.prof@inova7.local']);
     }
 
+    public function test_admin_can_manage_academic_terms(): void
+    {
+        $admin = User::create([
+            'name' => 'Administrador de Semestres',
+            'email' => 'admin.semestres@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($admin)->get('/admin/semestres/novo')->assertOk();
+        $this->actingAs($admin)->post('/admin/semestres', [
+            'code' => '2026.7',
+            'starts_at' => '2026-09-01',
+            'ends_at' => '2027-01-31',
+            'status' => 'planning',
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('academic_terms', ['code' => '2026.7']);
+    }
+
     public function test_catalog_can_filter_students_and_subjects_by_search(): void
     {
         $admin = User::create([

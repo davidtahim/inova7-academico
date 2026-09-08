@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AcademicTerm;
 use App\Models\Course;
 use App\Models\CurriculumMatrix;
 use App\Models\Professor;
@@ -158,6 +159,74 @@ class AdminCatalogController extends Controller
         $matrix->delete();
 
         return redirect()->route('admin.matrices.index')->with('success', 'Matriz removida com sucesso!');
+    }
+
+    public function termsIndex()
+    {
+        $this->ensureAdmin();
+
+        return view('admin.semesters.index', [
+            'terms' => AcademicTerm::orderBy('code', 'desc')->get(),
+        ]);
+    }
+
+    public function termCreate()
+    {
+        $this->ensureAdmin();
+
+        return view('admin.semesters.form', [
+            'term' => new AcademicTerm(),
+        ]);
+    }
+
+    public function termStore(Request $request)
+    {
+        $this->ensureAdmin();
+
+        $validated = $request->validate([
+            'code' => ['required', 'string', 'max:20', 'unique:academic_terms,code'],
+            'starts_at' => ['nullable', 'date'],
+            'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
+            'status' => ['required', 'in:planning,active,closed'],
+        ]);
+
+        AcademicTerm::create($validated);
+
+        return redirect()->route('admin.semestres.index')->with('success', 'Semestre cadastrado com sucesso!');
+    }
+
+    public function termEdit(AcademicTerm $term)
+    {
+        $this->ensureAdmin();
+
+        return view('admin.semesters.form', [
+            'term' => $term,
+        ]);
+    }
+
+    public function termUpdate(Request $request, AcademicTerm $term)
+    {
+        $this->ensureAdmin();
+
+        $validated = $request->validate([
+            'code' => ['required', 'string', 'max:20', 'unique:academic_terms,code,' . $term->id],
+            'starts_at' => ['nullable', 'date'],
+            'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
+            'status' => ['required', 'in:planning,active,closed'],
+        ]);
+
+        $term->update($validated);
+
+        return redirect()->route('admin.semestres.index')->with('success', 'Semestre atualizado com sucesso!');
+    }
+
+    public function termDestroy(AcademicTerm $term)
+    {
+        $this->ensureAdmin();
+
+        $term->delete();
+
+        return redirect()->route('admin.semestres.index')->with('success', 'Semestre removido com sucesso!');
     }
 
     public function subjectsIndex()
