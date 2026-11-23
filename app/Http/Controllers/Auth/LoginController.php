@@ -43,6 +43,10 @@ class LoginController extends Controller
         $request->session()->regenerate();
 
         if ($user->role === 'teacher') {
+            if ($user->must_change_password) {
+                return redirect()->route('profile.edit')->with('warning', 'Defina uma nova senha e confirme suas disciplinas para continuar.');
+            }
+
             return redirect()->route('profile.edit');
         }
 

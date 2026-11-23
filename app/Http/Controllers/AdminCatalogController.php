@@ -51,6 +51,7 @@ class AdminCatalogController extends Controller
             'email' => $email,
             'role' => 'teacher',
             'password' => 'senha1234',
+            'must_change_password' => true,
         ];
 
         if (method_exists(User::class, 'query')) {
@@ -64,6 +65,7 @@ class AdminCatalogController extends Controller
                 'name' => $professor->name,
                 'role' => 'teacher',
                 'password' => 'senha1234',
+                'must_change_password' => true,
             ]);
 
             if (Schema::hasColumn('users', 'registration_number') && ! empty($professor->registration)) {

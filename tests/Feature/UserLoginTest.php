@@ -14,6 +14,7 @@ use App\Models\TeachingAssignment;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class UserLoginTest extends TestCase
@@ -72,7 +73,7 @@ class UserLoginTest extends TestCase
         $this->assertAuthenticated();
     }
 
-    public function test_teacher_user_is_redirected_to_profile_edit_after_login(): void
+    public function test_teacher_user_is_redirected_to_profile_edit_after_login_when_password_needs_setup(): void
     {
         $user = User::create([
             'name' => 'Prof. Débora Souza',
@@ -80,6 +81,7 @@ class UserLoginTest extends TestCase
             'password' => 'senha1234',
             'role' => 'teacher',
             'is_active' => true,
+            'must_change_password' => true,
         ]);
 
         $response = $this->post('/login', [
@@ -89,6 +91,55 @@ class UserLoginTest extends TestCase
 
         $response->assertRedirect(route('profile.edit'));
         $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_teacher_can_set_new_password_and_select_semester_subjects_from_profile(): void
+    {
+        $user = User::create([
+            'name' => 'Prof. Eliana Costa',
+            'email' => 'eliana@prof.uni7.edu.br',
+            'password' => 'senha1234',
+            'role' => 'teacher',
+            'is_active' => true,
+            'must_change_password' => true,
+        ]);
+
+        $professor = Professor::create([
+            'name' => 'Prof. Eliana Costa',
+            'email' => 'eliana@prof.uni7.edu.br',
+            'registration' => '223344',
+            'qualification' => 'Doutora',
+            'active' => true,
+        ]);
+
+        $subjectA = Subject::create([
+            'code' => 'MAT101',
+            'name' => 'Matemática I',
+            'total_hours' => 80,
+        ]);
+
+        $subjectB = Subject::create([
+            'code' => 'PROG201',
+            'name' => 'Programação II',
+            'total_hours' => 80,
+        ]);
+
+        $this->actingAs($user)
+            ->put('/perfil', [
+                'name' => 'Prof. Eliana Costa',
+                'email' => 'eliana@prof.uni7.edu.br',
+                'role' => 'teacher',
+                'password' => 'NovaSenha123',
+                'password_confirmation' => 'NovaSenha123',
+                'subjects' => [$subjectA->id, $subjectB->id],
+            ])
+            ->assertRedirect('/perfil');
+
+        $user->refresh();
+
+        $this->assertFalse((bool) $user->must_change_password);
+        $this->assertTrue(Hash::check('NovaSenha123', $user->password));
+        $this->assertEqualsCanonicalizing([$subjectA->id, $subjectB->id], $professor->fresh()->subjects()->pluck('subjects.id')->all());
     }
 
     public function test_inactive_user_cannot_login(): void
@@ -140,12 +191,12 @@ class UserLoginTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Minhas disciplinas');
-        $response->assertSee('Minha disponibilidade');
-        $response->assertDontSee('Disciplinas</h5>');
-        $response->assertDontSee('Disponibilidade</h5>');
+        $response->assertSee('Disponibilidade');
+        $response->assertSee('Nova senha');
+        $response->assertSee('Salvar perfil');
     }
 
-    public function test_teacher_profile_page_is_read_only_without_edit_create_or_delete_actions(): void
+    public function test_teacher_profile_form_allows_password_setup_and_subject_selection(): void
     {
         $user = User::create([
             'name' => 'Prof. Marcos',
@@ -153,15 +204,76 @@ class UserLoginTest extends TestCase
             'password' => 'senha1234',
             'role' => 'teacher',
             'is_active' => true,
+            'must_change_password' => true,
         ]);
 
-        $response = $this->actingAs($user)->get('/perfil');
+        $term = AcademicTerm::create([
+            'code' => '2026.2',
+            'starts_at' => '2026-08-01',
+            'ends_at' => '2026-12-15',
+            'status' => 'active',
+        ]);
+
+        $course = Course::create([
+            'code' => 'SI',
+            'name' => 'Sistemas de Informação',
+            'degree' => 'Bacharelado',
+            'active' => true,
+        ]);
+
+        $matrix = CurriculumMatrix::create([
+            'course_id' => $course->id,
+            'code' => 'MTR-001',
+            'name' => 'Matriz 2026',
+            'status' => 'Atual',
+        ]);
+
+        $professor = Professor::create([
+            'name' => 'Prof. Marcos',
+            'email' => 'marcos.prof@inova7.local',
+            'registration' => '223344',
+            'qualification' => 'Doutora',
+            'active' => true,
+        ]);
+
+        $subject = Subject::create([
+            'code' => 'FIS103',
+            'name' => 'Física Geral',
+            'total_hours' => 80,
+        ]);
+
+        $offering = ClassOffering::create([
+            'academic_term_id' => $term->id,
+            'course_id' => $course->id,
+            'curriculum_matrix_id' => $matrix->id,
+            'subject_id' => $subject->id,
+            'class_code' => 'FIS-01',
+            'period' => 1,
+            'shift' => 'MANHÃ',
+            'modality' => 'PRESENCIAL',
+            'occurs' => true,
+            'weekly_hours' => 4,
+            'totvs_hours' => 4,
+            'status' => 'planned',
+        ]);
+
+        TeachingAssignment::create([
+            'class_offering_id' => $offering->id,
+            'professor_id' => $professor->id,
+            'weekly_hours' => 4,
+            'status' => 'planned',
+        ]);
+
+        $response = $this->withSession(['selected_academic_term_id' => $term->id])
+            ->actingAs($user)
+            ->get('/perfil/editar');
 
         $response->assertOk();
-        $response->assertSee('Acesso somente leitura');
-        $response->assertDontSee('Editar perfil');
-        $response->assertDontSee('Novo professor');
-        $response->assertDontSee('Excluir');
+        $response->assertSee('Nova senha');
+        $response->assertSee('Minhas disciplinas');
+        $response->assertSee('Salvar perfil');
+        $response->assertSee('Física Geral');
+        $response->assertSee((string) $subject->id);
     }
 
     public function test_admin_routes_follow_the_admin_planejamento_prefix(): void

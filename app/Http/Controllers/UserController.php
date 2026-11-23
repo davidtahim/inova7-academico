@@ -47,6 +47,25 @@ class UserController extends Controller
 
         $professor = Professor::where('email', $user->email)->orWhere('name', $user->name)->first();
         $assignedSubjects = $this->assignedSubjectsForProfessor($professor, $term);
+        $allSubjects = $assignedSubjects;
+        $selectedSubjectIds = $professor ? $professor->subjects()->pluck('subjects.id')->all() : [];
+
+        $availability = $professor && $term
+            ? ProfessorAvailability::where('professor_id', $professor->id)
+            ->where('academic_term_id', $term->id)
+            ->orderBy('weekday')
+            ->orderBy('starts_at')
+            ->get()
+            : collect();
+
+        if ($availability->isEmpty()) {
+            $availability = collect([
+                (object) ['weekday' => 1, 'starts_at' => '07:30', 'ends_at' => '08:20', 'preference' => 'preferred'],
+                (object) ['weekday' => 1, 'starts_at' => '10:50', 'ends_at' => '11:40', 'preference' => 'preferred'],
+                (object) ['weekday' => 2, 'starts_at' => '18:30', 'ends_at' => '19:20', 'preference' => 'preferred'],
+                (object) ['weekday' => 2, 'starts_at' => '21:00', 'ends_at' => '21:50', 'preference' => 'preferred'],
+            ]);
+        }
 
         return view('users.profile-edit', [
             'user' => $user,
@@ -54,13 +73,9 @@ class UserController extends Controller
             'professor' => $professor,
             'term' => $term,
             'subjects' => $assignedSubjects,
-            'availability' => $professor && $term
-                ? ProfessorAvailability::where('professor_id', $professor->id)
-                ->where('academic_term_id', $term->id)
-                ->orderBy('weekday')
-                ->orderBy('starts_at')
-                ->get()
-                : collect(),
+            'allSubjects' => $allSubjects,
+            'selectedSubjectIds' => $selectedSubjectIds,
+            'availability' => $availability,
         ]);
     }
 
@@ -71,12 +86,18 @@ class UserController extends Controller
             abort(403);
         }
 
+        $teacherMustSetPassword = $user->role === 'teacher' && ($user->must_change_password || $request->filled('password'));
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'registration_number' => ['nullable', 'string', 'max:20', 'unique:users,registration_number,' . $user->id],
             'role' => 'required|in:admin,coordinator,teacher,student,staff',
-            'password' => ['nullable', 'confirmed', Password::min(8)->letters()->numbers()],
+            'password' => [
+                $teacherMustSetPassword || $request->filled('password') ? 'required' : 'nullable',
+                'confirmed',
+                Password::min(8)->letters()->numbers(),
+            ],
             'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'subjects' => ['nullable', 'array'],
             'subjects.*' => ['integer', 'exists:subjects,id'],
@@ -97,6 +118,7 @@ class UserController extends Controller
 
         if (! empty($validated['password'])) {
             $user->password = $validated['password'];
+            $user->must_change_password = false;
         }
 
         $user->save();
@@ -116,6 +138,15 @@ class UserController extends Controller
             $professor->email = $user->email;
             $professor->registration = $user->registration_number ?? $professor->registration;
             $professor->save();
+
+            $selectedSubjectIds = collect($validated['subjects'] ?? [])
+                ->filter(fn($subjectId) => is_numeric($subjectId))
+                ->map(fn($subjectId) => (int) $subjectId)
+                ->unique()
+                ->values()
+                ->all();
+
+            $professor->subjects()->sync($selectedSubjectIds);
 
             // A disponibilidade do professor é ingerida pela importação da oferta Ubíqua.
             // O professor não deve sobrescrever esses dados pelo próprio perfil.

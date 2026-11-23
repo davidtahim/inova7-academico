@@ -18,6 +18,7 @@ class User extends Authenticatable
         'role',
         'photo_path',
         'is_active',
+        'must_change_password',
     ];
 
     protected $hidden = [
@@ -29,6 +30,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed', // Hash automático ao salvar (Laravel 11)
         'is_active' => 'boolean',
+        'must_change_password' => 'boolean',
     ];
 
     public static function roleOptions(): array

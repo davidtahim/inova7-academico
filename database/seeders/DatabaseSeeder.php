@@ -31,7 +31,7 @@ class DatabaseSeeder extends Seeder
         );
         User::updateOrCreate(
             ['email' => 'professor@inova7.local'],
-            ['name' => 'Professor Demo', 'password' => Hash::make('senha1234'), 'role' => 'teacher', 'is_active' => true]
+            ['name' => 'Professor Demo', 'password' => Hash::make('senha1234'), 'role' => 'teacher', 'is_active' => true, 'must_change_password' => true]
         );
         User::updateOrCreate(
             ['email' => 'coordenacao@inova7.local'],
