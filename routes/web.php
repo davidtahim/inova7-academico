@@ -33,6 +33,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/planejamento', [\App\Http\Controllers\AdminCatalogController::class, 'planejamentoIndex'])->name('admin.planejamento.index');
 
         Route::prefix('admin/planejamento')->name('admin.')->group(function () {
+            Route::get('/usuarios', [\App\Http\Controllers\AdminCatalogController::class, 'usersIndex'])->name('users.index');
+            Route::get('/usuarios/{user}/editar', [\App\Http\Controllers\AdminCatalogController::class, 'userEdit'])->name('users.edit');
+            Route::put('/usuarios/{user}', [\App\Http\Controllers\AdminCatalogController::class, 'userUpdate'])->name('users.update');
+            Route::delete('/usuarios/{user}', [\App\Http\Controllers\AdminCatalogController::class, 'userDestroy'])->name('users.destroy');
+
             Route::get('/cursos', [\App\Http\Controllers\AdminCatalogController::class, 'coursesIndex'])->name('courses.index');
             Route::get('/cursos/novo', [\App\Http\Controllers\AdminCatalogController::class, 'courseCreate'])->name('courses.create');
             Route::post('/cursos', [\App\Http\Controllers\AdminCatalogController::class, 'courseStore'])->name('courses.store');

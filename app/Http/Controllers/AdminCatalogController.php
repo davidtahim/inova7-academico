@@ -99,6 +99,7 @@ class AdminCatalogController extends Controller
         $this->ensureAdmin();
 
         return view('admin.planejamento.index', [
+            'usersCount' => User::count(),
             'coursesCount' => Course::count(),
             'subjectsCount' => Subject::count(),
             'professorsCount' => Professor::count(),
@@ -626,5 +627,120 @@ class AdminCatalogController extends Controller
         $professor->delete();
 
         return redirect()->route('admin.professors.index')->with('success', 'Professor removido com sucesso!');
+    }
+
+    public function usersIndex(Request $request)
+    {
+        $this->ensureAdmin();
+
+        $query = trim((string) $request->query('q', ''));
+        $roleFilter = trim((string) $request->query('role', ''));
+
+        $users = User::query()
+            ->when($query !== '', function ($queryBuilder) use ($query) {
+                $queryBuilder->where(function ($innerQuery) use ($query) {
+                    $innerQuery->where('name', 'like', "%{$query}%")
+                        ->orWhere('email', 'like', "%{$query}%")
+                        ->orWhere('registration_number', 'like', "%{$query}%");
+                });
+            })
+            ->when($roleFilter !== '', function ($queryBuilder) use ($roleFilter) {
+                $queryBuilder->where('role', $roleFilter);
+            })
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.users-index', [
+            'users' => $users,
+            'query' => $query,
+            'roleFilter' => $roleFilter,
+            'roleOptions' => User::roleOptions(),
+        ]);
+    }
+
+    public function userEdit(User $user)
+    {
+        $this->ensureAdmin();
+
+        return view('admin.users-form', [
+            'user' => $user,
+            'roleOptions' => User::roleOptions(),
+        ]);
+    }
+
+    public function userUpdate(Request $request, User $user)
+    {
+        $this->ensureAdmin();
+
+        $rules = [
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'role' => ['required', 'in:admin,coordinator,teacher,student,staff'],
+            'password' => ['nullable', 'confirmed', 'min:8'],
+        ];
+
+        if (Schema::hasColumn('users', 'registration_number')) {
+            $rules['registration_number'] = ['nullable', 'string', 'max:20', 'unique:users,registration_number,' . $user->id];
+        }
+
+        if (Schema::hasColumn('users', 'is_active')) {
+            $rules['is_active'] = ['nullable', 'boolean'];
+        }
+
+        $validated = $request->validate($rules);
+
+        $userData = [
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'role' => $validated['role'],
+        ];
+
+        if (Schema::hasColumn('users', 'registration_number')) {
+            $userData['registration_number'] = $validated['registration_number'] ?? null;
+        }
+
+        if (Schema::hasColumn('users', 'is_active')) {
+            $userData['is_active'] = $validated['is_active'] ?? false;
+        }
+
+        if (! empty($validated['password'])) {
+            $userData['password'] = $validated['password'];
+            $userData['must_change_password'] = true;
+        }
+
+        $user->update($userData);
+
+        if ($user->role === 'teacher') {
+            $professor = Professor::where('email', $user->email)->first();
+            if (! $professor) {
+                $professor = Professor::create([
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'registration' => $user->registration_number,
+                    'active' => true,
+                ]);
+            } else {
+                $professor->update([
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'registration' => $user->registration_number,
+                ]);
+            }
+        }
+
+        return redirect()->route('admin.users.index')->with('success', 'Usuário atualizado com sucesso!');
+    }
+
+    public function userDestroy(User $user)
+    {
+        $this->ensureAdmin();
+
+        if ($user->id === Auth::id()) {
+            return redirect()->route('admin.users.index')->with('error', 'Você não pode deletar sua própria conta!');
+        }
+
+        $user->delete();
+
+        return redirect()->route('admin.users.index')->with('success', 'Usuário removido com sucesso!');
     }
 }

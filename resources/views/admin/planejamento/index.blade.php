@@ -15,6 +15,19 @@
             <div class="col-sm-6 col-xl-3">
                 <article class="card card-soft h-100 admin-panel-stat">
                     <div class="card-body py-3">
+                        <div class="small text-secondary">Usuários</div>
+                        <div class="stat-number mt-2">{{ $usersCount }}</div>
+                        <div class="small text-secondary mt-2">Usuários do sistema</div>
+                    </div>
+                    <div class="card-footer bg-white border-0 pt-0 pb-3">
+                        <a href="{{ route('admin.users.index') }}" class="btn btn-sm btn-outline-primary">Abrir</a>
+                    </div>
+                </article>
+            </div>
+
+            <div class="col-sm-6 col-xl-3">
+                <article class="card card-soft h-100 admin-panel-stat">
+                    <div class="card-body py-3">
                         <div class="small text-secondary">Cursos</div>
                         <div class="stat-number mt-2">{{ $coursesCount }}</div>
                         <div class="small text-secondary mt-2">Cadastros ativos</div>
@@ -72,6 +85,8 @@
                         <span class="section-title">Cadastros</span>
                     </div>
                     <div class="card-body d-grid gap-2 py-2">
+                        <a href="{{ route('admin.users.index') }}"
+                            class="btn btn-outline-primary admin-panel-btn">Usuários</a>
                         <a href="{{ route('admin.courses.index') }}"
                             class="btn btn-outline-primary admin-panel-btn">Cursos</a>
                         <a href="{{ route('admin.matrices.index') }}"
