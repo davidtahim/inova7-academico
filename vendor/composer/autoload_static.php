@@ -671,10 +671,12 @@ class ComposerStaticInitacfaad418815ccd5a9b2928066ddc7c3
     );
 
     public static $classMap = array (
+        'App\\Http\\Controllers\\AdminCatalogController' => __DIR__ . '/../..' . '/app/Http/Controllers/AdminCatalogController.php',
         'App\\Http\\Controllers\\AuditController' => __DIR__ . '/../..' . '/app/Http/Controllers/AuditController.php',
         'App\\Http\\Controllers\\AuditDocumentController' => __DIR__ . '/../..' . '/app/Http/Controllers/AuditDocumentController.php',
         'App\\Http\\Controllers\\AuditTemplateController' => __DIR__ . '/../..' . '/app/Http/Controllers/AuditTemplateController.php',
         'App\\Http\\Controllers\\Auth\\LoginController' => __DIR__ . '/../..' . '/app/Http/Controllers/Auth/LoginController.php',
+        'App\\Http\\Controllers\\CatalogController' => __DIR__ . '/../..' . '/app/Http/Controllers/CatalogController.php',
         'App\\Http\\Controllers\\Controller' => __DIR__ . '/../..' . '/app/Http/Controllers/Controller.php',
         'App\\Http\\Controllers\\DashboardController' => __DIR__ . '/../..' . '/app/Http/Controllers/DashboardController.php',
         'App\\Http\\Controllers\\ImportController' => __DIR__ . '/../..' . '/app/Http/Controllers/ImportController.php',
@@ -690,6 +692,7 @@ class ComposerStaticInitacfaad418815ccd5a9b2928066ddc7c3
         'App\\Models\\Professor' => __DIR__ . '/../..' . '/app/Models/Professor.php',
         'App\\Models\\ProfessorAvailability' => __DIR__ . '/../..' . '/app/Models/ProfessorAvailability.php',
         'App\\Models\\ScheduleSlot' => __DIR__ . '/../..' . '/app/Models/ScheduleSlot.php',
+        'App\\Models\\StudentAcademicRecord' => __DIR__ . '/../..' . '/app/Models/StudentAcademicRecord.php',
         'App\\Models\\Subject' => __DIR__ . '/../..' . '/app/Models/Subject.php',
         'App\\Models\\TeachingAssignment' => __DIR__ . '/../..' . '/app/Models/TeachingAssignment.php',
         'App\\Models\\User' => __DIR__ . '/../..' . '/app/Models/User.php',
@@ -697,6 +700,7 @@ class ComposerStaticInitacfaad418815ccd5a9b2928066ddc7c3
         'App\\Services\\AuditTemplateRenderer' => __DIR__ . '/../..' . '/app/Services/AuditTemplateRenderer.php',
         'App\\Services\\CcgFor01DataBuilder' => __DIR__ . '/../..' . '/app/Services/CcgFor01DataBuilder.php',
         'App\\Services\\ConflictDetector' => __DIR__ . '/../..' . '/app/Services/ConflictDetector.php',
+        'App\\Services\\ProfessorAllocationService' => __DIR__ . '/../..' . '/app/Services/ProfessorAllocationService.php',
         'Attribute' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/Attribute.php',
         'Barryvdh\\DomPDF\\Facade\\Pdf' => __DIR__ . '/..' . '/barryvdh/laravel-dompdf/src/Facade/Pdf.php',
         'Barryvdh\\DomPDF\\PDF' => __DIR__ . '/..' . '/barryvdh/laravel-dompdf/src/PDF.php',

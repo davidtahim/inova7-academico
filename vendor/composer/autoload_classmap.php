@@ -6,10 +6,12 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
+    'App\\Http\\Controllers\\AdminCatalogController' => $baseDir . '/app/Http/Controllers/AdminCatalogController.php',
     'App\\Http\\Controllers\\AuditController' => $baseDir . '/app/Http/Controllers/AuditController.php',
     'App\\Http\\Controllers\\AuditDocumentController' => $baseDir . '/app/Http/Controllers/AuditDocumentController.php',
     'App\\Http\\Controllers\\AuditTemplateController' => $baseDir . '/app/Http/Controllers/AuditTemplateController.php',
     'App\\Http\\Controllers\\Auth\\LoginController' => $baseDir . '/app/Http/Controllers/Auth/LoginController.php',
+    'App\\Http\\Controllers\\CatalogController' => $baseDir . '/app/Http/Controllers/CatalogController.php',
     'App\\Http\\Controllers\\Controller' => $baseDir . '/app/Http/Controllers/Controller.php',
     'App\\Http\\Controllers\\DashboardController' => $baseDir . '/app/Http/Controllers/DashboardController.php',
     'App\\Http\\Controllers\\ImportController' => $baseDir . '/app/Http/Controllers/ImportController.php',
@@ -25,6 +27,7 @@ return array(
     'App\\Models\\Professor' => $baseDir . '/app/Models/Professor.php',
     'App\\Models\\ProfessorAvailability' => $baseDir . '/app/Models/ProfessorAvailability.php',
     'App\\Models\\ScheduleSlot' => $baseDir . '/app/Models/ScheduleSlot.php',
+    'App\\Models\\StudentAcademicRecord' => $baseDir . '/app/Models/StudentAcademicRecord.php',
     'App\\Models\\Subject' => $baseDir . '/app/Models/Subject.php',
     'App\\Models\\TeachingAssignment' => $baseDir . '/app/Models/TeachingAssignment.php',
     'App\\Models\\User' => $baseDir . '/app/Models/User.php',
@@ -32,6 +35,7 @@ return array(
     'App\\Services\\AuditTemplateRenderer' => $baseDir . '/app/Services/AuditTemplateRenderer.php',
     'App\\Services\\CcgFor01DataBuilder' => $baseDir . '/app/Services/CcgFor01DataBuilder.php',
     'App\\Services\\ConflictDetector' => $baseDir . '/app/Services/ConflictDetector.php',
+    'App\\Services\\ProfessorAllocationService' => $baseDir . '/app/Services/ProfessorAllocationService.php',
     'Attribute' => $vendorDir . '/symfony/polyfill-php80/Resources/stubs/Attribute.php',
     'Barryvdh\\DomPDF\\Facade\\Pdf' => $vendorDir . '/barryvdh/laravel-dompdf/src/Facade/Pdf.php',
     'Barryvdh\\DomPDF\\PDF' => $vendorDir . '/barryvdh/laravel-dompdf/src/PDF.php',
