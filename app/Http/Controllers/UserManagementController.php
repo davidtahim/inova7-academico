@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rules\Password;
 
@@ -107,6 +108,12 @@ class UserManagementController extends Controller
         $validated = $request->validate($rules);
 
         try {
+            Log::info('UserManagementController::store - Iniciando criação de usuário', [
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'role' => $validated['role'],
+            ]);
+
             DB::beginTransaction();
 
             $userData = [
@@ -114,6 +121,7 @@ class UserManagementController extends Controller
                 'email' => $validated['email'],
                 'password' => Hash::make($validated['password']),
                 'role' => $validated['role'],
+                'must_change_password' => true,
             ];
 
             if (Schema::hasColumn('users', 'registration_number') && $validated['registration_number']) {
@@ -124,19 +132,32 @@ class UserManagementController extends Controller
                 $userData['is_active'] = $validated['is_active'] ?? true;
             }
 
+            Log::info('UserManagementController::store - Dados do usuário preparados', $userData);
+
             $user = User::create($userData);
+
+            Log::info('UserManagementController::store - Usuário criado', ['user_id' => $user->id]);
 
             // Se for professor, criar registro em professores
             if ($validated['role'] === 'teacher') {
+                Log::info('UserManagementController::store - Criando registro de professor');
                 $this->createOrUpdateProfessor($user);
             }
 
             DB::commit();
 
+            Log::info('UserManagementController::store - Usuário salvo com sucesso', ['user_id' => $user->id]);
+
             return redirect()->route('admin.users.show', $user)
                 ->with('success', 'Usuário criado com sucesso!');
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('UserManagementController::store - ERRO ao criar usuário', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return back()->withInput()
                 ->with('error', 'Erro ao criar usuário: ' . $e->getMessage());
         }
