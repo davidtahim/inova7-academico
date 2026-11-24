@@ -86,10 +86,17 @@
                                 <span>Professor</span>
                                 <span class="nav-caret">▾</span>
                             </summary>
-                            <a class="nav-link {{ request()->routeIs('profile.edit') ? 'active' : '' }}"
-                                href="{{ route('profile.edit') }}#disciplinas">◌ Minhas disciplinas</a>
-                            <a class="nav-link {{ request()->routeIs('profile.edit') ? 'active' : '' }}"
-                                href="{{ route('profile.edit') }}#disponibilidade">◔ Minha disponibilidade</a>
+                            @if (Auth::user()->professor_id && Auth::user()->professor)
+                                <a class="nav-link {{ request()->routeIs('admin.professors.subjects') ? 'active' : '' }}"
+                                    href="{{ route('admin.professors.subjects', Auth::user()->professor) }}">◌ Minhas disciplinas</a>
+                                <a class="nav-link {{ request()->routeIs('admin.professors.availability') ? 'active' : '' }}"
+                                    href="{{ route('admin.professors.availability', Auth::user()->professor) }}">◔ Minha disponibilidade</a>
+                            @else
+                                <a class="nav-link {{ request()->routeIs('profile.edit') ? 'active' : '' }}"
+                                    href="{{ route('profile.edit') }}#disciplinas">◌ Minhas disciplinas</a>
+                                <a class="nav-link {{ request()->routeIs('profile.edit') ? 'active' : '' }}"
+                                    href="{{ route('profile.edit') }}#disponibilidade">◔ Minha disponibilidade</a>
+                            @endif
                         </details>
                     @endif
 
