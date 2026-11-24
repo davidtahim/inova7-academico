@@ -92,6 +92,26 @@ class AdminCatalogController extends Controller
 
         if (Schema::hasColumn('users', 'registration_number') && ! empty($professor->registration)) {
             $userData['registration_number'] = $professor->registration;
+            
+            // Verificar se já existe usuário com este registration_number
+            $existingUser = User::where('registration_number', $professor->registration)->first();
+            if ($existingUser) {
+                // Atualizar o usuário existente ao invés de criar novo
+                $existingUser->fill([
+                    'name' => $professor->name,
+                    'email' => $email,
+                    'role' => 'teacher',
+                    'password' => 'senha1234',
+                    'must_change_password' => true,
+                ]);
+
+                if (Schema::hasColumn('users', 'is_active')) {
+                    $existingUser->is_active = (bool) $professor->active;
+                }
+
+                $existingUser->save();
+                return;
+            }
         }
 
         if (Schema::hasColumn('users', 'is_active')) {
