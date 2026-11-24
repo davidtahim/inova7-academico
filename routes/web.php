@@ -38,6 +38,10 @@ Route::middleware('auth')->group(function () {
             Route::put('/usuarios/{user}', [\App\Http\Controllers\AdminCatalogController::class, 'userUpdate'])->name('users.update');
             Route::delete('/usuarios/{user}', [\App\Http\Controllers\AdminCatalogController::class, 'userDestroy'])->name('users.destroy');
 
+            Route::get('/professores/{professor}/disponibilidade', [\App\Http\Controllers\ProfessorAvailabilityController::class, 'show'])->name('professors.availability');
+            Route::get('/professores/{professor}/disciplinas', [\App\Http\Controllers\ProfessorAvailabilityController::class, 'showSubjects'])->name('professors.subjects');
+            Route::put('/professores/{professor}/disciplinas', [\App\Http\Controllers\ProfessorAvailabilityController::class, 'updateSubjects'])->name('professors.update-subjects');
+
             Route::get('/cursos', [\App\Http\Controllers\AdminCatalogController::class, 'coursesIndex'])->name('courses.index');
             Route::get('/cursos/novo', [\App\Http\Controllers\AdminCatalogController::class, 'courseCreate'])->name('courses.create');
             Route::post('/cursos', [\App\Http\Controllers\AdminCatalogController::class, 'courseStore'])->name('courses.store');

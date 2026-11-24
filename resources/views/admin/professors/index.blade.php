@@ -55,6 +55,10 @@
                                         <div class="table-actions">
                                             <a href="{{ route('admin.professors.edit', $professor) }}"
                                                 class="btn btn-sm btn-outline-primary">Editar</a>
+                                            <a href="{{ route('admin.professors.availability', $professor) }}"
+                                                class="btn btn-sm btn-outline-info" title="Ver disponibilidade de horários">📅</a>
+                                            <a href="{{ route('admin.professors.subjects', $professor) }}"
+                                                class="btn btn-sm btn-outline-success" title="Gerenciar disciplinas">📚</a>
                                             <form action="{{ route('admin.professors.destroy', $professor) }}"
                                                 method="POST" class="d-inline-block">
                                                 @csrf

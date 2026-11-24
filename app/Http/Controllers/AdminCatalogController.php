@@ -21,6 +21,13 @@ class AdminCatalogController extends Controller
         }
     }
 
+    private function ensureCatalogAccess(): void
+    {
+        if (! Auth::check() || ! in_array(Auth::user()->role, ['coordinator', 'staff', 'admin'], true)) {
+            abort(403, 'Acesso negado. Você não tem permissão para gerenciar o catálogo.');
+        }
+    }
+
     private function resolveProfessorEmail(string $name, ?string $chapa, ?string $email): ?string
     {
         $normalizedChapa = trim((string) $chapa);
@@ -514,7 +521,7 @@ class AdminCatalogController extends Controller
 
     public function professorsIndex(Request $request)
     {
-        $this->ensureAdmin();
+        $this->ensureCatalogAccess();
 
         $query = trim((string) $request->query('q', ''));
 
@@ -580,7 +587,7 @@ class AdminCatalogController extends Controller
 
     public function professorEdit(Professor $professor)
     {
-        $this->ensureAdmin();
+        $this->ensureCatalogAccess();
 
         return view('admin.professors.form', [
             'professor' => $professor,
@@ -589,7 +596,7 @@ class AdminCatalogController extends Controller
 
     public function professorUpdate(Request $request, Professor $professor)
     {
-        $this->ensureAdmin();
+        $this->ensureCatalogAccess();
 
         $validated = $request->validate([
             'registration' => ['nullable', 'string', 'max:50', 'unique:professors,registration,' . $professor->id],
