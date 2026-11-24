@@ -311,6 +311,7 @@
     @if($isEditable)
     <script>
         const form = document.getElementById('availabilityForm');
+        const formAction = "{{ route('admin.professors.update-availability', $professor) }}";
         let selectedSlots = new Map();
 
         // Inicializar slots já selecionados
@@ -394,31 +395,37 @@
                 });
             });
 
-            // Adicionar como campo hidden
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'availability_slots';
-            input.value = JSON.stringify(slots);
-            form.appendChild(input);
-
-            // Enviar
             const saveBtn = document.getElementById('saveBtn');
             const originalText = saveBtn.innerHTML;
             saveBtn.disabled = true;
             saveBtn.innerHTML = '⏳ Salvando...';
 
-            fetch(form.action, {
+            const csrfToken = document.querySelector('input[name="_token"]').value;
+
+            fetch(formAction, {
                 method: 'PUT',
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                    'X-CSRF-TOKEN': csrfToken,
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                 },
                 body: JSON.stringify({
                     availability_slots: slots
                 })
             })
-            .then(response => response.json())
+            .then(async response => {
+                console.log('Status:', response.status);
+                console.log('Headers:', response.headers);
+                
+                if (!response.ok) {
+                    const error = await response.text();
+                    console.error('Erro do servidor:', error);
+                    throw new Error(`HTTP error! status: ${response.status}, body: ${error}`);
+                }
+                return response.json();
+            })
             .then(data => {
+                console.log('Resposta:', data);
                 if (data.success) {
                     // Mostrar mensagem de sucesso
                     const alert = document.createElement('div');
@@ -437,7 +444,9 @@
                 }
             })
             .catch(error => {
-                alert('Erro ao salvar: ' + error.message);
+                console.error('Erro completo:', error);
+                const errorMsg = error.message || 'Erro desconhecido ao salvar';
+                alert('❌ Erro ao salvar: ' + errorMsg + '\n\nAbra o console (F12) para mais detalhes.');
                 saveBtn.disabled = false;
                 saveBtn.innerHTML = originalText;
             });
