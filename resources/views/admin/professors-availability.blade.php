@@ -99,8 +99,6 @@
                             </table>
                         </div>
                     </div>
-                </div>
-            </div>
 
             <!-- Resumo e Legenda -->
             <div class="col-lg-4">
@@ -134,29 +132,6 @@
                     </div>
                 </div>
 
-                <div class="card border-0 shadow-sm mb-3">
-                    <div class="card-header bg-light border-0">
-                        <h5 class="mb-0">Resumo</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="stat-row mb-2">
-                            <span class="text-muted">Total de horários</span>
-                            <strong id="totalSlots">{{ $totalSlots }}</strong>
-                        </div>
-                        <div class="stat-row mb-2">
-                            <span class="text-muted">Preferidos</span>
-                            <span class="badge bg-success" id="preferredCount">{{ $preferredCount }}</span>
-                        </div>
-                        <div class="stat-row mb-2">
-                            <span class="text-muted">Disponíveis</span>
-                            <span class="badge bg-info" id="availableCount">{{ $availableCount }}</span>
-                        </div>
-                        <div class="stat-row">
-                            <span class="text-muted">Indisponíveis</span>
-                            <span class="badge bg-light text-muted" id="unavailableCount">{{ $unavailableCount }}</span>
-                        </div>
-                    </div>
-                </div>
 
                 @if($term)
                     <div class="card border-0 shadow-sm">
@@ -178,72 +153,101 @@
             </div>
         </div>
 
-        <!-- Horários Detalhados -->
-        <div class="card border-0 shadow-sm mt-4">
-            <div class="card-header bg-light border-0">
-                <h5 class="mb-0">Detalhamento de Horários</h5>
-            </div>
-            <div class="card-body">
-                @if($availabilities->isEmpty())
-                    <div class="alert alert-info mb-0">
-                        Nenhum horário de disponibilidade cadastrado para este professor neste semestre.
+        <!-- Detalhamento de Horários (Carregado após salvar) -->
+        @if($isEditable)
+        <div id="detalhamentoContainer" style="margin-top: 30px; display: none;">
+            <div class="row g-3">
+                <!-- Tabela de Detalhamento -->
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-light border-0 d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-0">📋 Detalhamento de Horários</h5>
+                                <small class="text-muted">Horários salvos em tempo real - Clique para editar ou excluir</small>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table id="detalhamentoTable" class="table table-sm table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 15%;">Dia da Semana</th>
+                                            <th style="width: 15%;">Horário</th>
+                                            <th style="width: 15%;">Preferência</th>
+                                            <th style="width: 35%;">Status</th>
+                                            <th style="width: 20%;" class="text-center">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="detalhamentoContent">
+                                        <!-- Conteúdo carregado via JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
-                @else
-                    <div class="table-responsive">
-                        <table class="table table-sm table-hover">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Dia da Semana</th>
-                                    <th>Horário</th>
-                                    <th>Preferência</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($availabilities->sortBy(['weekday', 'starts_at']) as $slot)
-                                    <tr>
-                                        <td>
-                                            <strong>
-                                                @switch($slot->weekday)
-                                                    @case(1) Segunda-feira @break
-                                                    @case(2) Terça-feira @break
-                                                    @case(3) Quarta-feira @break
-                                                    @case(4) Quinta-feira @break
-                                                    @case(5) Sexta-feira @break
-                                                    @case(6) Sábado @break
-                                                @endswitch
-                                            </strong>
-                                        </td>
-                                        <td>
-                                            {{ \Carbon\Carbon::parse($slot->starts_at)->format('H:i') }} - 
-                                            {{ \Carbon\Carbon::parse($slot->ends_at)->format('H:i') }}
-                                        </td>
-                                        <td>
-                                            <span class="badge 
-                                                @if($slot->preference === 'preferred') bg-success
-                                                @elseif($slot->preference === 'available') bg-info
-                                                @else bg-light text-muted
-                                                @endif">
-                                                @switch($slot->preference)
-                                                    @case('preferred') Preferido @break
-                                                    @case('available') Disponível @break
-                                                    @default Indisponível
-                                                @endswitch
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <small class="text-muted">
-                                                {{ $slot->created_at ? 'Registrado em ' . $slot->created_at->format('d/m/Y H:i') : '—' }}
-                                            </small>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                </div>
+
+                <!-- Resumo ao Lado -->
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-light border-0">
+                            <h5 class="mb-0">Resumo</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="stat-row mb-2">
+                                <span class="text-muted">Total de horários</span>
+                                <strong id="totalSlots">{{ $totalSlots }}</strong>
+                            </div>
+                            <div class="stat-row mb-2">
+                                <span class="text-muted">Preferidos</span>
+                                <span class="badge bg-success" id="preferredCount">{{ $preferredCount }}</span>
+                            </div>
+                            <div class="stat-row mb-2">
+                                <span class="text-muted">Disponíveis</span>
+                                <span class="badge bg-info" id="availableCount">{{ $availableCount }}</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="text-muted">Indisponíveis</span>
+                                <span class="badge bg-light text-muted" id="unavailableCount">{{ $unavailableCount }}</span>
+                            </div>
+                        </div>
                     </div>
-                @endif
+                </div>
             </div>
         </div>
+        @endif
+
+        <!-- Modal para Editar Preferência -->
+        @if($isEditable)
+        <div class="modal fade" id="editPreferenceModal" tabindex="-1">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Editar Preferência</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-3"><strong id="editSlotInfo"></strong></p>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="preference" id="pref_preferred" value="preferred" autocomplete="off">
+                            <label class="btn btn-outline-success" for="pref_preferred">
+                                ✓ Preferido
+                            </label>
+
+                            <input type="radio" class="btn-check" name="preference" id="pref_available" value="available" autocomplete="off">
+                            <label class="btn btn-outline-info" for="pref_available">
+                                ◐ Disponível
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" id="savePreferenceBtn">Salvar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
 
         <!-- Ações -->
         <div class="d-flex gap-2 justify-content-end mt-4">
@@ -298,7 +302,9 @@
 
     @if($isEditable)
     <script>
+        console.log('Script de edição carregado. isEditable:', true);
         const formAction = "{{ route('admin.professors.update-availability', $professor) }}";
+        const csrfToken = "{{ csrf_token() }}";
         let selectedSlots = new Map();
         let saveTimeout;
 
@@ -310,14 +316,30 @@
                 selectedSlots.set(key, status);
             }
         });
+        
+        console.log('selectedSlots inicializados:', selectedSlots);
+        
+        // Renderizar detalhamento na inicialização
+        renderDetalhamento();
+        
+        // Adicionar event listeners via JavaScript (além do onclick)
+        document.querySelectorAll('.availability-cell').forEach(cell => {
+            cell.addEventListener('click', function(e) {
+                console.log('Cell clicada via event listener');
+                toggleAvailability(this);
+            });
+        });
 
         function toggleAvailability(element) {
+            console.log('toggleAvailability chamado', element.dataset);
+            
             const weekday = element.dataset.weekday;
             const start = element.dataset.start;
             const end = element.dataset.end;
             const key = `${weekday}-${start}-${end}`;
             
             const currentStatus = element.dataset.status;
+            console.log('Status atual:', currentStatus);
             let newStatus;
 
             // Ciclo: unavailable → preferred → available → unavailable
@@ -348,6 +370,7 @@
             }
 
             element.dataset.status = newStatus;
+            console.log('Novo status:', newStatus);
             updateSummary();
             
             // Auto-salvar após 1 segundo de inatividade
@@ -386,8 +409,6 @@
                 });
             });
 
-            const csrfToken = document.querySelector('input[name="_token"]').value;
-
             fetch(formAction, {
                 method: 'PUT',
                 headers: {
@@ -411,6 +432,8 @@
                 if (data.success) {
                     // Mostrar toast de sucesso
                     showNotification('✓ Disponibilidade salva automaticamente!', 'success');
+                    // Renderizar detalhamento
+                    renderDetalhamento();
                 } else {
                     showNotification('Erro ao salvar: ' + data.message, 'error');
                 }
@@ -419,6 +442,164 @@
                 console.error('Erro:', error);
                 showNotification('❌ Erro ao salvar: ' + error.message, 'error');
             });
+        }
+
+        function renderDetalhamento() {
+            const container = document.getElementById('detalhamentoContainer');
+            const tbody = document.getElementById('detalhamentoContent');
+            
+            if (selectedSlots.size === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            const dayNames = {
+                1: 'Segunda-feira',
+                2: 'Terça-feira',
+                3: 'Quarta-feira',
+                4: 'Quinta-feira',
+                5: 'Sexta-feira',
+                6: 'Sábado'
+            };
+
+            const preferenceLabel = {
+                'preferred': '✓ Preferido',
+                'available': '◐ Disponível'
+            };
+
+            const preferenceBadge = {
+                'preferred': '<span class="badge bg-success">✓ Preferido</span>',
+                'available': '<span class="badge bg-info">◐ Disponível</span>'
+            };
+
+            // Montar array de slots ordenado
+            const slots = [];
+            selectedSlots.forEach((preference, key) => {
+                const [weekday, start, end] = key.split('-');
+                slots.push({
+                    weekday: parseInt(weekday),
+                    day: dayNames[weekday],
+                    start: start,
+                    end: end,
+                    horario: `${start} - ${end}`,
+                    preference: preference,
+                    label: preferenceLabel[preference],
+                    badge: preferenceBadge[preference],
+                    key: key
+                });
+            });
+
+            // Ordenar por weekday e horário
+            slots.sort((a, b) => {
+                if (a.weekday !== b.weekday) return a.weekday - b.weekday;
+                return a.start.localeCompare(b.start);
+            });
+
+            // Montar linhas da tabela
+            let html = '';
+            slots.forEach((slot, index) => {
+                const now = new Date();
+                const registeredAt = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                
+                html += `
+                    <tr data-slot-key="${slot.key}">
+                        <td><strong>${slot.day}</strong></td>
+                        <td>${slot.horario}</td>
+                        <td>${slot.badge}</td>
+                        <td><small class="text-muted">Registrado em ${registeredAt}</small></td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-outline-primary" onclick="editarPreferencia('${slot.key}', '${slot.horario}', '${slot.preference}')">
+                                ✏️ Editar
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="excluirHorario('${slot.key}')">
+                                🗑️ Excluir
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+            container.style.display = 'block';
+        }
+
+        function editarPreferencia(slotKey, horario, currentPreference) {
+            // Armazenar dados no modal
+            window.currentEditSlot = slotKey;
+            
+            document.getElementById('editSlotInfo').textContent = horario;
+            
+            // Marcar a preferência atual
+            document.getElementById('pref_preferred').checked = currentPreference === 'preferred';
+            document.getElementById('pref_available').checked = currentPreference === 'available';
+            
+            // Mostrar modal
+            const modal = new bootstrap.Modal(document.getElementById('editPreferenceModal'));
+            modal.show();
+        }
+
+        // Salvar mudança de preferência
+        document.addEventListener('DOMContentLoaded', function() {
+            const saveBtn = document.getElementById('savePreferenceBtn');
+            if (saveBtn) {
+                saveBtn.addEventListener('click', function() {
+                    const newPreference = document.querySelector('input[name="preference"]:checked').value;
+                    const slotKey = window.currentEditSlot;
+                    
+                    if (slotKey && newPreference) {
+                        // Atualizar no Map
+                        selectedSlots.set(slotKey, newPreference);
+                        
+                        // Fechar modal
+                        bootstrap.Modal.getInstance(document.getElementById('editPreferenceModal')).hide();
+                        
+                        // Atualizar resumo
+                        updateSummary();
+                        
+                        // Atualizar detalhamento
+                        renderDetalhamento();
+                        
+                        // Agendar auto-save
+                        clearTimeout(saveTimeout);
+                        saveTimeout = setTimeout(() => {
+                            saveAvailability();
+                        }, 1000);
+                    }
+                });
+            }
+
+            // Renderizar detalhamento ao carregar a página
+            renderDetalhamento();
+        });
+
+        function excluirHorario(slotKey) {
+            if (confirm('Tem certeza que deseja excluir este horário?')) {
+                // Remover do Map
+                selectedSlots.delete(slotKey);
+                
+                // Atualizar resumo
+                updateSummary();
+                
+                // Atualizar detalhamento
+                renderDetalhamento();
+                
+                // Atualizar célula na tabela
+                const [weekday, start, end] = slotKey.split('-');
+                const cell = document.querySelector(`.availability-cell[data-weekday="${weekday}"][data-start="${start}"][data-end="${end}"]`);
+                if (cell) {
+                    cell.className = 'availability-cell bg-light text-muted';
+                    cell.innerHTML = '<small>✗ Indisponível</small>';
+                    cell.dataset.status = 'unavailable';
+                }
+                
+                // Agendar auto-save
+                clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(() => {
+                    saveAvailability();
+                }, 1000);
+                
+                showNotification('✓ Horário excluído!', 'success');
+            }
         }
 
         function showNotification(message, type) {
