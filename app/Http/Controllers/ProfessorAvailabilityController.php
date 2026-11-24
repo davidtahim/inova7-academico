@@ -6,6 +6,7 @@ use App\Models\AcademicTerm;
 use App\Models\Professor;
 use App\Models\ProfessorAvailability;
 use App\Models\Subject;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,7 +14,7 @@ class ProfessorAvailabilityController extends Controller
 {
     public function show(Professor $professor)
     {
-        $this->checkAccess();
+        $this->checkAccess($professor);
 
         $selectedTermId = session('selected_academic_term_id');
         $term = $selectedTermId ? AcademicTerm::find($selectedTermId) : null;
@@ -34,6 +35,8 @@ class ProfessorAvailabilityController extends Controller
         $unavailableCount = $availabilities->where('preference', 'unavailable')->count();
         $totalSlots = $preferredCount + $availableCount + $unavailableCount;
 
+        $isEditable = $this->canEditAvailability($professor);
+
         return view('admin.professors-availability', [
             'professor' => $professor,
             'term' => $term,
@@ -43,12 +46,58 @@ class ProfessorAvailabilityController extends Controller
             'availableCount' => $availableCount,
             'unavailableCount' => $unavailableCount,
             'totalSlots' => $totalSlots,
+            'isEditable' => $isEditable,
         ]);
+    }
+
+    public function updateAvailability(Request $request, Professor $professor)
+    {
+        $this->checkAccess($professor);
+        
+        if (!$this->canEditAvailability($professor)) {
+            return redirect()->back()->with('error', 'Você não tem permissão para editar essa disponibilidade.');
+        }
+
+        $selectedTermId = session('selected_academic_term_id');
+        $term = $selectedTermId ? AcademicTerm::find($selectedTermId) : null;
+        $term ??= AcademicTerm::latest('id')->first();
+
+        if (!$term) {
+            return redirect()->back()->with('error', 'Nenhum período acadêmico disponível.');
+        }
+
+        $validated = $request->validate([
+            'availability_slots' => ['array'],
+            'availability_slots.*.weekday' => ['integer', 'between:1,6'],
+            'availability_slots.*.starts_at' => ['date_format:H:i'],
+            'availability_slots.*.ends_at' => ['date_format:H:i'],
+            'availability_slots.*.preference' => ['string', 'in:preferred,available,unavailable'],
+        ]);
+
+        // Remover todas as disponibilidades do período atual
+        ProfessorAvailability::where('professor_id', $professor->id)
+            ->where('academic_term_id', $term->id)
+            ->delete();
+
+        // Adicionar novas disponibilidades
+        foreach ($validated['availability_slots'] ?? [] as $slot) {
+            ProfessorAvailability::create([
+                'professor_id' => $professor->id,
+                'academic_term_id' => $term->id,
+                'weekday' => $slot['weekday'],
+                'starts_at' => $slot['starts_at'],
+                'ends_at' => $slot['ends_at'],
+                'preference' => $slot['preference'],
+            ]);
+        }
+
+        return redirect()->route('admin.professors.availability', $professor)
+            ->with('success', 'Disponibilidade atualizada com sucesso!');
     }
 
     public function showSubjects(Professor $professor)
     {
-        $this->checkAccess();
+        $this->checkAccess($professor);
 
         $selectedSubjects = $professor->subjects()->orderBy('name')->get();
         $allSubjects = Subject::orderBy('name')->get();
@@ -65,7 +114,7 @@ class ProfessorAvailabilityController extends Controller
 
     public function updateSubjects(Request $request, Professor $professor)
     {
-        $this->checkAccess();
+        $this->checkAccess($professor);
 
         $validated = $request->validate([
             'subject_ids' => ['nullable', 'array'],
@@ -102,10 +151,31 @@ class ProfessorAvailabilityController extends Controller
         ];
     }
 
-    private function checkAccess()
+    private function checkAccess(Professor $professor)
     {
-        if (! Auth::check() || ! in_array(Auth::user()->role, ['coordinator', 'staff', 'admin'], true)) {
-            abort(403, 'Acesso negado. Você não tem permissão para visualizar disponibilidades.');
+        if (!Auth::check()) {
+            abort(401, 'Você precisa estar autenticado.');
         }
+
+        $user = Auth::user();
+        $isAdmin = in_array($user->role, ['coordinator', 'staff', 'admin'], true);
+        $isOwnProfessor = $user->role === 'teacher' && $user->professor_id === $professor->id;
+
+        if (!$isAdmin && !$isOwnProfessor) {
+            abort(403, 'Acesso negado. Você não tem permissão para visualizar essa disponibilidade.');
+        }
+    }
+
+    private function canEditAvailability(Professor $professor)
+    {
+        if (!Auth::check()) {
+            return false;
+        }
+
+        $user = Auth::user();
+        $isAdmin = in_array($user->role, ['coordinator', 'staff', 'admin'], true);
+        $isOwnProfessor = $user->role === 'teacher' && $user->professor_id === $professor->id;
+
+        return $isAdmin || $isOwnProfessor;
     }
 }

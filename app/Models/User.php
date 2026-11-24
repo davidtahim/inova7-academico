@@ -19,6 +19,7 @@ class User extends Authenticatable
         'photo_path',
         'is_active',
         'must_change_password',
+        'professor_id',
     ];
 
     protected $hidden = [
@@ -52,5 +53,10 @@ class User extends Authenticatable
     public function studentAcademicRecords()
     {
         return $this->hasMany(StudentAcademicRecord::class);
+    }
+
+    public function professor()
+    {
+        return $this->belongsTo(Professor::class);
     }
 }

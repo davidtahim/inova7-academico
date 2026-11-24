@@ -39,6 +39,7 @@ Route::middleware('auth')->group(function () {
             Route::delete('/usuarios/{user}', [\App\Http\Controllers\AdminCatalogController::class, 'userDestroy'])->name('users.destroy');
 
             Route::get('/professores/{professor}/disponibilidade', [\App\Http\Controllers\ProfessorAvailabilityController::class, 'show'])->name('professors.availability');
+            Route::put('/professores/{professor}/disponibilidade', [\App\Http\Controllers\ProfessorAvailabilityController::class, 'updateAvailability'])->name('professors.update-availability');
             Route::get('/professores/{professor}/disciplinas', [\App\Http\Controllers\ProfessorAvailabilityController::class, 'showSubjects'])->name('professors.subjects');
             Route::put('/professores/{professor}/disciplinas', [\App\Http\Controllers\ProfessorAvailabilityController::class, 'updateSubjects'])->name('professors.update-subjects');
 

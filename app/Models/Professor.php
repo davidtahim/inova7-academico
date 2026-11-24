@@ -27,4 +27,9 @@ class Professor extends Model
     {
         return $this->belongsToMany(Subject::class, 'professor_subject');
     }
+
+    public function user()
+    {
+        return $this->hasOne(User::class);
+    }
 }
