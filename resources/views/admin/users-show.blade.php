@@ -156,13 +156,9 @@
                         </a>
 
                         <!-- Redefinir Senha -->
-                        <form action="{{ route('admin.users.reset-password', $user) }}" method="POST">
-                            @csrf
-                            <button type="submit" class="btn btn-warning w-100" 
-                                onclick="return confirm('Deseja realmente redefinir a senha deste usuário?')">
-                                🔑 Redefinir Senha
-                            </button>
-                        </form>
+                        <button type="button" class="btn btn-warning w-100" data-bs-toggle="modal" data-bs-target="#resetPasswordModal">
+                            🔑 Redefinir Senha
+                        </button>
 
                         <!-- Alternar Status -->
                         @if (!($user->isAdminTi() && Auth::id() === $user->id))
@@ -245,6 +241,61 @@
                         </small>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Redefinir Senha -->
+    <div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-labelledby="resetPasswordModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header admin-form-header">
+                    <h5 class="modal-title" id="resetPasswordModalLabel">🔑 Redefinir Senha</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('admin.users.reset-password', $user) }}" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <p class="text-muted mb-3">
+                            Digite a nova senha temporária para <strong>{{ $user->name }}</strong>. 
+                            O usuário será solicitado a mudar na próxima entrada.
+                        </p>
+
+                        <!-- Senha -->
+                        <div class="mb-3">
+                            <label for="resetPassword" class="form-label fw-500">Nova Senha *</label>
+                            <input type="password" class="form-control @error('password') is-invalid @enderror" 
+                                id="resetPassword" name="password" required>
+                            @error('password')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                            <small class="text-muted d-block mt-2">
+                                Mínimo 8 caracteres com letras e números
+                            </small>
+                        </div>
+
+                        <!-- Confirmar Senha -->
+                        <div class="mb-3">
+                            <label for="resetPasswordConfirmation" class="form-label fw-500">Confirmar Senha *</label>
+                            <input type="password" class="form-control @error('password_confirmation') is-invalid @enderror" 
+                                id="resetPasswordConfirmation" name="password_confirmation" required>
+                            @error('password_confirmation')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="alert alert-info">
+                            <small>
+                                <strong>⚠️ Lembrete:</strong> Após redefinir, o usuário receberá a mensagem 
+                                de que deve alterar a senha no próximo login.
+                            </small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-warning">🔑 Redefinir Senha</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
