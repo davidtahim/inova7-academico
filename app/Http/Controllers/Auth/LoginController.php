@@ -61,7 +61,14 @@ class LoginController extends Controller
             if ($user->must_change_password) {
                 return redirect()->route('profile.edit')->with('warning', 'Defina uma nova senha e confirme suas disciplinas para continuar.');
             }
-            return redirect()->route('profile.edit');
+            
+            // Se professor tem registro vinculado, redirecionar para disponibilidade
+            if ($user->professor_id && $user->professor) {
+                return redirect()->route('admin.professors.availability', $user->professor);
+            }
+            
+            // Caso contrário, ir para perfil para vincular professor
+            return redirect()->route('profile.edit')->with('info', 'Complete seu perfil de professor para continuar.');
         }
 
         if ($user->isStaff()) {
