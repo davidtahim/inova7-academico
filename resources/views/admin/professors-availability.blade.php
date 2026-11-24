@@ -18,43 +18,38 @@
             <a href="{{ route('admin.professors.index') }}" class="btn btn-outline-secondary">Voltar</a>
         </div>
 
-        @if($isEditable)
-        <form id="availabilityForm" action="{{ route('admin.professors.update-availability', $professor) }}" method="POST">
-            @csrf
-            @method('PUT')
-        @endif
-
         <div class="row g-3">
             <!-- Calendário de Disponibilidade -->
             <div class="col-lg-8">
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-light border-0">
-                        <h5 class="mb-0">Grade de Horários {{ $isEditable ? '(Editável)' : '(Visualização)' }}</h5>
+                        <h5 class="mb-0">Grade de Horários {{ $isEditable ? '(Editável - Clique para mudar)' : '(Visualização)' }}</h5>
                     </div>
                     <div class="card-body">
                         @if($isEditable)
                             <div class="alert alert-info mb-3" role="alert">
-                                <strong>Clique nos horários</strong> para marcar/desmarcar sua disponibilidade.
-                                Use as cores para indicar sua preferência.
+                                <strong>✏️ Clique nos horários</strong> para mudar o estado:
+                                <br><small>⚪ Cinza → 🟢 Verde (Preferido) → 🔵 Azul (Disponível) → ⚪ Cinza (Indisponível)</small>
                             </div>
                         @endif
                         <div class="table-responsive">
                             <table class="table table-sm table-bordered availability-grid">
                                 <thead class="table-light">
                                     <tr>
-                                        <th class="text-center" style="width: 15%;">Horário</th>
+                                        <th class="text-center" style="width: 12%;">Horário</th>
                                         <th class="text-center">Seg</th>
                                         <th class="text-center">Ter</th>
                                         <th class="text-center">Qua</th>
                                         <th class="text-center">Qui</th>
                                         <th class="text-center">Sex</th>
+                                        <th class="text-center">Sáb</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($timeSlots as $slot)
                                         <tr>
                                             <td class="text-center fw-bold small">{{ $slot['time'] }}</td>
-                                            @foreach(['monday', 'tuesday', 'wednesday', 'thursday', 'friday'] as $day)
+                                            @foreach(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as $day)
                                                 @php
                                                     $dayNum = match($day) {
                                                         'monday' => 1,
@@ -62,6 +57,7 @@
                                                         'wednesday' => 3,
                                                         'thursday' => 4,
                                                         'friday' => 5,
+                                                        'saturday' => 6,
                                                     };
                                                     $available = $availabilities
                                                         ->where('weekday', $dayNum)
@@ -252,20 +248,12 @@
         <!-- Ações -->
         <div class="d-flex gap-2 justify-content-end mt-4">
             <a href="{{ route('admin.professors.index') }}" class="btn btn-outline-secondary">Voltar</a>
-            @if($isEditable)
-                <button type="submit" class="btn btn-success" id="saveBtn">
-                    💾 Salvar Disponibilidade
-                </button>
-            @else
+            @if(!$isEditable)
                 <a href="{{ route('teacher.availability.pdf') }}" class="btn btn-primary" target="_blank">
                     📄 Exportar como PDF
                 </a>
             @endif
         </div>
-
-        @if($isEditable)
-        </form>
-        @endif
     </div>
 
     <style>
@@ -310,9 +298,9 @@
 
     @if($isEditable)
     <script>
-        const form = document.getElementById('availabilityForm');
         const formAction = "{{ route('admin.professors.update-availability', $professor) }}";
         let selectedSlots = new Map();
+        let saveTimeout;
 
         // Inicializar slots já selecionados
         document.querySelectorAll('.availability-cell').forEach(cell => {
@@ -361,6 +349,12 @@
 
             element.dataset.status = newStatus;
             updateSummary();
+            
+            // Auto-salvar após 1 segundo de inatividade
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                saveAvailability();
+            }, 1000);
         }
 
         function updateSummary() {
@@ -379,10 +373,7 @@
                 parseInt(document.getElementById('totalSlots').textContent) - preferred - available;
         }
 
-        // Interceptar submit do formulário
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-
+        function saveAvailability() {
             // Preparar dados
             const slots = [];
             selectedSlots.forEach((preference, key) => {
@@ -394,11 +385,6 @@
                     preference: preference
                 });
             });
-
-            const saveBtn = document.getElementById('saveBtn');
-            const originalText = saveBtn.innerHTML;
-            saveBtn.disabled = true;
-            saveBtn.innerHTML = '⏳ Salvando...';
 
             const csrfToken = document.querySelector('input[name="_token"]').value;
 
@@ -414,43 +400,45 @@
                 })
             })
             .then(async response => {
-                console.log('Status:', response.status);
-                console.log('Headers:', response.headers);
-                
                 if (!response.ok) {
                     const error = await response.text();
                     console.error('Erro do servidor:', error);
-                    throw new Error(`HTTP error! status: ${response.status}, body: ${error}`);
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 return response.json();
             })
             .then(data => {
-                console.log('Resposta:', data);
                 if (data.success) {
-                    // Mostrar mensagem de sucesso
-                    const alert = document.createElement('div');
-                    alert.className = 'alert alert-success alert-dismissible fade show';
-                    alert.role = 'alert';
-                    alert.innerHTML = `
-                        <strong>✓ Sucesso!</strong> Sua disponibilidade foi salva.
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    `;
-                    document.querySelector('.container').insertBefore(alert, document.querySelector('.page-head'));
-                    
-                    // Recarregar após 2 segundos
-                    setTimeout(() => location.reload(), 2000);
+                    // Mostrar toast de sucesso
+                    showNotification('✓ Disponibilidade salva automaticamente!', 'success');
                 } else {
-                    throw new Error(data.message || 'Erro ao salvar');
+                    showNotification('Erro ao salvar: ' + data.message, 'error');
                 }
             })
             .catch(error => {
-                console.error('Erro completo:', error);
-                const errorMsg = error.message || 'Erro desconhecido ao salvar';
-                alert('❌ Erro ao salvar: ' + errorMsg + '\n\nAbra o console (F12) para mais detalhes.');
-                saveBtn.disabled = false;
-                saveBtn.innerHTML = originalText;
+                console.error('Erro:', error);
+                showNotification('❌ Erro ao salvar: ' + error.message, 'error');
             });
-        });
+        }
+
+        function showNotification(message, type) {
+            // Remover notificação anterior se existir
+            const existing = document.getElementById('notification-toast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.id = 'notification-toast';
+            toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} position-fixed`;
+            toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
+            toast.innerHTML = `${message}`;
+            
+            document.body.appendChild(toast);
+
+            // Remover após 3 segundos se sucesso
+            if (type === 'success') {
+                setTimeout(() => toast.remove(), 3000);
+            }
+        }
     </script>
     @endif
 @endsection
