@@ -270,7 +270,7 @@ class UserManagementController extends Controller
         $this->ensureAdminTi();
 
         $validated = $request->validate([
-            'password' => ['required', 'confirmed', Password::min(8)->letters().numbers()],
+            'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers()],
         ]);
 
         $user->update([
