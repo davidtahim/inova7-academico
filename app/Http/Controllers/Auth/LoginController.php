@@ -62,12 +62,27 @@ class LoginController extends Controller
                 return redirect()->route('profile.edit')->with('warning', 'Defina uma nova senha e confirme suas disciplinas para continuar.');
             }
             
+            \Log::info('Teacher login', [
+                'user_id' => $user->id,
+                'professor_id' => $user->professor_id,
+                'has_professor_relation' => $user->professor ? 'yes' : 'no',
+                'professor' => $user->professor?->toArray(),
+            ]);
+            
             // Se professor tem registro vinculado, redirecionar para disponibilidade
             if ($user->professor_id && $user->professor) {
+                \Log::info('Redirecting teacher to availability', [
+                    'user_id' => $user->id,
+                    'professor_id' => $user->professor_id,
+                ]);
                 return redirect()->route('admin.professors.availability', $user->professor);
             }
             
             // Caso contrário, ir para perfil para vincular professor
+            \Log::warning('Teacher has no professor relation', [
+                'user_id' => $user->id,
+                'professor_id' => $user->professor_id,
+            ]);
             return redirect()->route('profile.edit')->with('info', 'Complete seu perfil de professor para continuar.');
         }
 
