@@ -52,10 +52,10 @@ class CurriculumMatrixDisciplineController extends Controller
             'availableSubjects' => $availableSubjects,
             'summary' => $summary,
             'shifts' => [
-                'MANHÃ' => 'Manhã (07:00 - 12:00)',
-                'TARDE' => 'Tarde (13:00 - 18:00)',
-                'NOITE' => 'Noite (19:00 - 22:30)',
-                'INTEGRAL' => 'Integral (07:00 - 18:00)',
+                'MANHÃ' => 'Manhã (07:30 - 12:40) — 6 aulas',
+                'TARDE' => 'Tarde (13:10 - 17:30) — 5 aulas',
+                'NOITE' => 'Noite (18:30 - 22:00) — 4 aulas',
+                'INTEGRAL' => 'Integral (07:30 - 17:30) — Manhã e Tarde',
             ],
             'offeringTypes' => [
                 'OBRIGATORIA' => 'Obrigatória',
@@ -229,10 +229,10 @@ class CurriculumMatrixDisciplineController extends Controller
             'matrix' => $matrix,
             'discipline' => $discipline,
             'shifts' => [
-                'MANHÃ' => 'Manhã (07:00 - 12:00)',
-                'TARDE' => 'Tarde (13:00 - 18:00)',
-                'NOITE' => 'Noite (19:00 - 22:30)',
-                'INTEGRAL' => 'Integral (07:00 - 18:00)',
+                'MANHÃ' => 'Manhã (07:30 - 12:40) — 6 aulas',
+                'TARDE' => 'Tarde (13:10 - 17:30) — 5 aulas',
+                'NOITE' => 'Noite (18:30 - 22:00) — 4 aulas',
+                'INTEGRAL' => 'Integral (07:30 - 17:30) — Manhã e Tarde',
             ],
             'offeringTypes' => [
                 'OBRIGATORIA' => 'Obrigatória',

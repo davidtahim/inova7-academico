@@ -12,10 +12,10 @@ enum Shift: string
     public function label(): string
     {
         return match ($this) {
-            self::MANHÃ => 'Manhã (07:00 - 12:00)',
-            self::TARDE => 'Tarde (13:00 - 18:00)',
-            self::NOITE => 'Noite (19:00 - 22:30)',
-            self::INTEGRAL => 'Integral (07:00 - 18:00)',
+            self::MANHÃ => 'Manhã (07:30 - 12:40) — 6 aulas',
+            self::TARDE => 'Tarde (13:10 - 17:30) — 5 aulas',
+            self::NOITE => 'Noite (18:30 - 22:00) — 4 aulas',
+            self::INTEGRAL => 'Integral (07:30 - 17:30) — Manhã e Tarde',
         };
     }
 
