@@ -49,23 +49,11 @@
                                     @foreach($timeSlots as $slot)
                                         <tr>
                                             <td class="text-center fw-bold small">{{ $slot['time'] }}</td>
-                                            @foreach(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as $day)
+                                            @foreach([1, 2, 3, 4, 5, 6] as $dayNum)
                                                 @php
-                                                    $dayNum = match($day) {
-                                                        'monday' => 1,
-                                                        'tuesday' => 2,
-                                                        'wednesday' => 3,
-                                                        'thursday' => 4,
-                                                        'friday' => 5,
-                                                        'saturday' => 6,
-                                                    };
-                                                    $available = $availabilities
-                                                        ->where('weekday', $dayNum)
-                                                        ->where('starts_at', $slot['start'])
-                                                        ->where('ends_at', $slot['end'])
-                                                        ->first();
+                                                    $horario = $slot['start'] . ' - ' . $slot['end'];
+                                                    $status = $savedAvailabilities[$dayNum][$horario] ?? 'unavailable';
                                                     
-                                                    $status = $available ? $available->preference : 'unavailable';
                                                     $class = match($status) {
                                                         'preferred' => 'bg-success text-white',
                                                         'available' => 'bg-info text-white',
@@ -99,8 +87,10 @@
                             </table>
                         </div>
                     </div>
+                </div>
+            </div>
 
-            <!-- Resumo e Legenda -->
+            <!-- Legenda e Resumo -->
             <div class="col-lg-4">
                 <div class="card border-0 shadow-sm mb-3">
                     <div class="card-header bg-light border-0">
@@ -309,29 +299,77 @@
         let selectedSlots = new Map();
         let saveTimeout;
 
-        // Inicializar slots já selecionados
-        document.querySelectorAll('.availability-cell').forEach(cell => {
-            const status = cell.dataset.status;
-            if (status !== 'unavailable') {
-                const key = `${cell.dataset.weekday}-${cell.dataset.start}-${cell.dataset.end}`;
-                selectedSlots.set(key, status);
-            }
-        });
-        
-        console.log('selectedSlots inicializados:', selectedSlots);
-        console.log('selectedSlots.size:', selectedSlots.size);
-        
-        // Renderizar detalhamento na inicialização
-        console.log('Chamando renderDetalhamento() na inicialização...');
-        renderDetalhamento();
-        console.log('renderDetalhamento() completo');
-        
-        // Adicionar event listeners via JavaScript (além do onclick)
-        document.querySelectorAll('.availability-cell').forEach(cell => {
-            cell.addEventListener('click', function(e) {
-                console.log('Cell clicada via event listener');
-                toggleAvailability(this);
+        // Aguardar DOM estar pronto antes de executar qualquer inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('✓ DOM carregado. Iniciando...');
+            
+            // Inicializar slots já selecionados a partir do banco de dados
+            // As células já têm data-status preenchido com os valores do banco
+            document.querySelectorAll('.availability-cell').forEach(cell => {
+                const status = cell.dataset.status;
+                const weekday = cell.dataset.weekday;
+                const start = cell.dataset.start;
+                const end = cell.dataset.end;
+                
+                console.log('Célula encontrada:', {
+                    weekday: weekday,
+                    start: start,
+                    end: end,
+                    status: status
+                });
+                
+                if (status !== 'unavailable') {
+                    const key = `${weekday}-${start}-${end}`;
+                    selectedSlots.set(key, status);
+                    console.log('✓ Slot carregado do BD:', key, '=', status);
+                }
             });
+            
+            console.log('✓ Slots inicializados do banco de dados');
+            console.log('selectedSlots.size:', selectedSlots.size);
+            console.log('selectedSlots:', Array.from(selectedSlots.entries()));
+            
+            // Renderizar detalhamento na inicialização
+            console.log('Chamando renderDetalhamento() na inicialização...');
+            renderDetalhamento();
+            console.log('✓ renderDetalhamento() completo');
+            
+            // Adicionar event listeners via JavaScript (além do onclick)
+            document.querySelectorAll('.availability-cell').forEach(cell => {
+                cell.addEventListener('click', function(e) {
+                    console.log('Cell clicada via event listener');
+                    toggleAvailability(this);
+                });
+            });
+            
+            // Salvar mudança de preferência
+            const saveBtn = document.getElementById('savePreferenceBtn');
+            if (saveBtn) {
+                saveBtn.addEventListener('click', function() {
+                    const newPreference = document.querySelector('input[name="preference"]:checked').value;
+                    const slotKey = window.currentEditSlot;
+                    
+                    if (slotKey && newPreference) {
+                        // Atualizar no Map
+                        selectedSlots.set(slotKey, newPreference);
+                        
+                        // Fechar modal
+                        bootstrap.Modal.getInstance(document.getElementById('editPreferenceModal')).hide();
+                        
+                        // Atualizar resumo
+                        updateSummary();
+                        
+                        // Atualizar detalhamento
+                        renderDetalhamento();
+                        
+                        // Agendar auto-save
+                        clearTimeout(saveTimeout);
+                        saveTimeout = setTimeout(() => {
+                            saveAvailability();
+                        }, 1000);
+                    }
+                });
+            }
         });
 
         function toggleAvailability(element) {
@@ -567,40 +605,6 @@
             const modal = new bootstrap.Modal(document.getElementById('editPreferenceModal'));
             modal.show();
         }
-
-        // Salvar mudança de preferência
-        document.addEventListener('DOMContentLoaded', function() {
-            const saveBtn = document.getElementById('savePreferenceBtn');
-            if (saveBtn) {
-                saveBtn.addEventListener('click', function() {
-                    const newPreference = document.querySelector('input[name="preference"]:checked').value;
-                    const slotKey = window.currentEditSlot;
-                    
-                    if (slotKey && newPreference) {
-                        // Atualizar no Map
-                        selectedSlots.set(slotKey, newPreference);
-                        
-                        // Fechar modal
-                        bootstrap.Modal.getInstance(document.getElementById('editPreferenceModal')).hide();
-                        
-                        // Atualizar resumo
-                        updateSummary();
-                        
-                        // Atualizar detalhamento
-                        renderDetalhamento();
-                        
-                        // Agendar auto-save
-                        clearTimeout(saveTimeout);
-                        saveTimeout = setTimeout(() => {
-                            saveAvailability();
-                        }, 1000);
-                    }
-                });
-            }
-
-            // Renderizar detalhamento ao carregar a página
-            renderDetalhamento();
-        });
 
         function excluirHorario(slotKey) {
             if (confirm('Tem certeza que deseja excluir este horário?')) {

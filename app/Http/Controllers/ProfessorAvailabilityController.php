@@ -30,6 +30,34 @@ class ProfessorAvailabilityController extends Controller
 
         $timeSlots = $this->generateTimeSlots();
 
+        // Mapear disponibilidades salvas: [weekday][horario] = preference
+        $savedAvailabilities = [];
+        foreach ($availabilities as $item) {
+            // Formatar horário: converter TIME (07:30:00) para formato curto (07:30)
+            $startTime = $item->starts_at instanceof \DateTime 
+                ? $item->starts_at->format('H:i')
+                : substr($item->starts_at, 0, 5); // Se string, pegar primeiros 5 caracteres
+            
+            $endTime = $item->ends_at instanceof \DateTime 
+                ? $item->ends_at->format('H:i')
+                : substr($item->ends_at, 0, 5);
+            
+            $horario = $startTime . ' - ' . $endTime;
+            
+            if (!isset($savedAvailabilities[$item->weekday])) {
+                $savedAvailabilities[$item->weekday] = [];
+            }
+            $savedAvailabilities[$item->weekday][$horario] = $item->preference;
+            
+            \Log::info('Disponibilidade carregada', [
+                'weekday' => $item->weekday,
+                'horario' => $horario,
+                'preference' => $item->preference,
+                'starts_at_raw' => $item->starts_at,
+                'ends_at_raw' => $item->ends_at,
+            ]);
+        }
+
         $preferredCount = $availabilities->where('preference', 'preferred')->count();
         $availableCount = $availabilities->where('preference', 'available')->count();
         $totalSlots = count($timeSlots) * 6; // 15 horários × 6 dias = 90
@@ -41,6 +69,7 @@ class ProfessorAvailabilityController extends Controller
             'professor' => $professor,
             'term' => $term,
             'availabilities' => $availabilities,
+            'savedAvailabilities' => $savedAvailabilities,
             'timeSlots' => $timeSlots,
             'preferredCount' => $preferredCount,
             'availableCount' => $availableCount,
