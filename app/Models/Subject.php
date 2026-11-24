@@ -17,4 +17,21 @@ class Subject extends Model
     {
         return $this->belongsToMany(CurriculumMatrix::class, 'curriculum_subject')->withPivot(['period', 'sequence']);
     }
+
+    /**
+     * Obter os vínculos de disciplina para oferta semestral.
+     * Relaciona esta disciplina com cada matriz e período específico.
+     */
+    public function offeringLinks()
+    {
+        return $this->hasMany(CurriculumMatrixDiscipline::class)->with('curriculumMatrix');
+    }
+
+    /**
+     * Obter resumo de quantas vezes esta disciplina está vinculada em diferentes matrizes/períodos.
+     */
+    public function getOfferingCount()
+    {
+        return $this->offeringLinks()->count();
+    }
 }

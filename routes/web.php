@@ -59,6 +59,13 @@ Route::middleware('auth')->group(function () {
             Route::get('/matrizes/{matrix}/editar', [\App\Http\Controllers\AdminCatalogController::class, 'matrixEdit'])->name('matrices.edit');
             Route::put('/matrizes/{matrix}', [\App\Http\Controllers\AdminCatalogController::class, 'matrixUpdate'])->name('matrices.update');
             Route::delete('/matrizes/{matrix}', [\App\Http\Controllers\AdminCatalogController::class, 'matrixDestroy'])->name('matrices.destroy');
+            
+            // Gestão de disciplinas por matriz (grade curricular)
+            Route::get('/matrizes/{matrix}/disciplinas', [\App\Http\Controllers\CurriculumMatrixDisciplineController::class, 'show'])->name('matrices.disciplines.show');
+            Route::post('/matrizes/{matrix}/disciplinas', [\App\Http\Controllers\CurriculumMatrixDisciplineController::class, 'store'])->name('matrices.disciplines.store');
+            Route::get('/matrizes/{matrix}/disciplinas/{discipline}/editar', [\App\Http\Controllers\CurriculumMatrixDisciplineController::class, 'edit'])->name('matrices.disciplines.edit');
+            Route::put('/matrizes/{matrix}/disciplinas/{discipline}', [\App\Http\Controllers\CurriculumMatrixDisciplineController::class, 'update'])->name('matrices.disciplines.update');
+            Route::delete('/matrizes/{matrix}/disciplinas/{discipline}', [\App\Http\Controllers\CurriculumMatrixDisciplineController::class, 'destroy'])->name('matrices.disciplines.destroy');
 
             Route::get('/semestres', [\App\Http\Controllers\AdminCatalogController::class, 'termsIndex'])->name('semestres.index');
             Route::get('/semestres/novo', [\App\Http\Controllers\AdminCatalogController::class, 'termCreate'])->name('semestres.create');

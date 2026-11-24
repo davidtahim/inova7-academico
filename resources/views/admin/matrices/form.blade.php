@@ -66,6 +66,16 @@
                                     value="{{ old('effective_from', $matrix->effective_from ?? '') }}">
                             </div>
 
+                            @if (isset($matrix->id))
+                                <div class="mb-4 p-3 bg-light rounded border border-primary">
+                                    <h6 class="mb-2">📋 Gestão da Grade Curricular</h6>
+                                    <p class="text-muted mb-3 small">Configure as disciplinas, períodos, turnos e restrições de sala para esta matriz.</p>
+                                    <a href="{{ route('admin.matrices.disciplines.show', $matrix) }}" class="btn btn-primary btn-sm">
+                                        Gerenciar Disciplinas →
+                                    </a>
+                                </div>
+                            @endif
+
                             <div class="d-flex justify-content-end gap-2">
                                 <a href="{{ route('admin.matrices.index') }}"
                                     class="btn btn-outline-secondary">Cancelar</a>
