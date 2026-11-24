@@ -132,6 +132,29 @@
                     </div>
                 </div>
 
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-header bg-light border-0">
+                        <h5 class="mb-0">Resumo</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="stat-row mb-2">
+                            <span class="text-muted">Total de horários</span>
+                            <strong id="totalSlots">{{ $totalSlots }}</strong>
+                        </div>
+                        <div class="stat-row mb-2">
+                            <span class="text-muted">Preferidos</span>
+                            <span class="badge bg-success" id="preferredCount">{{ $preferredCount }}</span>
+                        </div>
+                        <div class="stat-row mb-2">
+                            <span class="text-muted">Disponíveis</span>
+                            <span class="badge bg-info" id="availableCount">{{ $availableCount }}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="text-muted">Indisponíveis</span>
+                            <span class="badge bg-light text-muted" id="unavailableCount">{{ $unavailableCount }}</span>
+                        </div>
+                    </div>
+                </div>
 
                 @if($term)
                     <div class="card border-0 shadow-sm">
@@ -156,61 +179,39 @@
         <!-- Detalhamento de Horários (Carregado após salvar) -->
         @if($isEditable)
         <div id="detalhamentoContainer" style="margin-top: 30px; display: none;">
-            <div class="row g-3">
-                <!-- Tabela de Detalhamento -->
-                <div class="col-lg-8">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-light border-0 d-flex justify-content-between align-items-center">
-                            <div>
-                                <h5 class="mb-0">📋 Detalhamento de Horários</h5>
-                                <small class="text-muted">Horários salvos em tempo real - Clique para editar ou excluir</small>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table id="detalhamentoTable" class="table table-sm table-hover mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th style="width: 15%;">Dia da Semana</th>
-                                            <th style="width: 15%;">Horário</th>
-                                            <th style="width: 15%;">Preferência</th>
-                                            <th style="width: 35%;">Status</th>
-                                            <th style="width: 20%;" class="text-center">Ações</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="detalhamentoContent">
-                                        <!-- Conteúdo carregado via JavaScript -->
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light border-0 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">📋 Detalhamento de Horários</h5>
+                        <small class="text-muted">Horários salvos em tempo real - Clique para editar ou excluir</small>
                     </div>
                 </div>
-
-                <!-- Resumo ao Lado -->
-                <div class="col-lg-4">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-light border-0">
-                            <h5 class="mb-0">Resumo</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="stat-row mb-2">
-                                <span class="text-muted">Total de horários</span>
-                                <strong id="totalSlots">{{ $totalSlots }}</strong>
-                            </div>
-                            <div class="stat-row mb-2">
-                                <span class="text-muted">Preferidos</span>
-                                <span class="badge bg-success" id="preferredCount">{{ $preferredCount }}</span>
-                            </div>
-                            <div class="stat-row mb-2">
-                                <span class="text-muted">Disponíveis</span>
-                                <span class="badge bg-info" id="availableCount">{{ $availableCount }}</span>
-                            </div>
-                            <div class="stat-row">
-                                <span class="text-muted">Indisponíveis</span>
-                                <span class="badge bg-light text-muted" id="unavailableCount">{{ $unavailableCount }}</span>
-                            </div>
-                        </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="detalhamentoTable" class="table table-sm table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 15%;">Dia da Semana</th>
+                                    <th style="width: 15%;">Horário</th>
+                                    <th style="width: 15%;">Preferência</th>
+                                    <th style="width: 35%;">Status</th>
+                                    <th style="width: 20%;" class="text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="detalhamentoContent">
+                                <!-- Conteúdo carregado via JavaScript -->
+                            </tbody>
+                            <tfoot class="table-light" id="detalhamentoFooter" style="display: none;">
+                                <tr class="fw-bold">
+                                    <td colspan="5" class="text-end">
+                                        <span class="me-3">Total: <span id="footerTotal">0</span></span>
+                                        <span class="badge bg-success me-2">✓ Preferidos: <span id="footerPreferred">0</span></span>
+                                        <span class="badge bg-info me-2">◐ Disponíveis: <span id="footerAvailable">0</span></span>
+                                        <span class="badge bg-light text-muted">✗ Indisponíveis: <span id="footerUnavailable">0</span></span>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -318,9 +319,12 @@
         });
         
         console.log('selectedSlots inicializados:', selectedSlots);
+        console.log('selectedSlots.size:', selectedSlots.size);
         
         // Renderizar detalhamento na inicialização
+        console.log('Chamando renderDetalhamento() na inicialização...');
         renderDetalhamento();
+        console.log('renderDetalhamento() completo');
         
         // Adicionar event listeners via JavaScript (além do onclick)
         document.querySelectorAll('.availability-cell').forEach(cell => {
@@ -445,11 +449,18 @@
         }
 
         function renderDetalhamento() {
+            console.log('renderDetalhamento() chamada');
             const container = document.getElementById('detalhamentoContainer');
             const tbody = document.getElementById('detalhamentoContent');
+            const footer = document.getElementById('detalhamentoFooter');
+            
+            console.log('selectedSlots.size:', selectedSlots.size);
+            console.log('selectedSlots:', selectedSlots);
             
             if (selectedSlots.size === 0) {
+                console.log('Nenhum slot selecionado, escondendo container');
                 container.style.display = 'none';
+                footer.style.display = 'none';
                 return;
             }
 
@@ -521,6 +532,25 @@
 
             tbody.innerHTML = html;
             container.style.display = 'block';
+
+            // Atualizar footer com resumo
+            let preferredCount = 0;
+            let availableCount = 0;
+
+            selectedSlots.forEach((preference) => {
+                if (preference === 'preferred') preferredCount++;
+                else if (preference === 'available') availableCount++;
+            });
+
+            const totalSlots = 90; // 15 horários × 6 dias
+            const unavailableCount = totalSlots - preferredCount - availableCount;
+
+            document.getElementById('footerTotal').textContent = selectedSlots.size;
+            document.getElementById('footerPreferred').textContent = preferredCount;
+            document.getElementById('footerAvailable').textContent = availableCount;
+            document.getElementById('footerUnavailable').textContent = unavailableCount;
+
+            footer.style.display = 'table-footer-group';
         }
 
         function editarPreferencia(slotKey, horario, currentPreference) {

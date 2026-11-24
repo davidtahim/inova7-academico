@@ -32,8 +32,8 @@ class ProfessorAvailabilityController extends Controller
 
         $preferredCount = $availabilities->where('preference', 'preferred')->count();
         $availableCount = $availabilities->where('preference', 'available')->count();
-        $unavailableCount = $availabilities->where('preference', 'unavailable')->count();
-        $totalSlots = $preferredCount + $availableCount + $unavailableCount;
+        $totalSlots = count($timeSlots) * 6; // 15 horários × 6 dias = 90
+        $unavailableCount = $totalSlots - $preferredCount - $availableCount;
 
         $isEditable = $this->canEditAvailability($professor);
 
@@ -80,6 +80,13 @@ class ProfessorAvailabilityController extends Controller
             'availability_slots.*.preference' => ['string', 'in:preferred,available,unavailable'],
         ]);
 
+        \Log::info('updateAvailability chamado', [
+            'professor_id' => $professor->id,
+            'term_id' => $term->id,
+            'slots_count' => count($validated['availability_slots'] ?? []),
+            'slots' => $validated['availability_slots'] ?? []
+        ]);
+
         // Remover todas as disponibilidades do período atual
         ProfessorAvailability::where('professor_id', $professor->id)
             ->where('academic_term_id', $term->id)
@@ -87,7 +94,7 @@ class ProfessorAvailabilityController extends Controller
 
         // Adicionar novas disponibilidades
         foreach ($validated['availability_slots'] ?? [] as $slot) {
-            ProfessorAvailability::create([
+            $created = ProfessorAvailability::create([
                 'professor_id' => $professor->id,
                 'academic_term_id' => $term->id,
                 'weekday' => $slot['weekday'],
@@ -95,7 +102,14 @@ class ProfessorAvailabilityController extends Controller
                 'ends_at' => $slot['ends_at'],
                 'preference' => $slot['preference'],
             ]);
+            \Log::info('Slot criado', $created->toArray());
         }
+
+        $allSlots = ProfessorAvailability::where('professor_id', $professor->id)
+            ->where('academic_term_id', $term->id)
+            ->get();
+
+        \Log::info('Total de slots após salvar', ['count' => $allSlots->count()]);
 
         if ($request->wantsJson()) {
             return response()->json(['success' => true, 'message' => 'Disponibilidade atualizada com sucesso!']);
