@@ -50,6 +50,71 @@ class User extends Authenticatable
         return self::roleOptions()[$this->role] ?? ucfirst(str_replace('_', ' ', $this->role));
     }
 
+    // Métodos de verificação de permissão (RBAC)
+    public function isAdminTi(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    public function isCoordinator(): bool
+    {
+        return $this->role === 'coordinator';
+    }
+
+    public function isTeacher(): bool
+    {
+        return $this->role === 'teacher';
+    }
+
+    public function isStaff(): bool
+    {
+        return $this->role === 'staff';
+    }
+
+    public function isStudent(): bool
+    {
+        return $this->role === 'student';
+    }
+
+    public function hasRole($role): bool
+    {
+        if (is_array($role)) {
+            return in_array($this->role, $role, true);
+        }
+        return $this->role === $role;
+    }
+
+    public function hasAnyRole($roles): bool
+    {
+        return $this->hasRole($roles);
+    }
+
+    public function canManageUsers(): bool
+    {
+        return $this->isAdminTi();
+    }
+
+    public function canAccessCatalog(): bool
+    {
+        return in_array($this->role, ['admin', 'coordinator', 'staff'], true);
+    }
+
+    public function canAccessPlanning(): bool
+    {
+        return in_array($this->role, ['admin', 'coordinator'], true);
+    }
+
+    public function canAccessAudit(): bool
+    {
+        return $this->isAdminTi();
+    }
+
+    public function canAccessImports(): bool
+    {
+        return in_array($this->role, ['admin', 'coordinator'], true);
+    }
+
+    // Relacionamentos
     public function studentAcademicRecords()
     {
         return $this->hasMany(StudentAcademicRecord::class);

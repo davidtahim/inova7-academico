@@ -33,10 +33,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/planejamento', [\App\Http\Controllers\AdminCatalogController::class, 'planejamentoIndex'])->name('admin.planejamento.index');
 
         Route::prefix('admin/planejamento')->name('admin.')->group(function () {
-            Route::get('/usuarios', [\App\Http\Controllers\AdminCatalogController::class, 'usersIndex'])->name('users.index');
-            Route::get('/usuarios/{user}/editar', [\App\Http\Controllers\AdminCatalogController::class, 'userEdit'])->name('users.edit');
-            Route::put('/usuarios/{user}', [\App\Http\Controllers\AdminCatalogController::class, 'userUpdate'])->name('users.update');
-            Route::delete('/usuarios/{user}', [\App\Http\Controllers\AdminCatalogController::class, 'userDestroy'])->name('users.destroy');
+            // Gestão de Usuários (Administrador de TI)
+            Route::get('/usuarios', [\App\Http\Controllers\UserManagementController::class, 'index'])->name('users.index');
+            Route::get('/usuarios/novo', [\App\Http\Controllers\UserManagementController::class, 'create'])->name('users.create');
+            Route::post('/usuarios', [\App\Http\Controllers\UserManagementController::class, 'store'])->name('users.store');
+            Route::get('/usuarios/{user}', [\App\Http\Controllers\UserManagementController::class, 'show'])->name('users.show');
+            Route::get('/usuarios/{user}/editar', [\App\Http\Controllers\UserManagementController::class, 'edit'])->name('users.edit');
+            Route::put('/usuarios/{user}', [\App\Http\Controllers\UserManagementController::class, 'update'])->name('users.update');
+            Route::post('/usuarios/{user}/redefinir-senha', [\App\Http\Controllers\UserManagementController::class, 'resetPassword'])->name('users.reset-password');
+            Route::post('/usuarios/{user}/toggle-status', [\App\Http\Controllers\UserManagementController::class, 'toggleStatus'])->name('users.toggle-status');
+            Route::delete('/usuarios/{user}', [\App\Http\Controllers\UserManagementController::class, 'destroy'])->name('users.destroy');
 
             Route::get('/professores/{professor}/disponibilidade', [\App\Http\Controllers\ProfessorAvailabilityController::class, 'show'])->name('professors.availability');
             Route::put('/professores/{professor}/disponibilidade', [\App\Http\Controllers\ProfessorAvailabilityController::class, 'updateAvailability'])->name('professors.update-availability');

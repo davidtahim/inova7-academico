@@ -42,14 +42,36 @@ class LoginController extends Controller
 
         $request->session()->regenerate();
 
-        if ($user->role === 'teacher') {
+        // Redirecionamento baseado em perfil
+        if ($user->isAdminTi()) {
+            if ($user->must_change_password) {
+                return redirect()->route('profile.edit')->with('warning', 'Defina uma nova senha para continuar.');
+            }
+            return redirect()->route('admin.users.index');
+        }
+
+        if ($user->isCoordinator()) {
+            if ($user->must_change_password) {
+                return redirect()->route('profile.edit')->with('warning', 'Defina uma nova senha para continuar.');
+            }
+            return redirect()->route('admin.planejamento.index');
+        }
+
+        if ($user->isTeacher()) {
             if ($user->must_change_password) {
                 return redirect()->route('profile.edit')->with('warning', 'Defina uma nova senha e confirme suas disciplinas para continuar.');
             }
-
             return redirect()->route('profile.edit');
         }
 
+        if ($user->isStaff()) {
+            if ($user->must_change_password) {
+                return redirect()->route('profile.edit')->with('warning', 'Defina uma nova senha para continuar.');
+            }
+            return redirect()->route('dashboard');
+        }
+
+        // Alunos e outros perfis
         return redirect()->route('dashboard');
     }
 
