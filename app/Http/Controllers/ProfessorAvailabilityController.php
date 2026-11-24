@@ -55,6 +55,9 @@ class ProfessorAvailabilityController extends Controller
         $this->checkAccess($professor);
         
         if (!$this->canEditAvailability($professor)) {
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Você não tem permissão para editar essa disponibilidade.'], 403);
+            }
             return redirect()->back()->with('error', 'Você não tem permissão para editar essa disponibilidade.');
         }
 
@@ -63,6 +66,9 @@ class ProfessorAvailabilityController extends Controller
         $term ??= AcademicTerm::latest('id')->first();
 
         if (!$term) {
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Nenhum período acadêmico disponível.'], 400);
+            }
             return redirect()->back()->with('error', 'Nenhum período acadêmico disponível.');
         }
 
@@ -89,6 +95,10 @@ class ProfessorAvailabilityController extends Controller
                 'ends_at' => $slot['ends_at'],
                 'preference' => $slot['preference'],
             ]);
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Disponibilidade atualizada com sucesso!']);
         }
 
         return redirect()->route('admin.professors.availability', $professor)

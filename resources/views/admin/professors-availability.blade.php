@@ -11,18 +11,33 @@
                 @if($term)
                     <p><strong>Semestre:</strong> {{ $term->code }}</p>
                 @endif
+                @if($isEditable)
+                    <p class="text-info mb-0"><small>✏️ Clique nos horários para selecionar sua disponibilidade</small></p>
+                @endif
             </div>
             <a href="{{ route('admin.professors.index') }}" class="btn btn-outline-secondary">Voltar</a>
         </div>
+
+        @if($isEditable)
+        <form id="availabilityForm" action="{{ route('admin.professors.update-availability', $professor) }}" method="POST">
+            @csrf
+            @method('PUT')
+        @endif
 
         <div class="row g-3">
             <!-- Calendário de Disponibilidade -->
             <div class="col-lg-8">
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-light border-0">
-                        <h5 class="mb-0">Grade de Horários</h5>
+                        <h5 class="mb-0">Grade de Horários {{ $isEditable ? '(Editável)' : '(Visualização)' }}</h5>
                     </div>
                     <div class="card-body">
+                        @if($isEditable)
+                            <div class="alert alert-info mb-3" role="alert">
+                                <strong>Clique nos horários</strong> para marcar/desmarcar sua disponibilidade.
+                                Use as cores para indicar sua preferência.
+                            </div>
+                        @endif
                         <div class="table-responsive">
                             <table class="table table-sm table-bordered availability-grid">
                                 <thead class="table-light">
@@ -67,9 +82,17 @@
                                                         'unavailable' => '✗ Indisponível',
                                                         default => '—'
                                                     };
+                                                    $cellId = "slot-{$dayNum}-{$slot['start']}-{$slot['end']}";
                                                 @endphp
                                                 <td class="text-center p-0">
-                                                    <div class="availability-cell {{ $class }}">
+                                                    <div class="availability-cell {{ $class }}" 
+                                                         data-cell-id="{{ $cellId }}"
+                                                         data-weekday="{{ $dayNum }}"
+                                                         data-start="{{ $slot['start'] }}"
+                                                         data-end="{{ $slot['end'] }}"
+                                                         data-status="{{ $status }}"
+                                                         onclick="@if($isEditable)toggleAvailability(this)@endif"
+                                                         style="cursor: {{ $isEditable ? 'pointer' : 'default' }};">
                                                         <small>{{ $label }}</small>
                                                     </div>
                                                 </td>
@@ -90,6 +113,9 @@
                         <h5 class="mb-0">Legenda</h5>
                     </div>
                     <div class="card-body">
+                        @if($isEditable)
+                            <p class="text-muted small mb-3">Clique nos horários para alternar entre os estados:</p>
+                        @endif
                         <div class="mb-3">
                             <div class="d-flex align-items-center gap-2 mb-2">
                                 <span class="badge bg-success" style="min-width: 50px;">✓</span>
@@ -104,6 +130,11 @@
                                 <span>Indisponível - Não pode estar</span>
                             </div>
                         </div>
+                        @if($isEditable)
+                            <div class="alert alert-info mb-0" role="alert">
+                                <small><strong>Dica:</strong> Clique várias vezes para mudar entre os estados!</small>
+                            </div>
+                        @endif
                     </div>
                 </div>
 
@@ -114,19 +145,19 @@
                     <div class="card-body">
                         <div class="stat-row mb-2">
                             <span class="text-muted">Total de horários</span>
-                            <strong>{{ $totalSlots }}</strong>
+                            <strong id="totalSlots">{{ $totalSlots }}</strong>
                         </div>
                         <div class="stat-row mb-2">
                             <span class="text-muted">Preferidos</span>
-                            <span class="badge bg-success">{{ $preferredCount }}</span>
+                            <span class="badge bg-success" id="preferredCount">{{ $preferredCount }}</span>
                         </div>
                         <div class="stat-row mb-2">
                             <span class="text-muted">Disponíveis</span>
-                            <span class="badge bg-info">{{ $availableCount }}</span>
+                            <span class="badge bg-info" id="availableCount">{{ $availableCount }}</span>
                         </div>
                         <div class="stat-row">
                             <span class="text-muted">Indisponíveis</span>
-                            <span class="badge bg-light text-muted">{{ $unavailableCount }}</span>
+                            <span class="badge bg-light text-muted" id="unavailableCount">{{ $unavailableCount }}</span>
                         </div>
                     </div>
                 </div>
@@ -221,10 +252,20 @@
         <!-- Ações -->
         <div class="d-flex gap-2 justify-content-end mt-4">
             <a href="{{ route('admin.professors.index') }}" class="btn btn-outline-secondary">Voltar</a>
-            <a href="{{ route('teacher.availability.pdf') }}" class="btn btn-primary" target="_blank">
-                📄 Exportar como PDF
-            </a>
+            @if($isEditable)
+                <button type="submit" class="btn btn-success" id="saveBtn">
+                    💾 Salvar Disponibilidade
+                </button>
+            @else
+                <a href="{{ route('teacher.availability.pdf') }}" class="btn btn-primary" target="_blank">
+                    📄 Exportar como PDF
+                </a>
+            @endif
         </div>
+
+        @if($isEditable)
+        </form>
+        @endif
     </div>
 
     <style>
@@ -238,8 +279,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
             transition: all 0.2s ease;
+            border-radius: 4px;
         }
 
         .availability-cell:hover {
@@ -257,5 +298,150 @@
         .stat-row:last-child {
             border-bottom: none;
         }
+
+        .availability-cell.cursor-pointer {
+            cursor: pointer;
+        }
+
+        .availability-cell.cursor-pointer:hover {
+            box-shadow: inset 0 0 0 2px rgba(0,0,0,0.1);
+        }
     </style>
+
+    @if($isEditable)
+    <script>
+        const form = document.getElementById('availabilityForm');
+        let selectedSlots = new Map();
+
+        // Inicializar slots já selecionados
+        document.querySelectorAll('.availability-cell').forEach(cell => {
+            const status = cell.dataset.status;
+            if (status !== 'unavailable') {
+                const key = `${cell.dataset.weekday}-${cell.dataset.start}-${cell.dataset.end}`;
+                selectedSlots.set(key, status);
+            }
+        });
+
+        function toggleAvailability(element) {
+            const weekday = element.dataset.weekday;
+            const start = element.dataset.start;
+            const end = element.dataset.end;
+            const key = `${weekday}-${start}-${end}`;
+            
+            const currentStatus = element.dataset.status;
+            let newStatus;
+
+            // Ciclo: unavailable → preferred → available → unavailable
+            switch(currentStatus) {
+                case 'unavailable':
+                    newStatus = 'preferred';
+                    element.className = 'availability-cell bg-success text-white';
+                    element.innerHTML = '<small>✓ Preferido</small>';
+                    selectedSlots.set(key, 'preferred');
+                    break;
+                case 'preferred':
+                    newStatus = 'available';
+                    element.className = 'availability-cell bg-info text-white';
+                    element.innerHTML = '<small>◐ Disponível</small>';
+                    selectedSlots.set(key, 'available');
+                    break;
+                case 'available':
+                    newStatus = 'unavailable';
+                    element.className = 'availability-cell bg-light text-muted';
+                    element.innerHTML = '<small>✗ Indisponível</small>';
+                    selectedSlots.delete(key);
+                    break;
+                default:
+                    newStatus = 'unavailable';
+                    element.className = 'availability-cell bg-light text-muted';
+                    element.innerHTML = '<small>✗ Indisponível</small>';
+                    selectedSlots.delete(key);
+            }
+
+            element.dataset.status = newStatus;
+            updateSummary();
+        }
+
+        function updateSummary() {
+            let preferred = 0;
+            let available = 0;
+
+            document.querySelectorAll('.availability-cell').forEach(cell => {
+                const status = cell.dataset.status;
+                if (status === 'preferred') preferred++;
+                else if (status === 'available') available++;
+            });
+
+            document.getElementById('preferredCount').textContent = preferred;
+            document.getElementById('availableCount').textContent = available;
+            document.getElementById('unavailableCount').textContent = 
+                parseInt(document.getElementById('totalSlots').textContent) - preferred - available;
+        }
+
+        // Interceptar submit do formulário
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Preparar dados
+            const slots = [];
+            selectedSlots.forEach((preference, key) => {
+                const [weekday, start, end] = key.split('-');
+                slots.push({
+                    weekday: parseInt(weekday),
+                    starts_at: start,
+                    ends_at: end,
+                    preference: preference
+                });
+            });
+
+            // Adicionar como campo hidden
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'availability_slots';
+            input.value = JSON.stringify(slots);
+            form.appendChild(input);
+
+            // Enviar
+            const saveBtn = document.getElementById('saveBtn');
+            const originalText = saveBtn.innerHTML;
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '⏳ Salvando...';
+
+            fetch(form.action, {
+                method: 'PUT',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    availability_slots: slots
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Mostrar mensagem de sucesso
+                    const alert = document.createElement('div');
+                    alert.className = 'alert alert-success alert-dismissible fade show';
+                    alert.role = 'alert';
+                    alert.innerHTML = `
+                        <strong>✓ Sucesso!</strong> Sua disponibilidade foi salva.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+                    document.querySelector('.container').insertBefore(alert, document.querySelector('.page-head'));
+                    
+                    // Recarregar após 2 segundos
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    throw new Error(data.message || 'Erro ao salvar');
+                }
+            })
+            .catch(error => {
+                alert('Erro ao salvar: ' + error.message);
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalText;
+            });
+        });
+    </script>
+    @endif
 @endsection
