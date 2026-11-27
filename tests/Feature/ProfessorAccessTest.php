@@ -87,6 +87,24 @@ class ProfessorAccessTest extends TestCase
             ->assertViewHas('unavailableCount', 88);
     }
 
+    public function test_profile_edit_shows_the_same_grid_with_saved_states(): void
+    {
+        $teacher = $this->userWithRole('teacher', $this->professor);
+        $this->actingAs($teacher)
+            ->putJson(route('admin.professors.update-availability', $this->professor), $this->availabilityPayload());
+
+        $this->actingAs($teacher)
+            ->get(route('profile.edit'))
+            ->assertOk()
+            ->assertSee('id="disponibilidade"', false)
+            ->assertViewHas('isEditable', true)
+            ->assertViewHas('savedAvailabilities', fn ($saved) => ($saved[1]['07:30 - 08:20'] ?? null) === 'preferred')
+            ->assertViewHas('preferredCount', 1)
+            ->assertViewHas('availableCount', 1)
+            ->assertViewHas('unavailableCount', 88)
+            ->assertSee(route('admin.professors.update-availability', $this->professor), false);
+    }
+
     public function test_teacher_cannot_access_another_professor(): void
     {
         $teacher = $this->userWithRole('teacher', $this->professor);

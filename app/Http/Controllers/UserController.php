@@ -7,10 +7,12 @@ use App\Models\Professor;
 use App\Models\ProfessorAvailability;
 use App\Models\Subject;
 use App\Models\User;
+use App\Services\AvailabilityGrid;
 use App\Services\TeacherDashboard;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -110,49 +112,33 @@ class UserController extends Controller
         return $term ?? AcademicTerm::latest('id')->first();
     }
 
-    public function editProfile()
+    public function editProfile(AvailabilityGrid $grid)
     {
         $user = Auth::user();
         if (! $user instanceof User) {
             abort(403);
         }
 
-        $selectedTermId = session('selected_academic_term_id');
-        $term = $selectedTermId ? AcademicTerm::find($selectedTermId) : null;
-        $term ??= AcademicTerm::latest('id')->first();
+        $term = AvailabilityGrid::selectedTerm();
 
-        $professor = Professor::where('email', $user->email)->orWhere('name', $user->name)->first();
+        $professor = $user->resolveProfessor()
+            ?? ($user->isTeacher() ? Professor::where('email', $user->email)->orWhere('name', $user->name)->first() : null);
         $assignedSubjects = $this->assignedSubjectsForProfessor($professor, $term);
-        $allSubjects = $assignedSubjects;
         $selectedSubjectIds = $professor ? $professor->subjects()->pluck('subjects.id')->all() : [];
 
-        $availability = $professor && $term
-            ? ProfessorAvailability::where('professor_id', $professor->id)
-            ->where('academic_term_id', $term->id)
-            ->orderBy('weekday')
-            ->orderBy('starts_at')
-            ->get()
-            : collect();
+        $availabilityGrid = $professor ? $grid->build($professor, $term) : [];
 
-        if ($availability->isEmpty()) {
-            $availability = collect([
-                (object) ['weekday' => 1, 'starts_at' => '07:30', 'ends_at' => '08:20', 'preference' => 'preferred'],
-                (object) ['weekday' => 1, 'starts_at' => '10:50', 'ends_at' => '11:40', 'preference' => 'preferred'],
-                (object) ['weekday' => 2, 'starts_at' => '18:30', 'ends_at' => '19:20', 'preference' => 'preferred'],
-                (object) ['weekday' => 2, 'starts_at' => '21:00', 'ends_at' => '21:50', 'preference' => 'preferred'],
-            ]);
-        }
-
-        return view('users.profile-edit', [
+        return view('users.profile-edit', array_merge($availabilityGrid, [
             'user' => $user,
             'roles' => User::roleOptions(),
             'professor' => $professor,
             'term' => $term,
             'subjects' => $assignedSubjects,
-            'allSubjects' => $allSubjects,
+            'allSubjects' => $assignedSubjects,
             'selectedSubjectIds' => $selectedSubjectIds,
-            'availability' => $availability,
-        ]);
+            'hasAvailabilityGrid' => $professor !== null,
+            'isEditable' => $professor !== null && Gate::allows('updateAvailability', $professor),
+        ]));
     }
 
     public function updateProfile(Request $request)
