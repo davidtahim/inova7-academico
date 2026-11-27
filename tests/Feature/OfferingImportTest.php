@@ -64,16 +64,19 @@ class OfferingImportTest extends TestCase
 
     private function import(string $csvBody, string $term = '2027.1'): TestResponse
     {
-        $path = storage_path('framework/testing/oferta-' . uniqid() . '.csv');
-        if (! is_dir(dirname($path))) {
-            mkdir(dirname($path), 0777, true);
-        }
+        // Arquivo temporário do sistema, apagado ao final (não fica no repositório).
+        $path = tempnam(sys_get_temp_dir(), 'oferta-') . '.csv';
         file_put_contents($path, self::HEADER . "\n" . $csvBody);
 
-        return $this->actingAs($this->coordinator)->post(route('imports.ubiqua.store'), [
-            'arquivo' => new UploadedFile($path, 'oferta.csv', 'text/csv', null, true),
-            'academic_term_code' => $term,
-        ]);
+        try {
+            return $this->actingAs($this->coordinator)->post(route('imports.ubiqua.store'), [
+                'arquivo' => new UploadedFile($path, 'oferta.csv', 'text/csv', null, true),
+                'academic_term_code' => $term,
+            ]);
+        } finally {
+            @unlink($path);
+            @unlink(substr($path, 0, -4));
+        }
     }
 
     public function test_coordinator_imports_official_columns_and_links_matrix_discipline(): void
