@@ -5,13 +5,21 @@ namespace App\Http\Controllers;
 use App\Models\AcademicTerm;
 use App\Models\Professor;
 use App\Models\ProfessorAvailability;
-use App\Models\Subject;
-use App\Models\User;
+use App\Services\TeachingQualificationCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 class ProfessorAvailabilityController extends Controller
 {
+    private const ROOM_TYPE_LABELS = [
+        'SALA_COMUM' => 'Sala comum',
+        'LABORATORIO_INFORMATICA' => 'Lab. Informática',
+        'LABORATORIO_ENGENHARIA' => 'Lab. Engenharia',
+        'SALA_PRATICA' => 'Sala de prática',
+        'ESTUDIO_PRODUCAO' => 'Estúdio',
+        'LABORATORIO_CIENCIAS' => 'Lab. Ciências',
+    ];
+
     public function show(Professor $professor)
     {
         $selectedTermId = session('selected_academic_term_id');
@@ -137,19 +145,22 @@ class ProfessorAvailabilityController extends Controller
             ->with('success', 'Disponibilidade atualizada com sucesso!');
     }
 
-    public function showSubjects(Professor $professor)
+    public function showSubjects(Professor $professor, TeachingQualificationCatalog $catalog)
     {
         $selectedSubjects = $professor->subjects()->orderBy('name')->get();
-        $allSubjects = Subject::orderBy('name')->get();
+        $data = $catalog->build();
 
         return view('admin.professors-subjects', [
             'professor' => $professor,
             'selectedSubjects' => $selectedSubjects,
-            'allSubjects' => $allSubjects,
+            'selectedIds' => $selectedSubjects->pluck('id')->map(fn ($id) => (int) $id)->all(),
+            'matrices' => $data['matrices'],
+            'otherSubjects' => $data['others'],
             'selectedCount' => $selectedSubjects->count(),
-            'totalSubjects' => $allSubjects->count(),
-            'unselectedCount' => $allSubjects->count() - $selectedSubjects->count(),
+            'totalSubjects' => $data['total_subjects'],
+            'unselectedCount' => max(0, $data['total_subjects'] - $selectedSubjects->count()),
             'isEditable' => Gate::allows('updateSubjects', $professor),
+            'roomTypes' => self::ROOM_TYPE_LABELS,
         ]);
     }
 
