@@ -37,9 +37,7 @@
                         </form>
 
                         <div class="mt-3 text-center">
-                            <span class="text-secondary">Não tem conta?</span>
-                            <a href="{{ route('users.create') }}"
-                                class="fw-semibold text-primary text-decoration-none">Criar usuário</a>
+                            <span class="text-secondary small">Não tem acesso? Solicite seu usuário ao Administrador de TI.</span>
                         </div>
                     </div>
                 </div>

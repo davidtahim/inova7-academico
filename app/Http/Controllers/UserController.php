@@ -10,17 +10,11 @@ use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
 
 class UserController extends Controller
 {
-    public function create()
-    {
-        return view('users.create');
-    }
-
     public function profile()
     {
         $user = Auth::user();
@@ -92,7 +86,6 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'registration_number' => ['nullable', 'string', 'max:20', 'unique:users,registration_number,' . $user->id],
-            'role' => 'required|in:admin,coordinator,teacher,student,staff',
             'password' => [
                 $teacherMustSetPassword || $request->filled('password') ? 'required' : 'nullable',
                 'confirmed',
@@ -113,7 +106,7 @@ class UserController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'registration_number' => $validated['registration_number'] ?? null,
-            'role' => $validated['role'],
+            // O perfil (role) só é alterado pelo Administrador de TI na gestão de usuários.
         ]);
 
         if (! empty($validated['password'])) {
@@ -225,40 +218,5 @@ class UserController extends Controller
             ->pluck('class_offerings.subject_id');
 
         return Subject::whereIn('id', $subjectIds)->orderBy('name')->get();
-    }
-
-    public function store(Request $request)
-    {
-        $rules = [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'role' => 'required|in:admin,coordinator,teacher,student,staff',
-            'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers()],
-        ];
-
-        if (Schema::hasColumn('users', 'registration_number')) {
-            $rules['registration_number'] = 'nullable|string|max:20|unique:users';
-        }
-
-        $validated = $request->validate($rules);
-
-        $payload = [
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'role' => $validated['role'],
-            'password' => $validated['password'],
-        ];
-
-        if (Schema::hasColumn('users', 'is_active')) {
-            $payload['is_active'] = $request->has('is_active');
-        }
-
-        if (Schema::hasColumn('users', 'registration_number') && ! empty($validated['registration_number'])) {
-            $payload['registration_number'] = $validated['registration_number'];
-        }
-
-        User::create($payload);
-
-        return redirect()->route('dashboard')->with('success', 'Novo usuário cadastrado com sucesso!');
     }
 }

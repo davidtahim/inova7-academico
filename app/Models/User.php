@@ -32,6 +32,7 @@ class User extends Authenticatable
         'password' => 'hashed', // Hash automático ao salvar (Laravel 11)
         'is_active' => 'boolean',
         'must_change_password' => 'boolean',
+        'professor_id' => 'integer',
     ];
 
     public static function roleOptions(): array

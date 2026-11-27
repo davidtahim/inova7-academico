@@ -220,17 +220,9 @@
 
                                     <div class="col-md-6">
                                         <label for="role" class="form-label fw-semibold">Perfil</label>
-                                        <select class="form-select @error('role') is-invalid @enderror" id="role"
-                                            name="role" required>
-                                            @foreach ($roles as $key => $label)
-                                                <option value="{{ $key }}"
-                                                    {{ old('role', $user->role) === $key ? 'selected' : '' }}>
-                                                    {{ $label }}</option>
-                                            @endforeach
-                                        </select>
-                                        @error('role')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
+                                        <input type="text" class="form-control" id="role"
+                                            value="{{ $user->role_label }}" disabled readonly>
+                                        <div class="form-text">O perfil de acesso é definido pelo Administrador de TI.</div>
                                     </div>
 
                                     <div class="col-md-6">

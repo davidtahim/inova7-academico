@@ -15,7 +15,7 @@
                     <p class="text-info mb-0"><small>✏️ Clique nos horários para selecionar sua disponibilidade</small></p>
                 @endif
             </div>
-            <a href="{{ route('admin.professors.index') }}" class="btn btn-outline-secondary">Voltar</a>
+            <a href="{{ Gate::allows('access-catalog') ? route('admin.professors.index') : route('dashboard') }}" class="btn btn-outline-secondary">Voltar</a>
         </div>
 
         <div class="row g-3">
@@ -242,7 +242,7 @@
 
         <!-- Ações -->
         <div class="d-flex gap-2 justify-content-end mt-4">
-            <a href="{{ route('admin.professors.index') }}" class="btn btn-outline-secondary">Voltar</a>
+            <a href="{{ Gate::allows('access-catalog') ? route('admin.professors.index') : route('dashboard') }}" class="btn btn-outline-secondary">Voltar</a>
             @if(!$isEditable)
                 <a href="{{ route('teacher.availability.pdf') }}" class="btn btn-primary" target="_blank">
                     📄 Exportar como PDF

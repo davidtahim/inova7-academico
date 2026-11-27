@@ -8,14 +8,13 @@ use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\PlanningController;
+use App\Http\Controllers\ProfessorAvailabilityController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
-    Route::get('/usuarios/novo', [UserController::class, 'create'])->name('users.create');
-    Route::post('/usuarios', [UserController::class, 'store'])->name('users.store');
 });
 
 Route::middleware('auth')->group(function () {
@@ -24,6 +23,19 @@ Route::middleware('auth')->group(function () {
     Route::get('/planejamento', [PlanningController::class, 'index'])->name('planning.index');
     Route::post('/planejamento/alocar/{offering}', [PlanningController::class, 'confirmProfessor'])->name('planning.confirm-professor');
     Route::post('/planejamento/alocar-lote', [PlanningController::class, 'confirmProfessorBulk'])->name('planning.confirm-professor-bulk');
+
+    // Disponibilidade (CCG-FOR-02) e habilitação docente.
+    // Ficam fora do grupo "access-catalog" para que o próprio professor tenha acesso;
+    // a autorização é feita pela ProfessorPolicy.
+    Route::prefix('admin/planejamento/professores/{professor}')
+        ->name('admin.professors.')
+        ->controller(ProfessorAvailabilityController::class)
+        ->group(function () {
+            Route::get('/disponibilidade', 'show')->name('availability')->can('view', 'professor');
+            Route::put('/disponibilidade', 'updateAvailability')->name('update-availability')->can('updateAvailability', 'professor');
+            Route::get('/disciplinas', 'showSubjects')->name('subjects')->can('view', 'professor');
+            Route::put('/disciplinas', 'updateSubjects')->name('update-subjects')->can('updateSubjects', 'professor');
+        });
 
     Route::middleware('can:access-catalog')->group(function () {
         Route::get('/admin', function () {
@@ -43,11 +55,6 @@ Route::middleware('auth')->group(function () {
             Route::post('/usuarios/{user}/redefinir-senha', [\App\Http\Controllers\UserManagementController::class, 'resetPassword'])->name('users.reset-password');
             Route::post('/usuarios/{user}/toggle-status', [\App\Http\Controllers\UserManagementController::class, 'toggleStatus'])->name('users.toggle-status');
             Route::delete('/usuarios/{user}', [\App\Http\Controllers\UserManagementController::class, 'destroy'])->name('users.destroy');
-
-            Route::get('/professores/{professor}/disponibilidade', [\App\Http\Controllers\ProfessorAvailabilityController::class, 'show'])->name('professors.availability');
-            Route::put('/professores/{professor}/disponibilidade', [\App\Http\Controllers\ProfessorAvailabilityController::class, 'updateAvailability'])->name('professors.update-availability');
-            Route::get('/professores/{professor}/disciplinas', [\App\Http\Controllers\ProfessorAvailabilityController::class, 'showSubjects'])->name('professors.subjects');
-            Route::put('/professores/{professor}/disciplinas', [\App\Http\Controllers\ProfessorAvailabilityController::class, 'updateSubjects'])->name('professors.update-subjects');
 
             Route::get('/cursos', [\App\Http\Controllers\AdminCatalogController::class, 'coursesIndex'])->name('courses.index');
             Route::get('/cursos/novo', [\App\Http\Controllers\AdminCatalogController::class, 'courseCreate'])->name('courses.create');

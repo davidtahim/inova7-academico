@@ -116,7 +116,7 @@
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" name="subject_ids[]" 
                                             value="{{ $subject->id }}" id="subject_{{ $subject->id }}"
-                                            {{ $isSelected ? 'checked' : '' }}>
+                                            {{ $isSelected ? 'checked' : '' }} {{ $isEditable ? '' : 'disabled' }}>
                                         <label class="form-check-label w-100" for="subject_{{ $subject->id }}">
                                             <strong>{{ $subject->name }}</strong>
                                             <br>
@@ -132,10 +132,16 @@
                         </div>
 
                         <div class="d-flex gap-2 justify-content-end mt-4">
-                            <a href="{{ route('admin.professors.index') }}" class="btn btn-outline-secondary">Cancelar</a>
-                            <button type="submit" class="btn btn-primary">
-                                Salvar Disciplinas
-                            </button>
+                            @can('access-catalog')
+                                <a href="{{ route('admin.professors.index') }}" class="btn btn-outline-secondary">Voltar</a>
+                            @else
+                                <a href="{{ route('admin.professors.availability', $professor) }}" class="btn btn-outline-secondary">Voltar</a>
+                            @endcan
+                            @if($isEditable)
+                                <button type="submit" class="btn btn-primary">
+                                    Salvar Disciplinas
+                                </button>
+                            @endif
                         </div>
                     </form>
                 @endif

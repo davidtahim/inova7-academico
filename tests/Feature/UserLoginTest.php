@@ -69,7 +69,8 @@ class UserLoginTest extends TestCase
             'password' => 'senha1234',
         ]);
 
-        $response->assertRedirect(route('dashboard'));
+        // Administrador de TI é direcionado para a gestão de usuários.
+        $response->assertRedirect(route('admin.users.index'));
         $this->assertAuthenticated();
     }
 
