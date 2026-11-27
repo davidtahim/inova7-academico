@@ -7,25 +7,107 @@ use App\Models\Professor;
 use App\Models\ProfessorAvailability;
 use App\Models\Subject;
 use App\Models\User;
+use App\Services\TeacherDashboard;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 class UserController extends Controller
 {
-    public function profile()
+    public function profile(TeacherDashboard $dashboard)
     {
         $user = Auth::user();
         if (! $user instanceof User) {
             abort(403);
         }
 
+        if ($user->isTeacher()) {
+            return $this->teacherDashboard($user, $dashboard);
+        }
+
         return view('users.profile', [
             'user' => $user,
             'roles' => User::roleOptions(),
         ]);
+    }
+
+    private function teacherDashboard(User $user, TeacherDashboard $dashboard)
+    {
+        $term = $this->selectedTerm();
+        $professor = $user->resolveProfessor();
+
+        return view('users.teacher-dashboard', array_merge([
+            'user' => $user,
+            'professor' => $professor,
+            'term' => $term,
+            'qualificationOptions' => TeacherDashboard::QUALIFICATIONS,
+            'statusLabels' => TeacherDashboard::ASSIGNMENT_STATUS,
+            'weekdays' => TeacherDashboard::WEEKDAYS,
+        ], $professor ? $dashboard->build($professor, $term) : [
+            'assignments' => collect(),
+            'qualifiedIds' => [],
+            'stats' => ['classes' => 0, 'weekly_hours' => 0, 'students' => 0, 'confirmed' => 0],
+            'missingFields' => [],
+            'checklist' => [],
+        ]));
+    }
+
+    /**
+     * Dados funcionais informados pelo próprio professor (mesmos campos da lista de
+     * professores da coordenação). O status (ativo/inativo) continua com a coordenação.
+     */
+    public function updateProfessionalData(Request $request)
+    {
+        $user = Auth::user();
+        abort_unless($user instanceof User && $user->isTeacher(), 403);
+
+        $professor = $user->resolveProfessor();
+        abort_unless($professor !== null, 404, 'Seu usuário ainda não está vinculado a um cadastro de professor. Procure a coordenação.');
+
+        $validated = $request->validateWithBag('professional', [
+            'name' => ['required', 'string', 'max:255'],
+            'registration' => ['required', 'string', 'max:30', Rule::unique('professors', 'registration')->ignore($professor->id)],
+            'chapa' => ['required', 'string', 'max:30'],
+            'qualification' => ['required', Rule::in(TeacherDashboard::QUALIFICATIONS)],
+            'lattes' => ['nullable', 'url', 'max:255'],
+        ], [
+            'registration.unique' => 'Esta matrícula já pertence a outro professor.',
+            'qualification.in' => 'Selecione uma formação da lista.',
+        ], [
+            'name' => 'nome',
+            'registration' => 'matrícula',
+            'chapa' => 'chapa',
+            'qualification' => 'formação',
+            'lattes' => 'currículo Lattes',
+        ]);
+
+        $professor->fill([
+            'name' => trim($validated['name']),
+            'registration' => trim($validated['registration']),
+            'chapa' => trim($validated['chapa']),
+            'qualification' => $validated['qualification'],
+            'lattes' => $validated['lattes'] ?? null,
+        ])->save();
+
+        $user->name = $professor->name;
+        $registrationTaken = User::where('registration_number', $professor->registration)->whereKeyNot($user->id)->exists();
+        if (! $registrationTaken) {
+            $user->registration_number = $professor->registration;
+        }
+        $user->save();
+
+        return redirect()->route('profile')->with('success', 'Dados funcionais atualizados.');
+    }
+
+    private function selectedTerm(): ?AcademicTerm
+    {
+        $selectedTermId = session('selected_academic_term_id');
+        $term = $selectedTermId ? AcademicTerm::find($selectedTermId) : null;
+
+        return $term ?? AcademicTerm::latest('id')->first();
     }
 
     public function editProfile()
@@ -117,7 +199,7 @@ class UserController extends Controller
         $user->save();
 
         if ($user->role === 'teacher') {
-            $professor = Professor::firstOrCreate(
+            $professor = $user->resolveProfessor() ?? Professor::firstOrCreate(
                 ['email' => $user->email],
                 [
                     'name' => $user->name,
@@ -131,6 +213,10 @@ class UserController extends Controller
             $professor->email = $user->email;
             $professor->registration = $user->registration_number ?? $professor->registration;
             $professor->save();
+
+            if ((int) $user->professor_id !== (int) $professor->id) {
+                $user->forceFill(['professor_id' => $professor->id])->save();
+            }
 
             $selectedSubjectIds = collect($validated['subjects'] ?? [])
                 ->filter(fn($subjectId) => is_numeric($subjectId))

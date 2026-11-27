@@ -134,5 +134,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/perfil/editar', [UserController::class, 'editProfile'])->name('profile.edit');
     Route::get('/perfil/disponibilidade/pdf', [UserController::class, 'exportTeacherAvailabilityDocument'])->name('teacher.availability.pdf');
     Route::put('/perfil', [UserController::class, 'updateProfile'])->name('profile.update');
+    Route::put('/perfil/dados-funcionais', [UserController::class, 'updateProfessionalData'])->name('profile.professional.update');
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 });

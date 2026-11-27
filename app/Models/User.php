@@ -148,4 +148,32 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Professor::class);
     }
+
+    /**
+     * Registro docente do usuário professor. Usa o vínculo professor_id e, para contas
+     * antigas sem vínculo, procura pelo e-mail (sem pegar o registro de outro usuário)
+     * e grava o vínculo encontrado.
+     */
+    public function resolveProfessor(): ?Professor
+    {
+        if (! $this->isTeacher()) {
+            return null;
+        }
+
+        if ($this->professor_id && $this->professor) {
+            return $this->professor;
+        }
+
+        $professor = Professor::query()
+            ->where('email', $this->email)
+            ->whereDoesntHave('user', fn ($query) => $query->whereKeyNot($this->getKey()))
+            ->first();
+
+        if ($professor) {
+            $this->forceFill(['professor_id' => $professor->id])->save();
+            $this->setRelation('professor', $professor);
+        }
+
+        return $professor;
+    }
 }

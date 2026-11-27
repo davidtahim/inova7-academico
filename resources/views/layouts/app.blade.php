@@ -29,8 +29,10 @@
                                 href="{{ route('planning.index') }}">▤ Planejamento</a>
                         @endif
 
-                        <a class="nav-link {{ request()->routeIs('profile') || request()->routeIs('profile.edit') ? 'active' : '' }}"
-                            href="{{ route('profile') }}">◉ Meu perfil</a>
+                        @unless (Auth::user()->role === 'teacher')
+                            <a class="nav-link {{ request()->routeIs('profile') || request()->routeIs('profile.edit') ? 'active' : '' }}"
+                                href="{{ route('profile') }}">◉ Meu perfil</a>
+                        @endunless
                     </details>
 
                     @if (Gate::any(['manage-catalog', 'access-imports', 'access-audit']))
@@ -97,6 +99,8 @@
                                 <span>Professor</span>
                                 <span class="nav-caret">▾</span>
                             </summary>
+                            <a class="nav-link {{ request()->routeIs('profile') ? 'active' : '' }}"
+                                href="{{ route('profile') }}">▦ Meu painel docente</a>
                             @if (Auth::user()->professor_id && Auth::user()->professor)
                                 <a class="nav-link {{ request()->routeIs('admin.professors.subjects') ? 'active' : '' }}"
                                     href="{{ route('admin.professors.subjects', Auth::user()->professor) }}">◌ Minhas disciplinas</a>

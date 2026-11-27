@@ -341,7 +341,8 @@ class UserLoginTest extends TestCase
             'password' => 'senha1234',
         ]);
 
-        $response->assertRedirect(route('profile.edit'));
+        // Professor sem troca de senha pendente vai para o painel docente.
+        $response->assertRedirect(route('profile'));
         $this->assertAuthenticatedAs($user);
     }
 
