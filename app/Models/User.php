@@ -98,7 +98,7 @@ class User extends Authenticatable
      * access-catalog         ✔      ✔      ✔
      * manage-catalog         ✔      ✔
      * manage-planning        ✔      ✔
-     * access-imports         ✔             ✔
+     * access-imports         ✔      ✔      ✔
      * access-audit           ✔      ✔      ✔
      */
     public function canManageUsers(): bool
@@ -129,8 +129,8 @@ class User extends Authenticatable
 
     public function canAccessImports(): bool
     {
-        // Decisão vigente: importações (Ubíqua, TOTVS, professores) ficam com TI e secretaria.
-        return $this->hasRole(['admin', 'staff']);
+        // Importações (oferta Ubíqua, TOTVS, professores): TI, coordenação e secretaria.
+        return $this->hasRole(['admin', 'coordinator', 'staff']);
     }
 
     public function canAccessAudit(): bool

@@ -59,7 +59,7 @@ class RbacTest extends TestCase
         $expected = [
             //             users  catalog manage  planning imports audit
             'admin' => [true,  true,   true,   true,    true,   true],
-            'coordinator' => [false, true,   true,   true,    false,  true],
+            'coordinator' => [false, true,   true,   true,    true,   true],
             'staff' => [false, true,   false,  false,   true,   true],
             'teacher' => [false, false,  false,  false,   false,  false],
             'student' => [false, false,  false,  false,   false,  false],
@@ -164,10 +164,10 @@ class RbacTest extends TestCase
         $this->actingAs($staff)->post(route('admin.courses.store'), ['code' => 'X', 'name' => 'Y'])->assertForbidden();
     }
 
-    public function test_imports_are_limited_to_admin_and_staff(): void
+    public function test_imports_are_open_to_admin_coordinator_and_staff(): void
     {
         $this->actingAs($this->userWithRole('staff'))->get(route('imports.ubiqua.index'))->assertOk();
-        $this->actingAs($this->userWithRole('coordinator'))->get(route('imports.ubiqua.index'))->assertForbidden();
+        $this->actingAs($this->userWithRole('coordinator'))->get(route('imports.ubiqua.index'))->assertOk();
         $this->actingAs($this->userWithRole('teacher'))->get(route('imports.ubiqua.index'))->assertForbidden();
     }
 }

@@ -890,7 +890,7 @@ class UserLoginTest extends TestCase
         $response->assertDontSee('+ Adicionar horário');
     }
 
-    public function test_only_it_staff_can_access_ubiquitous_import(): void
+    public function test_coordinator_and_it_staff_can_access_ubiquitous_import(): void
     {
         $coordinator = User::create([
             'name' => 'Coordenador',
@@ -909,7 +909,7 @@ class UserLoginTest extends TestCase
         ]);
 
         $response = $this->actingAs($coordinator)->get('/importacoes/oferta-ubiqua');
-        $response->assertForbidden();
+        $response->assertOk();
 
         $allowed = $this->actingAs($itStaff)->get('/importacoes/oferta-ubiqua');
         $allowed->assertOk();
