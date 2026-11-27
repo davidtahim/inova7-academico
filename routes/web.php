@@ -76,7 +76,6 @@ Route::middleware('auth')->group(function () {
             // Gestão de disciplinas por matriz (grade curricular)
             Route::get('/matrizes/{matrix}/disciplinas', [\App\Http\Controllers\CurriculumMatrixDisciplineController::class, 'show'])->name('matrices.disciplines.show');
             Route::post('/matrizes/{matrix}/disciplinas', [\App\Http\Controllers\CurriculumMatrixDisciplineController::class, 'store'])->name('matrices.disciplines.store');
-            Route::get('/matrizes/{matrix}/disciplinas/{discipline}/editar', [\App\Http\Controllers\CurriculumMatrixDisciplineController::class, 'edit'])->name('matrices.disciplines.edit');
             Route::put('/matrizes/{matrix}/disciplinas/{discipline}', [\App\Http\Controllers\CurriculumMatrixDisciplineController::class, 'update'])->name('matrices.disciplines.update');
             Route::delete('/matrizes/{matrix}/disciplinas/{discipline}', [\App\Http\Controllers\CurriculumMatrixDisciplineController::class, 'destroy'])->name('matrices.disciplines.destroy');
 

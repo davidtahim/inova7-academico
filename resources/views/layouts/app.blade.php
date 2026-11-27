@@ -33,15 +33,23 @@
                             href="{{ route('profile') }}">◉ Meu perfil</a>
                     </details>
 
-                    @if (Auth::user()->role === 'admin')
+                    @if (Gate::any(['manage-catalog', 'access-imports', 'access-audit']))
                         <details class="nav-section-group nav-section-group-admin" open>
                             <summary class="nav-section nav-section-admin">
                                 <span>Administração</span>
                                 <span class="nav-caret">▾</span>
                             </summary>
-                            <a class="nav-link nav-link-admin {{ request()->routeIs('admin.*') ? 'active' : '' }}"
-                                href="{{ route('admin.planejamento.index') }}">⚙ Administração do catálogo</a>
+                            @can('manage-users')
+                                <a class="nav-link nav-link-admin {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"
+                                    href="{{ route('admin.users.index') }}">⚿ Usuários e perfis</a>
+                            @endcan
 
+                            @can('manage-catalog')
+                                <a class="nav-link nav-link-admin {{ request()->routeIs('admin.*') && ! request()->routeIs('admin.users.*') ? 'active' : '' }}"
+                                    href="{{ route('admin.planejamento.index') }}">⚙ Administração do catálogo</a>
+                            @endcan
+
+                            @can('access-imports')
                             <details
                                 class="nav-subsection-group {{ request()->routeIs('imports.ubiqua.*') || request()->routeIs('imports.totvs.*') || request()->routeIs('imports.professors.*') ? 'open' : '' }}"
                                 open>
@@ -57,13 +65,16 @@
                                 <a class="nav-link nav-link-admin nav-link-child {{ request()->routeIs('imports.professors.*') ? 'active' : '' }}"
                                     href="{{ route('imports.professors.index') }}">• Professores</a>
                             </details>
+                            @endcan
 
-                            <a class="nav-link nav-link-admin {{ request()->routeIs('audit.*') ? 'active' : '' }}"
-                                href="{{ route('audit.index') }}">✓ Auditoria</a>
+                            @can('access-audit')
+                                <a class="nav-link nav-link-admin {{ request()->routeIs('audit.*') ? 'active' : '' }}"
+                                    href="{{ route('audit.index') }}">✓ Auditoria</a>
+                            @endcan
                         </details>
                     @endif
 
-                    @if (in_array(Auth::user()->role, ['coordinator', 'staff', 'admin'], true))
+                    @can('access-catalog')
                         <details class="nav-section-group" open>
                             <summary class="nav-section">
                                 <span>Catálogo</span>
@@ -78,7 +89,7 @@
                             <a class="nav-link {{ request()->routeIs('catalog.students') ? 'active' : '' }}"
                                 href="{{ route('catalog.students') }}">◍ Alunos</a>
                         </details>
-                    @endif
+                    @endcan
 
                     @if (Auth::user()->role === 'teacher')
                         <details class="nav-section-group" open>

@@ -90,6 +90,17 @@ class User extends Authenticatable
         return $this->hasRole($roles);
     }
 
+    /*
+     * Matriz de permissões (fonte única — os Gates em AppServiceProvider delegam para cá).
+     *
+     *                      admin  coord  staff  teacher  student
+     * manage-users           ✔
+     * access-catalog         ✔      ✔      ✔
+     * manage-catalog         ✔      ✔
+     * manage-planning        ✔      ✔
+     * access-imports         ✔             ✔
+     * access-audit           ✔      ✔      ✔
+     */
     public function canManageUsers(): bool
     {
         return $this->isAdminTi();
@@ -97,22 +108,34 @@ class User extends Authenticatable
 
     public function canAccessCatalog(): bool
     {
-        return in_array($this->role, ['admin', 'coordinator', 'staff'], true);
+        return $this->hasRole(['admin', 'coordinator', 'staff']);
     }
 
+    public function canManageCatalog(): bool
+    {
+        return $this->hasRole(['admin', 'coordinator']);
+    }
+
+    public function canManagePlanning(): bool
+    {
+        return $this->hasRole(['admin', 'coordinator']);
+    }
+
+    /** @deprecated use canManagePlanning() */
     public function canAccessPlanning(): bool
     {
-        return in_array($this->role, ['admin', 'coordinator'], true);
-    }
-
-    public function canAccessAudit(): bool
-    {
-        return $this->isAdminTi();
+        return $this->canManagePlanning();
     }
 
     public function canAccessImports(): bool
     {
-        return in_array($this->role, ['admin', 'coordinator'], true);
+        // Decisão vigente: importações (Ubíqua, TOTVS, professores) ficam com TI e secretaria.
+        return $this->hasRole(['admin', 'staff']);
+    }
+
+    public function canAccessAudit(): bool
+    {
+        return $this->hasRole(['admin', 'coordinator', 'staff']);
     }
 
     // Relacionamentos

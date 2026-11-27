@@ -12,6 +12,7 @@
         </div>
 
         <div class="row g-3 mb-4">
+            @can('manage-users')
             <div class="col-sm-6 col-xl-3">
                 <article class="card card-soft h-100 admin-panel-stat">
                     <div class="card-body py-3">
@@ -24,6 +25,7 @@
                     </div>
                 </article>
             </div>
+            @endcan
 
             <div class="col-sm-6 col-xl-3">
                 <article class="card card-soft h-100 admin-panel-stat">
@@ -85,8 +87,10 @@
                         <span class="section-title">Cadastros</span>
                     </div>
                     <div class="card-body d-grid gap-2 py-2">
-                        <a href="{{ route('admin.users.index') }}"
-                            class="btn btn-outline-primary admin-panel-btn">Usuários</a>
+                        @can('manage-users')
+                            <a href="{{ route('admin.users.index') }}"
+                                class="btn btn-outline-primary admin-panel-btn">Usuários</a>
+                        @endcan
                         <a href="{{ route('admin.courses.index') }}"
                             class="btn btn-outline-primary admin-panel-btn">Cursos</a>
                         <a href="{{ route('admin.matrices.index') }}"
