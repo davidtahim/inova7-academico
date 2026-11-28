@@ -89,4 +89,25 @@ class CatalogSyncTest extends TestCase
             @rmdir(database_path('data/catalogo'));
         }
     }
+
+    public function test_matrix_with_same_code_in_another_course_is_not_touched(): void
+    {
+        // Produção: a mesma matriz cadastrada por engano em outro curso (id menor) e no curso certo.
+        $ia = Course::create(['code' => 'CSE330', 'name' => 'Inteligência Artificial']);
+        $ads = Course::create(['code' => 'GRA-PPC-0240-G', 'name' => 'ADS']);
+        $wrong = CurriculumMatrix::create(['course_id' => $ia->id, 'code' => 'GRA-MAT-2140-H', 'name' => 'Errada']);
+        $right = CurriculumMatrix::create(['course_id' => $ads->id, 'code' => 'GRA-MAT-2140-H', 'name' => 'Antiga']);
+        $orphan = CurriculumMatrix::create(['course_id' => $ia->id, 'code' => 'SO-NO-IA', 'name' => 'Só uma']);
+
+        $report = app(CatalogSync::class)->apply(['format' => CatalogSync::FORMAT, 'courses' => [], 'subjects' => [], 'matrices' => [
+            ['code' => 'GRA-MAT-2140-H', 'course_code' => 'GRA-PPC-0240-G', 'name' => 'Matriz 56', 'status' => 'Atual', 'disciplines' => []],
+            ['code' => 'SO-NO-IA', 'course_code' => 'GRA-PPC-0240-G', 'name' => 'Movida', 'disciplines' => []],
+        ]]);
+
+        $this->assertSame('Matriz 56', $right->fresh()->name);
+        $this->assertSame('Errada', $wrong->fresh()->name, 'A duplicada do outro curso não muda');
+        $this->assertSame($ia->id, $wrong->fresh()->course_id);
+        $this->assertStringContainsString('Inteligência Artificial', $report['duplicates'][0]);
+        $this->assertSame($ads->id, $orphan->fresh()->course_id, 'Única com o código: vai para o curso certo');
+    }
 }

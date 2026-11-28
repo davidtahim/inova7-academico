@@ -69,7 +69,7 @@ class CatalogSync
     }
 
     /**
-     * @return array{courses: int, subjects: int, matrices: int, links: int, removed: int, kept: array<int, string>}
+     * @return array{courses: int, subjects: int, matrices: int, links: int, removed: int, kept: array<int, string>, duplicates: array<int, string>}
      */
     public function apply(array $data): array
     {
@@ -77,7 +77,7 @@ class CatalogSync
             throw new \InvalidArgumentException('Arquivo de catálogo inválido.');
         }
 
-        $report = ['courses' => 0, 'subjects' => 0, 'matrices' => 0, 'links' => 0, 'removed' => 0, 'kept' => []];
+        $report = ['courses' => 0, 'subjects' => 0, 'matrices' => 0, 'links' => 0, 'removed' => 0, 'kept' => [], 'duplicates' => []];
 
         DB::transaction(function () use ($data, &$report) {
             $courses = [];
@@ -100,14 +100,16 @@ class CatalogSync
 
             foreach ($data['matrices'] ?? [] as $m) {
                 $courseId = $courses[$m['course_code'] ?? ''] ?? Course::where('code', $m['course_code'] ?? '')->value('id');
-                $matrix = CurriculumMatrix::updateOrCreate(['code' => $m['code']], array_filter([
+                $matrix = $this->findMatrix($m['code'], $courseId, $report);
+                $matrix->fill(array_filter([
                     'course_id' => $courseId,
+                    'code' => $m['code'],
                     'name' => $m['name'] ?? null,
                     'version' => $m['version'] ?? null,
                     'status' => $m['status'] ?? null,
                     'effective_from' => $m['effective_from'] ?? null,
                     'allowed_for_import' => $m['allowed_for_import'] ?? null,
-                ], fn ($v) => $v !== null));
+                ], fn ($v) => $v !== null))->save();
                 $report['matrices']++;
 
                 // Grade da matriz (vínculos usados pela oferta, montagem e resolvedor).
@@ -149,6 +151,28 @@ class CatalogSync
         });
 
         return $report;
+    }
+
+    /**
+     * A matriz é única por curso + código (o mesmo código pode existir em outro curso).
+     * Usa a do curso certo; se só existir uma com o código, em outro curso, corrige o
+     * curso dela; as demais duplicadas ficam como estão e vão para o relatório.
+     */
+    private function findMatrix(string $code, ?int $courseId, array &$report): CurriculumMatrix
+    {
+        $sameCode = CurriculumMatrix::with('course')->where('code', $code)->get();
+        $matrix = $sameCode->firstWhere('course_id', $courseId)
+            ?? ($sameCode->count() === 1 ? $sameCode->first() : null)
+            ?? new CurriculumMatrix();
+
+        foreach ($sameCode as $other) {
+            if (! $other->is($matrix)) {
+                $report['duplicates'][] = "Matriz {$code} também existe no curso " . ($other->course?->name ?? '#' . $other->course_id)
+                    . " (id {$other->id}): mantida sem alteração; confira se deve ser excluída.";
+            }
+        }
+
+        return $matrix;
     }
 
     public function applyFile(string $path): array
