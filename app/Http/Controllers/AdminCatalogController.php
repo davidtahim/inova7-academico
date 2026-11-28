@@ -162,7 +162,7 @@ class AdminCatalogController extends Controller
 
         $query = trim((string) $request->query('q', ''));
 
-        $courses = Course::query()->with(['coordinator:id,name', 'assistants:id,name'])
+        $courses = \App\Support\CourseScope::filter(Course::query(), 'id')->with(['coordinator:id,name', 'assistants:id,name'])
             ->with(['matrices' => fn ($q) => $q->withCount('disciplinesForOffering')->orderBy('name')])
             ->when($query !== '', function ($queryBuilder) use ($query) {
                 $queryBuilder->where(function ($innerQuery) use ($query) {
@@ -251,6 +251,10 @@ class AdminCatalogController extends Controller
             'active' => ['nullable', 'boolean'],
         ]);
 
+        // Coordenação que cria um curso passa a coordená-lo (senão não o veria mais).
+        if (\App\Support\CourseScope::restricted() && empty($validated['coordinator_user_id'])) {
+            $validated['coordinator_user_id'] = $request->user()->id;
+        }
         $course = Course::create(\Illuminate\Support\Arr::except($validated, ['assistant_ids']));
         $this->syncAssistants($course, $validated);
 
@@ -341,7 +345,7 @@ class AdminCatalogController extends Controller
 
         $query = trim((string) $request->query('q', ''));
 
-        $matrices = CurriculumMatrix::with('course')->withCount('disciplinesForOffering')->when($query !== '', function ($queryBuilder) use ($query) {
+        $matrices = \App\Support\CourseScope::filter(CurriculumMatrix::with('course'))->withCount('disciplinesForOffering')->when($query !== '', function ($queryBuilder) use ($query) {
             $queryBuilder->where(function ($innerQuery) use ($query) {
                 $innerQuery->where('name', 'like', "%{$query}%")
                     ->orWhere('code', 'like', "%{$query}%")
@@ -424,7 +428,7 @@ class AdminCatalogController extends Controller
 
         return view('admin.matrices.form', [
             'matrix' => new CurriculumMatrix(['course_id' => request()->integer('course') ?: null]),
-            'courses' => Course::orderBy('name')->get(),
+            'courses' => \App\Support\CourseScope::filter(Course::query(), 'id')->orderBy('name')->get(),
         ]);
     }
 
@@ -455,7 +459,7 @@ class AdminCatalogController extends Controller
 
         return view('admin.matrices.form', [
             'matrix' => $matrix,
-            'courses' => Course::orderBy('name')->get(),
+            'courses' => \App\Support\CourseScope::filter(Course::query(), 'id')->orderBy('name')->get(),
         ]);
     }
 
@@ -586,7 +590,7 @@ class AdminCatalogController extends Controller
         $this->ensureAdmin();
 
         $query = trim((string) $request->query('q', ''));
-        $matrices = CurriculumMatrix::with('course')->withCount('disciplinesForOffering')
+        $matrices = \App\Support\CourseScope::filter(CurriculumMatrix::with('course'))->withCount('disciplinesForOffering')
             ->orderByDesc('disciplines_for_offering_count')->orderBy('name')->get()
             ->sortBy(fn ($m) => [$m->course?->name, $m->status === 'Atual' ? 0 : 1, $m->name])->values();
 

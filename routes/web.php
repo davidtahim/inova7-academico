@@ -73,7 +73,7 @@ Route::middleware('auth')->group(function () {
     })->where('path', '.*')->name('storage.public');
 
     Route::post('/semestre/selecionar', [DashboardController::class, 'selectAcademicTerm'])->name('academic-term.select');
-    Route::get('/horarios', [ScheduleController::class, 'index'])->name('schedules.index');
+    Route::get('/horarios', [ScheduleController::class, 'index'])->middleware('course.scope')->name('schedules.index');
 
     // Área do professor: sempre o próprio cadastro, sem id na URL.
     Route::middleware('can:teach')->prefix('docente')->name('teacher.')->group(function () {
@@ -85,7 +85,7 @@ Route::middleware('auth')->group(function () {
 
     // Planejamento do semestre (coordenação e admin).
     // term.open: num semestre concluído, o planejamento é só consulta.
-    Route::middleware(['can:manage-planning', 'term.open'])->prefix('planejamento')->group(function () {
+    Route::middleware(['can:manage-planning', 'term.open', 'course.scope'])->prefix('planejamento')->group(function () {
         Route::redirect('/', '/planejamento/grade')->name('planning.home');
 
         Route::name('allocation.')->group(function () {
@@ -128,7 +128,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // Cadastros acadêmicos (admin e coordenação).
-    Route::prefix('cadastros')->name('admin.')->group(function () {
+    Route::prefix('cadastros')->middleware('course.scope')->name('admin.')->group(function () {
         Route::middleware('can:manage-catalog')->group(function () {
             Route::get('/', [AdminCatalogController::class, 'planejamentoIndex'])->name('planejamento.index');
 
@@ -256,7 +256,7 @@ Route::middleware('auth')->group(function () {
             Route::delete('/{user}', 'destroy')->name('destroy');
         });
 
-        Route::middleware('can:access-audit')->prefix('auditoria')->name('audit.')->group(function () {
+        Route::middleware(['can:access-audit', 'course.scope'])->prefix('auditoria')->name('audit.')->group(function () {
             Route::get('/', [AuditController::class, 'index'])->name('index');
             Route::get('/templates/novo', [AuditTemplateController::class, 'create'])->name('templates.create');
             Route::post('/templates', [AuditTemplateController::class, 'store'])->name('templates.store');

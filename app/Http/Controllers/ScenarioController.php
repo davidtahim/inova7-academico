@@ -48,7 +48,7 @@ class ScenarioController extends Controller
     public function restore(Request $request, ScheduleScenario $scenario, ScheduleScenarios $scenarios)
     {
         $this->ensureSameTerm($scenario);
-        $r = $scenarios->restore($scenario, $request->user());
+        $r = $scenarios->restore($scenario, $request->user(), \App\Support\CourseScope::ids());
 
         $message = "Versão \"{$scenario->name}\" restaurada: {$r['saved']} disciplinas regravadas, {$r['unchanged']} já estavam iguais. "
             . "Pontos agora: " . number_format($r['score_after'], 0, ',', '.') . " ({$r['hard_after']} rígidas). "

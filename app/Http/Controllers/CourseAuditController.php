@@ -25,7 +25,7 @@ class CourseAuditController extends Controller
     public function index()
     {
         $term = AcademicTerm::current();
-        $courses = Course::with(['coordinator:id,name', 'assistants:id,name'])->where('active', true)->orderBy('name')->get();
+        $courses = \App\Support\CourseScope::filter(Course::with(['coordinator:id,name', 'assistants:id,name'])->where('active', true), 'id')->orderBy('name')->get();
         $audits = $term ? CourseAudit::with(['entries', 'documents'])->where('academic_term_id', $term->id)->get()->keyBy('course_id') : collect();
 
         return view('audit.courses.index', [

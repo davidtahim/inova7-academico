@@ -25,7 +25,7 @@ class ScheduleController extends Controller
             return view('schedules.unpublished', ['term' => $term]);
         }
         $myOfferings = $term && $user->isStudent() ? $planner->enrolledOfferings($user, $term) : collect();
-        $courses = Course::where('active', true)
+        $courses = \App\Support\CourseScope::filter(Course::where('active', true), 'id')
             ->when($term, fn ($q) => $q->whereHas('offerings', fn ($o) => $o->where('academic_term_id', $term->id)))
             ->orderBy('name')->get();
         $courseId = $request->integer('course') ?: $courses->first()?->id;
@@ -48,7 +48,7 @@ class ScheduleController extends Controller
         $shift = $selected->first()?->shift ?? 'NOITE';
 
         // Coordenação/admin editam a disciplina num modal (mesmo da Montagem), se o semestre não está concluído.
-        $editable = $canPreview && $term && ! $term->isClosed() && $selected->isNotEmpty();
+        $editable = $canPreview && $term && ! $term->isClosed() && $selected->isNotEmpty() && \App\Support\CourseScope::allows($courseId);
         $allocContext = $editable ? $modal->context($term) : null;
 
         return view('schedules.index', [

@@ -20,11 +20,13 @@ class SolverProblemBuilder
     {
     }
 
-    public function build(AcademicTerm $term): array
+    /** @param array<int>|null $courseIds cursos que podem mudar; os demais entram como bloqueio fixo (coordenação). */
+    public function build(AcademicTerm $term, ?array $courseIds = null): array
     {
         $all = ClassOffering::with(['subject', 'slots', 'assignments', 'matrixDiscipline', 'term'])
             ->where('academic_term_id', $term->id)->where('occurs', true)->get();
-        $isVariable = fn (ClassOffering $o) => ! $o->isDistance() && $o->classesToSchedule() > 0;
+        $isVariable = fn (ClassOffering $o) => ! $o->isDistance() && $o->classesToSchedule() > 0
+            && ($courseIds === null || in_array($o->course_id, $courseIds, true));
         $offerings = $all->filter($isVariable)->values();
         // O que ocupa a grade mas não será resolvido (EaD com horário, carga zero) entra como bloqueio fixo.
         $frozen = $all->reject($isVariable)->filter(fn (ClassOffering $o) => $o->slots->isNotEmpty())->values();

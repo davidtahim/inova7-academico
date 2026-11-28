@@ -256,7 +256,8 @@ class ScheduleAllocator
      *
      * @return array{copied: int, professor_only: int, without_match: int, skipped_distance: int, conflicts: array<int, string>}
      */
-    public function copyFromTerm(AcademicTerm $source, AcademicTerm $target): array
+    /** @param array<int>|null $courseIds só monta turmas destes cursos (coordenação); null = todas. */
+    public function copyFromTerm(AcademicTerm $source, AcademicTerm $target, ?array $courseIds = null): array
     {
         $report = ['copied' => 0, 'professor_only' => 0, 'without_match' => 0, 'skipped_distance' => 0, 'conflicts' => []];
 
@@ -267,6 +268,7 @@ class ScheduleAllocator
         $targets = ClassOffering::with(['subject', 'slots', 'assignments', 'matrixDiscipline'])
             ->where('academic_term_id', $target->id)
             ->where('occurs', true)
+            ->when($courseIds !== null, fn ($q) => $q->whereIn('course_id', $courseIds ?: [0]))
             ->orderBy('course_id')->orderBy('period')->orderBy('class_code')
             ->get()
             ->filter(fn (ClassOffering $o) => $o->slots->isEmpty());

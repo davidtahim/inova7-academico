@@ -18,6 +18,12 @@
         <div class="app-shell">
             @include('layouts.partials.sidebar')
             <main class="content">
+                @if (\App\Support\CourseScope::unlinkedCoordinator())
+                    <div class="alert alert-warning py-2 small" role="status">
+                        <strong>Você ainda não tem cursos vinculados</strong> e por isso vê todos os cursos. Quando o Administrador de TI
+                        marcar os seus cursos (Sistema › Usuários), você passará a ver e alterar só eles.
+                    </div>
+                @endif
                 @if (session('impersonator_id'))
                     <div class="impersonation-bar" role="status">
                         <span>Você está agindo como <strong>{{ auth()->user()->name }}</strong> (entrou como {{ session('impersonator_name') }}). Tudo o que salvar fica em nome do professor.</span>

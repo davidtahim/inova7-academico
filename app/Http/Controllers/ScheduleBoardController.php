@@ -25,7 +25,7 @@ class ScheduleBoardController extends Controller
 
         return view('allocation.board', [
             'term' => $term,
-            'courses' => Course::where('active', true)->whereHas('offerings', fn ($q) => $q->where('academic_term_id', $term?->id))->orderBy('name')->get(),
+            'courses' => \App\Support\CourseScope::filter(Course::where('active', true), 'id')->whereHas('offerings', fn ($q) => $q->where('academic_term_id', $term?->id))->orderBy('name')->get(),
             'weights' => ScheduleScorer::WEIGHTS,
         ]);
     }
@@ -88,7 +88,7 @@ class ScheduleBoardController extends Controller
             ->where('academic_term_id', $term->id)
             ->where('occurs', true)
             ->where('shift', $shift)
-            ->when($courseId, fn ($q) => $q->where('course_id', $courseId))
+            ->when($courseId, fn ($q) => $q->where('course_id', $courseId), fn ($q) => \App\Support\CourseScope::filter($q))
             ->get();
 
         $classes = $offerings->groupBy('class_code')->sortKeys()->map(fn ($group, $code) => [
