@@ -127,6 +127,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/cursos/{course}/editar', [AdminCatalogController::class, 'courseEdit'])->name('courses.edit');
             Route::put('/cursos/{course}', [AdminCatalogController::class, 'courseUpdate'])->name('courses.update');
             Route::delete('/cursos/{course}', [AdminCatalogController::class, 'courseDestroy'])->name('courses.destroy');
+            Route::post('/cursos/{course}/matrizes', [AdminCatalogController::class, 'courseAttachMatrix'])->name('courses.attach-matrix');
 
             Route::get('/matrizes', [AdminCatalogController::class, 'matricesIndex'])->name('matrices.index');
             Route::get('/matrizes/permitidas', [AdminCatalogController::class, 'importScopesIndex'])->name('import-scopes.index');

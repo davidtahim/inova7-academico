@@ -11,6 +11,37 @@
             </div>
         </div>
 
+        {{-- Consistência do catálogo: o que está divergente e onde corrigir. --}}
+        <section class="card border-0 shadow-sm mb-4" aria-labelledby="consistency-title">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <h3 class="h6 mb-0" id="consistency-title">Consistência do catálogo</h3>
+                    @if ($issues === [])
+                        <span class="badge bg-success">tudo certo</span>
+                    @else
+                        <span class="badge bg-danger">{{ count($issues) }} ponto(s) a corrigir</span>
+                    @endif
+                </div>
+                @if ($issues === [])
+                    <p class="small text-muted mb-0">Cursos, matrizes e turmas estão coerentes entre si.</p>
+                @else
+                    <ul class="list-unstyled mb-0 d-grid gap-2">
+                        @foreach ($issues as $issue)
+                            <li class="border-start border-3 border-{{ $issue['level'] }} ps-3">
+                                <div class="fw-semibold small">{{ $issue['title'] }}</div>
+                                <div class="small text-muted">{{ $issue['detail'] }}</div>
+                                <div class="d-flex flex-wrap gap-2 mt-1">
+                                    @foreach ($issue['links'] as $link)
+                                        <a href="{{ $link['url'] }}" class="btn btn-sm btn-outline-primary py-0">{{ $link['label'] }}</a>
+                                    @endforeach
+                                </div>
+                            </li>
+                        @endforeach
+                    </ul>
+                @endif
+            </div>
+        </section>
+
         <div class="row g-3 mb-4">
             @can('manage-users')
             <div class="col-sm-6 col-xl-3">

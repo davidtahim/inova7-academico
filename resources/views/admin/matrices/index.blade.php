@@ -35,6 +35,7 @@
                                 <th>Curso</th>
                                 <th>Código</th>
                                 <th>Nome</th>
+                                <th class="text-end">Disciplinas</th>
                                 <th>Status</th>
                                 <th class="text-end">Ações</th>
                             </tr>
@@ -43,12 +44,29 @@
                             @forelse ($matrices as $matrix)
                                 <tr>
                                     <td>
-                                        <span class="matrix-course-name">{{ $matrix->course?->name ?? '—' }}</span>
+                                        @if ($matrix->course)
+                                            <a href="{{ route('admin.courses.edit', $matrix->course) }}#matrizes" class="matrix-course-name text-decoration-none">{{ $matrix->course->name }}</a>
+                                            <div class="small text-muted">{{ $matrix->course->code }}</div>
+                                        @else
+                                            <span class="text-danger small">sem curso</span>
+                                        @endif
                                     </td>
-                                    <td><strong class="matrix-code-pill">{{ $matrix->code }}</strong></td>
+                                    <td>
+                                        <strong class="matrix-code-pill">{{ $matrix->code }}</strong>
+                                        @if (in_array($matrix->code, $duplicateCodes, true))
+                                            <span class="badge bg-danger-subtle text-danger-emphasis d-block mt-1" title="O mesmo código está em mais de um curso">código repetido em outro curso</span>
+                                        @endif
+                                    </td>
                                     <td>
                                         <span
                                             class="matrix-name-cell">{{ $matrix->name ?: 'Matriz ' . ($matrix->version ?? '—') . ' - ' . ($matrix->course?->name ?? 'Curso') }}</span>
+                                    </td>
+                                    <td class="text-end">
+                                        @if ($matrix->disciplines_for_offering_count)
+                                            {{ $matrix->disciplines_for_offering_count }}
+                                        @else
+                                            <span class="text-warning-emphasis small">nenhuma</span>
+                                        @endif
                                     </td>
                                     <td>
                                         <span class="status-badge {{ strtolower($matrix->status ?? 'ativa') }}">
@@ -66,14 +84,14 @@
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                    onclick="return confirm('Deseja remover esta matriz?')">Excluir</button>
+                                                    onclick="return confirm('Excluir a matriz {{ addslashes($matrix->code) }} e a grade dela? Só é possível se nenhuma turma estiver ligada.')">Excluir</button>
                                             </form>
                                         </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-center text-muted py-4">Nenhuma matriz cadastrada.</td>
+                                    <td colspan="6" class="text-center text-muted py-4">Nenhuma matriz cadastrada.</td>
                                 </tr>
                             @endforelse
                         </tbody>

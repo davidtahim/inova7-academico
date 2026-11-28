@@ -34,6 +34,7 @@
                                 <th>Código</th>
                                 <th>Nome</th>
                                 <th>Grau</th>
+                                <th>Matrizes</th>
                                 <th>Status</th>
                                 <th class="text-end">Ações</th>
                             </tr>
@@ -44,6 +45,17 @@
                                     <td><strong class="matrix-code-pill">{{ $course->code }}</strong></td>
                                     <td><span class="matrix-name-cell">{{ $course->name }}</span></td>
                                     <td>{{ $course->degree ?? '—' }}</td>
+                                    <td>
+                                        @forelse ($course->matrices as $matrix)
+                                            <a href="{{ route('admin.subjects.index', ['matriz' => $matrix->id]) }}"
+                                                class="badge rounded-pill bg-light text-dark border text-decoration-none me-1 mb-1"
+                                                title="{{ $matrix->code }} · {{ $matrix->disciplines_for_offering_count }} disciplinas · {{ $matrix->status }}">
+                                                {{ $matrix->name }}
+                                            </a>
+                                        @empty
+                                            <a href="{{ route('admin.courses.edit', $course) }}#matrizes" class="small text-warning-emphasis">Sem matriz: vincular</a>
+                                        @endforelse
+                                    </td>
                                     <td>
                                         <span class="status-badge {{ $course->active ? 'ativa' : 'inativa' }}">
                                             {{ $course->active ? 'Ativo' : 'Inativo' }}
@@ -58,14 +70,14 @@
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                    onclick="return confirm('Deseja remover este curso?')">Excluir</button>
+                                                    onclick="return confirm('Excluir o curso {{ addslashes($course->name) }}? Só é possível se ele não tiver matrizes nem turmas.')">Excluir</button>
                                             </form>
                                         </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-center text-muted py-4">Nenhum curso cadastrado.</td>
+                                    <td colspan="6" class="text-center text-muted py-4">Nenhum curso cadastrado.</td>
                                 </tr>
                             @endforelse
                         </tbody>

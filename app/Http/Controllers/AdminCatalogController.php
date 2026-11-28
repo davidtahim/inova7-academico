@@ -147,6 +147,7 @@ class AdminCatalogController extends Controller
         $this->ensureAdmin();
 
         return view('admin.planejamento.index', [
+            'issues' => app(\App\Services\CatalogConsistency::class)->check(),
             'usersCount' => User::count(),
             'coursesCount' => Course::count(),
             'subjectsCount' => Subject::count(),
@@ -162,6 +163,7 @@ class AdminCatalogController extends Controller
         $query = trim((string) $request->query('q', ''));
 
         $courses = Course::query()
+            ->with(['matrices' => fn ($q) => $q->withCount('disciplinesForOffering')->orderBy('name')])
             ->when($query !== '', function ($queryBuilder) use ($query) {
                 $queryBuilder->where(function ($innerQuery) use ($query) {
                     $innerQuery->where('name', 'like', "%{$query}%")
@@ -187,13 +189,38 @@ class AdminCatalogController extends Controller
         ]);
     }
 
+    /** Nome de curso não pode repetir (ignorando acentos e maiúsculas): evita "SI" e "GRA-PPC-0228-E" duplicados. */
+    private function uniqueCourseName(?Course $except = null): \Closure
+    {
+        return function (string $attribute, mixed $value, \Closure $fail) use ($except) {
+            $key = \App\Services\CatalogConsistency::key($value);
+            $same = Course::when($except, fn ($q) => $q->whereKeyNot($except->id))->get()
+                ->first(fn ($c) => \App\Services\CatalogConsistency::key($c->name) === $key);
+            if ($same) {
+                $fail("Já existe o curso \"{$same->name}\" (código {$same->code}). Edite-o em vez de cadastrar outro.");
+            }
+        };
+    }
+
+    /** Código de matriz é único na instituição, não só dentro do curso. */
+    private function uniqueMatrixCode(?CurriculumMatrix $except = null): \Closure
+    {
+        return function (string $attribute, mixed $value, \Closure $fail) use ($except) {
+            $same = CurriculumMatrix::with('course')->where('code', trim((string) $value))
+                ->when($except, fn ($q) => $q->whereKeyNot($except->id))->first();
+            if ($same) {
+                $fail("A matriz {$same->code} já existe no curso " . ($same->course?->name ?? '—') . '. Para usá-la em outro curso, mova-a pela tela do curso.');
+            }
+        };
+    }
+
     public function courseStore(Request $request)
     {
         $this->ensureAdmin();
 
         $validated = $request->validate([
             'code' => ['required', 'string', 'max:50', 'unique:courses,code'],
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255', $this->uniqueCourseName()],
             'degree' => ['nullable', 'string', 'max:255'],
             'active' => ['nullable', 'boolean'],
         ]);
@@ -209,7 +236,32 @@ class AdminCatalogController extends Controller
 
         return view('admin.courses.form', [
             'course' => $course,
+            'courseMatrices' => $course->matrices()->withCount('disciplinesForOffering')->orderBy('name')->get(),
+            'otherMatrices' => CurriculumMatrix::with('course')->where('course_id', '!=', $course->id)->orderBy('name')->get(),
         ]);
+    }
+
+    /** Traz para este curso uma matriz cadastrada em outro (ex.: curso duplicado ou errado). */
+    public function courseAttachMatrix(Request $request, Course $course)
+    {
+        $this->ensureAdmin();
+        $data = $request->validate(['matrix_id' => ['required', 'integer', 'exists:curriculum_matrices,id']]);
+        $matrix = CurriculumMatrix::with('course')->findOrFail($data['matrix_id']);
+
+        if (CurriculumMatrix::where('course_id', $course->id)->where('code', $matrix->code)->exists()) {
+            return redirect()->to(route('admin.courses.edit', $course) . '#matrizes')
+                ->with('error', "Este curso já tem uma matriz {$matrix->code}. Confira as duas e exclua a duplicada.");
+        }
+
+        $from = $matrix->course?->name ?? '—';
+        \Illuminate\Support\Facades\DB::transaction(function () use ($matrix, $course) {
+            $matrix->update(['course_id' => $course->id]);
+            // As turmas da matriz acompanham o curso, para não ficarem inconsistentes.
+            \App\Models\ClassOffering::where('curriculum_matrix_id', $matrix->id)->update(['course_id' => $course->id]);
+        });
+
+        return redirect()->to(route('admin.courses.edit', $course) . '#matrizes')
+            ->with('success', "Matriz {$matrix->name} ({$matrix->code}) movida de {$from} para {$course->name}.");
     }
 
     public function courseUpdate(Request $request, Course $course)
@@ -218,7 +270,7 @@ class AdminCatalogController extends Controller
 
         $validated = $request->validate([
             'code' => ['required', 'string', 'max:50', 'unique:courses,code,' . $course->id],
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255', $this->uniqueCourseName($course)],
             'degree' => ['nullable', 'string', 'max:255'],
             'active' => ['nullable', 'boolean'],
         ]);
@@ -232,6 +284,13 @@ class AdminCatalogController extends Controller
     {
         $this->ensureAdmin();
 
+        // Excluir curso apaga em cascata as turmas dele: só sem matrizes e sem turmas.
+        $matrices = $course->matrices()->count();
+        $offerings = \App\Models\ClassOffering::where('course_id', $course->id)->count();
+        if ($matrices || $offerings) {
+            return back()->with('error', "O curso {$course->name} não pode ser excluído: tem {$matrices} matriz(es) e {$offerings} turma(s). "
+                . 'Mova as matrizes para o curso correto na tela do curso; turmas saem ao reimportar a oferta.');
+        }
         $course->delete();
 
         return redirect()->route('admin.courses.index')->with('success', 'Curso removido com sucesso!');
@@ -243,7 +302,7 @@ class AdminCatalogController extends Controller
 
         $query = trim((string) $request->query('q', ''));
 
-        $matrices = CurriculumMatrix::with('course')->when($query !== '', function ($queryBuilder) use ($query) {
+        $matrices = CurriculumMatrix::with('course')->withCount('disciplinesForOffering')->when($query !== '', function ($queryBuilder) use ($query) {
             $queryBuilder->where(function ($innerQuery) use ($query) {
                 $innerQuery->where('name', 'like', "%{$query}%")
                     ->orWhere('code', 'like', "%{$query}%")
@@ -253,10 +312,11 @@ class AdminCatalogController extends Controller
                             ->orWhere('code', 'like', "%{$query}%");
                     });
             });
-        })->orderBy('name')->get();
+        })->get()->sortBy(fn ($m) => [$m->course?->name ?? '~', $m->name])->values();
 
         return view('admin.matrices.index', [
             'matrices' => $matrices,
+            'duplicateCodes' => CurriculumMatrix::select('code')->groupBy('code')->havingRaw('count(*) > 1')->pluck('code')->all(),
             'query' => $query,
         ]);
     }
@@ -324,7 +384,7 @@ class AdminCatalogController extends Controller
         $this->ensureAdmin();
 
         return view('admin.matrices.form', [
-            'matrix' => new CurriculumMatrix(),
+            'matrix' => new CurriculumMatrix(['course_id' => request()->integer('course') ?: null]),
             'courses' => Course::orderBy('name')->get(),
         ]);
     }
@@ -335,7 +395,7 @@ class AdminCatalogController extends Controller
 
         $validated = $request->validate([
             'course_id' => ['required', 'exists:courses,id'],
-            'code' => ['required', 'string', 'max:100'],
+            'code' => ['required', 'string', 'max:100', $this->uniqueMatrixCode()],
             'name' => ['required', 'string', 'max:255'],
             'version' => ['nullable', 'string', 'max:50'],
             'status' => ['nullable', 'in:Atual,Ativa,Inativa'],
@@ -366,7 +426,7 @@ class AdminCatalogController extends Controller
 
         $validated = $request->validate([
             'course_id' => ['required', 'exists:courses,id'],
-            'code' => ['required', 'string', 'max:100'],
+            'code' => ['required', 'string', 'max:100', $this->uniqueMatrixCode($matrix)],
             'name' => ['required', 'string', 'max:255'],
             'version' => ['nullable', 'string', 'max:50'],
             'status' => ['nullable', 'in:Atual,Ativa,Inativa'],
@@ -385,6 +445,10 @@ class AdminCatalogController extends Controller
     {
         $this->ensureAdmin();
 
+        $offerings = \App\Models\ClassOffering::where('curriculum_matrix_id', $matrix->id)->count();
+        if ($offerings) {
+            return back()->with('error', "A matriz {$matrix->code} não pode ser excluída: {$offerings} turma(s) estão ligadas a ela.");
+        }
         $matrix->delete();
 
         return redirect()->route('admin.matrices.index')->with('success', 'Matriz removida com sucesso!');
