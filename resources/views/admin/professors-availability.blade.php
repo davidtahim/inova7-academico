@@ -31,6 +31,7 @@
                 @if ($ownArea)
                     <a href="{{ route('teacher.availability.pdf') }}" class="btn btn-outline-primary" target="_blank" rel="noopener">Gerar CCG-FOR-02 (PDF)</a>
                     <a href="{{ route('teacher.subjects') }}" class="btn btn-outline-secondary">Minhas disciplinas</a>
+                    <a href="{{ asset('docs/tutorial-disponibilidade-professor.pdf') }}" class="btn btn-outline-secondary" target="_blank" rel="noopener" download>Tutorial (PDF)</a>
                 @else
                     <a href="{{ route('admin.professors.subjects', $professor) }}" class="btn btn-outline-secondary">Habilitação</a>
                 @endif

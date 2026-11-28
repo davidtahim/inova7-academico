@@ -8,7 +8,10 @@
             <p>Planejamento docente, horários e documentos de auditoria em um único fluxo.</p>
         </div>
         @can('manage-planning')
-            <a class="btn btn-primary" href="{{ route('allocation.board') }}">Abrir grade global</a>
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-outline-secondary" href="{{ asset('docs/tutorial-coordenacao.pdf') }}" target="_blank" rel="noopener" download>Tutorial (PDF)</a>
+                <a class="btn btn-primary" href="{{ route('allocation.board') }}">Abrir grade global</a>
+            </div>
         @endcan
     </section>
     <div class="row g-3 mb-4">
