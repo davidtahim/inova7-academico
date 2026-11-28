@@ -30,7 +30,8 @@ A matriz de permissões fica em `App\Models\User` (`can*()`), nos Gates de `App\
 
 | URL | Área | Acesso |
 | --- | --- | --- |
-| `/` | Início (cada perfil vai para o seu ponto de partida) | todos |
+| `/` | Apresentação do sistema (visitante) ou início do perfil (logado) | todos |
+| `/login` | Entrar | **sem login** |
 | `/horarios` | Horários das turmas | todos (alunos e professores após a publicação) |
 | `/docente/...` | Painel, disciplinas e disponibilidade do professor | professor |
 | `/planejamento/...` | Grade global, diagnóstico, versões, montagem, enturmação, professores por turma | admin, coordenação |

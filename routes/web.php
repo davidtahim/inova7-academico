@@ -50,6 +50,12 @@ Route::middleware('guest')->group(function () {
 | Os nomes das rotas foram mantidos; os endereços antigos redirecionam (301).
 */
 
+// Início: visitante vê a apresentação do sistema; logado vai para o ponto de partida do perfil.
+Route::get('/', function (\Illuminate\Http\Request $request) {
+    return auth()->check() ? app()->call([app(DashboardController::class), '__invoke']) : view('welcome');
+})->name('dashboard');
+Route::view('/sobre', 'welcome')->name('about');
+
 // Calendário público dos laboratórios (sem login): só reservas aprovadas, sem dados de quem pediu.
 Route::get('/calendario-laboratorios', [LabReservationController::class, 'publicCalendar'])->name('labs.public');
 
@@ -66,7 +72,6 @@ Route::middleware('auth')->group(function () {
         return $disk->response($path, null, ['Cache-Control' => 'private, max-age=86400']);
     })->where('path', '.*')->name('storage.public');
 
-    Route::get('/', DashboardController::class)->name('dashboard');
     Route::post('/semestre/selecionar', [DashboardController::class, 'selectAcademicTerm'])->name('academic-term.select');
     Route::get('/horarios', [ScheduleController::class, 'index'])->name('schedules.index');
 
