@@ -59,6 +59,14 @@
                                                 class="btn btn-sm btn-outline-info" title="Ver disponibilidade de horários">📅</a>
                                             <a href="{{ route('admin.professors.subjects', $professor) }}"
                                                 class="btn btn-sm btn-outline-success" title="Gerenciar disciplinas">📚</a>
+                                            @if ($professor->user)
+                                                @can('impersonate', $professor->user)
+                                                    <form action="{{ route('impersonate.start', $professor->user) }}" method="POST" class="d-inline-block">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-sm btn-outline-dark" title="Entrar como {{ $professor->name }}">Entrar como</button>
+                                                    </form>
+                                                @endcan
+                                            @endif
                                             <form action="{{ route('admin.professors.destroy', $professor) }}"
                                                 method="POST" class="d-inline-block">
                                                 @csrf

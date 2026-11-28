@@ -133,6 +133,15 @@ class User extends Authenticatable
         return $this->hasRole(['admin', 'coordinator']);
     }
 
+    /**
+     * "Entrar como": Administrador de TI e coordenação podem agir pelo professor (disponibilidade,
+     * disciplinas) sem a senha dele. Só contas de professor ativas; nunca a própria.
+     */
+    public function canImpersonate(User $target): bool
+    {
+        return $this->canManagePlanning() && $target->isTeacher() && $target->is_active && $target->id !== $this->id;
+    }
+
     public function canManagePlanning(): bool
     {
         return $this->hasRole(['admin', 'coordinator']);

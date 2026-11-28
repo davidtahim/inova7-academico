@@ -232,6 +232,10 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::prefix('sistema')->group(function () {
+        // Entrar como professor (coordenação e TI) e voltar para a própria conta.
+        Route::post('/entrar-como/{user}', [\App\Http\Controllers\ImpersonationController::class, 'start'])->name('impersonate.start');
+        Route::post('/voltar-para-minha-conta', [\App\Http\Controllers\ImpersonationController::class, 'stop'])->name('impersonate.stop');
+
         // Manutenção sem terminal (HostGator): migrations e caches pelo navegador.
         Route::middleware('can:manage-users')->prefix('manutencao')->name('system.maintenance')->controller(MaintenanceController::class)->group(function () {
             Route::get('/', 'index')->name('');
@@ -263,7 +267,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/perfil', [UserController::class, 'profile'])->name('profile');
     Route::get('/perfil/editar', [UserController::class, 'editProfile'])->name('profile.edit');
-    Route::put('/perfil', [UserController::class, 'updateProfile'])->name('profile.update');
+    Route::put('/perfil', [UserController::class, 'updateProfile'])->middleware('not.impersonating')->name('profile.update');
     Route::put('/perfil/dados-funcionais', [UserController::class, 'updateProfessionalData'])->name('profile.professional.update');
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 

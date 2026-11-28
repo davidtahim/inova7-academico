@@ -21,6 +21,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('access-imports', fn (User $user) => $user->canAccessImports());
         Gate::define('access-audit', fn (User $user) => $user->canAccessAudit());
         Gate::define('teach', fn (User $user) => $user->isTeacher());
+        Gate::define('impersonate', fn (User $user, User $target) => ! session()->has('impersonator_id') && $user->canImpersonate($target));
         // Laboratórios: gestores de cada área (e o Administrador de TI) aprovam e cadastram; demais perfis (exceto aluno) consultam e pedem.
         Gate::define('view-labs', fn (User $user) => ! $user->isStudent());
         // Gestor de laboratórios (por área) e Administrador de TI; a área é conferida em cada ação.

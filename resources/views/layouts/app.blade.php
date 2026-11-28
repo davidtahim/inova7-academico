@@ -18,6 +18,15 @@
         <div class="app-shell">
             @include('layouts.partials.sidebar')
             <main class="content">
+                @if (session('impersonator_id'))
+                    <div class="impersonation-bar" role="status">
+                        <span>Você está agindo como <strong>{{ auth()->user()->name }}</strong> (entrou como {{ session('impersonator_name') }}). Tudo o que salvar fica em nome do professor.</span>
+                        <form method="POST" action="{{ route('impersonate.stop') }}" class="m-0">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-dark">Voltar para minha conta</button>
+                        </form>
+                    </div>
+                @endif
                 <header class="topbar">
                     <button class="topbar-menu-btn" type="button" data-sidebar-toggle aria-controls="sidebar"
                         aria-expanded="false" aria-label="Abrir menu">

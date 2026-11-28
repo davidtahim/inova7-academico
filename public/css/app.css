@@ -736,3 +736,22 @@ body {
 
     .topbar-credit { display: none; }
 }
+
+/* Barra de "Entrar como professor" */
+.impersonation-bar {
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem 1rem;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 0 1rem;
+    padding: .6rem 1rem;
+    border-radius: .6rem;
+    background: #fff3cd;
+    border: 1px solid #f1c96b;
+    color: #5c4300;
+    font-size: .9rem
+}
