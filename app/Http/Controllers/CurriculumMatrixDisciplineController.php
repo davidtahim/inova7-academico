@@ -22,32 +22,10 @@ class CurriculumMatrixDisciplineController extends Controller
         abort_unless((int) $discipline->curriculum_matrix_id === (int) $matrix->getKey(), 404);
     }
 
-    /**
-     * Exibir a grade de disciplinas de uma matriz (integrado na edição).
-     */
-    public function show(CurriculumMatrix $matrix)
+    /** Opções dos formulários de vínculo (também usadas na tela de disciplinas). */
+    public static function options(): array
     {
-        $this->ensureCanManage();
-
-        $matrix->load(['course', 'disciplinesForOffering.subject']);
-
-        // Agrupar por período
-        $disciplinesByPeriod = $matrix->disciplinesForOffering()
-            ->orderBy('period')
-            ->get()
-            ->groupBy('period');
-
-        // Obter todas as disciplinas disponíveis para vincular
-        $availableSubjects = Subject::orderBy('name')->get();
-
-        // Obter resumo
-        $summary = $matrix->getSummary();
-
-        return view('admin.matrices.disciplines', [
-            'matrix' => $matrix,
-            'disciplinesByPeriod' => $disciplinesByPeriod,
-            'availableSubjects' => $availableSubjects,
-            'summary' => $summary,
+        return [
             'shifts' => [
                 'MANHÃ' => 'Manhã (07:30 - 12:40) — 6 aulas',
                 'TARDE' => 'Tarde (13:10 - 17:30) — 5 aulas',
@@ -68,7 +46,23 @@ class CurriculumMatrixDisciplineController extends Controller
                 'ESTUDIO_PRODUCAO' => 'Estúdio de Produção',
                 'LABORATORIO_CIENCIAS' => 'Laboratório de Ciências',
             ],
-        ]);
+        ];
+    }
+
+    /**
+     * A grade da matriz agora vive na tela de disciplinas (visão "por matriz").
+     */
+    public function show(CurriculumMatrix $matrix)
+    {
+        $this->ensureCanManage();
+
+        return redirect()->route('admin.subjects.index', ['matriz' => $matrix->id]);
+    }
+
+    /** Volta para a grade da matriz, no período alterado. */
+    private function backToMatrix(CurriculumMatrix $matrix, ?int $period = null)
+    {
+        return redirect()->to(route('admin.subjects.index', ['matriz' => $matrix->id]) . ($period ? '#periodo-' . $period : ''));
     }
 
     /**
@@ -126,7 +120,7 @@ class CurriculumMatrixDisciplineController extends Controller
             'max_consecutive_classes' => $validated['max_consecutive_classes'] ?? 2,
         ]);
 
-        return redirect()->route('admin.matrices.disciplines.show', $matrix)
+        return $this->backToMatrix($matrix, $link->period)
             ->with('success', 'Disciplina vinculada com sucesso!');
     }
 
@@ -183,8 +177,8 @@ class CurriculumMatrixDisciplineController extends Controller
             'max_consecutive_classes' => $validated['max_consecutive_classes'] ?? 2,
         ]);
 
-        return redirect()->route('admin.matrices.disciplines.show', $matrix)
-            ->with('success', 'Disciplina atualizada com sucesso!');
+        return $this->backToMatrix($matrix, (int) $validated['period'])
+            ->with('success', 'Vínculo atualizado com sucesso!');
     }
 
     /**
@@ -199,7 +193,7 @@ class CurriculumMatrixDisciplineController extends Controller
         $subjectName = $discipline->subject->name ?? 'Disciplina';
         $discipline->delete();
 
-        return redirect()->route('admin.matrices.disciplines.show', $matrix)
+        return $this->backToMatrix($matrix, $discipline->period)
             ->with('success', "Vínculo de \"$subjectName\" removido com sucesso!");
     }
 }

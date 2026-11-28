@@ -57,6 +57,8 @@
                                     </td>
                                     <td class="text-end">
                                         <div class="table-actions">
+                                            <a href="{{ route('admin.subjects.index', ['matriz' => $matrix->id]) }}"
+                                                class="btn btn-sm btn-primary">Grade de disciplinas</a>
                                             <a href="{{ route('admin.matrices.edit', $matrix) }}"
                                                 class="btn btn-sm btn-outline-primary">Editar</a>
                                             <form action="{{ route('admin.matrices.destroy', $matrix) }}" method="POST"

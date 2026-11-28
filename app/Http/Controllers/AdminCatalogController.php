@@ -471,25 +471,69 @@ class AdminCatalogController extends Controller
         return redirect()->route('admin.semestres.index')->with('success', 'Semestre removido com sucesso!');
     }
 
+    /**
+     * Disciplinas: uma tela com duas visões.
+     *  - por matriz (?matriz=ID): a grade curricular por período, com os vínculos
+     *    (aulas/semana, turno, tipo, sala) editáveis ali mesmo;
+     *  - catálogo (?matriz=todas | sem): todas as disciplinas, com as matrizes onde aparecem.
+     * A última visão escolhida fica guardada na sessão.
+     */
     public function subjectsIndex(Request $request)
     {
         $this->ensureAdmin();
 
         $query = trim((string) $request->query('q', ''));
+        $matrices = CurriculumMatrix::with('course')->withCount('disciplinesForOffering')
+            ->orderByDesc('disciplines_for_offering_count')->orderBy('name')->get()
+            ->sortBy(fn ($m) => [$m->course?->name, $m->status === 'Atual' ? 0 : 1, $m->name])->values();
 
-        $subjects = Subject::query()
-            ->when($query !== '', function ($queryBuilder) use ($query) {
-                $queryBuilder->where(function ($innerQuery) use ($query) {
-                    $innerQuery->where('name', 'like', "%{$query}%")
-                        ->orWhere('code', 'like', "%{$query}%");
-                });
-            })
-            ->orderBy('name')
-            ->get();
+        $view = (string) $request->query('matriz', session('subjects.view', $matrices->first()?->id ?? 'todas'));
+        if (! in_array($view, ['todas', 'sem'], true) && ! $matrices->contains('id', (int) $view)) {
+            $view = 'todas';
+        }
+        session(['subjects.view' => $view]);
 
-        return view('admin.subjects.index', [
-            'subjects' => $subjects,
+        $matchesQuery = fn ($q) => $q->where(fn ($inner) => $inner->where('name', 'like', "%{$query}%")
+            ->orWhere('code', 'like', "%{$query}%")->orWhere('abbreviation', 'like', "%{$query}%"));
+        $unlinkedCount = Subject::whereDoesntHave('offeringLinks')->count();
+        $common = [
             'query' => $query,
+            'matrices' => $matrices,
+            'view' => $view,
+            'totalSubjects' => Subject::count(),
+            'unlinkedCount' => $unlinkedCount,
+        ] + CurriculumMatrixDisciplineController::options();
+
+        if (in_array($view, ['todas', 'sem'], true)) {
+            $subjects = Subject::query()
+                ->with(['offeringLinks' => fn ($q) => $q->orderBy('period')])
+                ->when($view === 'sem', fn ($q) => $q->whereDoesntHave('offeringLinks'))
+                ->when($query !== '', $matchesQuery)
+                ->orderBy('name')
+                ->get();
+
+            return view('admin.subjects.index', $common + ['subjects' => $subjects, 'matrix' => null]);
+        }
+
+        $matrix = $matrices->firstWhere('id', (int) $view);
+        $links = $matrix->disciplinesForOffering()
+            ->when($query !== '', fn ($q) => $q->whereHas('subject', $matchesQuery))
+            ->orderBy('period')->get()
+            ->sortBy(fn ($l) => [$l->period, $l->subject?->name])->values();
+        $linkedIds = $matrix->disciplinesForOffering()->pluck('subject_id')->all();
+
+        return view('admin.subjects.index', $common + [
+            'matrix' => $matrix,
+            'linksByPeriod' => $links->groupBy('period'),
+            'matrixTotals' => [
+                'subjects' => $matrix->disciplines_for_offering_count,
+                'classes' => (int) $matrix->disciplinesForOffering()->sum('weekly_hours'),
+                'periods' => $matrix->disciplinesForOffering()->distinct()->count('period'),
+            ],
+            // Para "adicionar à matriz": as que ainda não estão nela vêm primeiro.
+            'availableSubjects' => Subject::orderBy('name')->get(['id', 'code', 'name'])
+                ->sortBy(fn ($s) => in_array($s->id, $linkedIds, true) ? 1 : 0)->values(),
+            'linkedIds' => $linkedIds,
         ]);
     }
 
@@ -518,9 +562,18 @@ class AdminCatalogController extends Controller
             'extension_hours' => ['nullable', 'integer', 'min:0'],
         ]);
 
-        Subject::create($validated);
+        $subject = Subject::create($validated);
 
-        return redirect()->route('admin.subjects.index')->with('success', 'Disciplina cadastrada com sucesso!');
+        // Criada a partir da grade de uma matriz: volta para lá com o vínculo já aberto.
+        $matrixId = $request->integer('matriz');
+        if ($matrixId && CurriculumMatrix::whereKey($matrixId)->exists()) {
+            return redirect()->route('admin.subjects.index', ['matriz' => $matrixId])
+                ->with('success', "Disciplina {$subject->name} cadastrada. Agora escolha o período e as aulas por semana.")
+                ->with('link_subject', $subject->id);
+        }
+
+        return redirect()->route('admin.subjects.index', ['matriz' => 'sem'])
+            ->with('success', "Disciplina {$subject->name} cadastrada. Ela ainda não está em nenhuma matriz.");
     }
 
     public function subjectEdit(Subject $subject)
