@@ -160,12 +160,38 @@
                                         </div>
                                     @endforeach
                                 </div>
-                                <small class="text-muted">Um curso tem um coordenador. Marcar aqui tira o curso de quem o coordenava. O Administrador de TI pode coordenar cursos sem mudar de perfil.</small>
+                                <small class="text-muted">Um curso tem um coordenador. Se o curso já tinha outro, ele passa a assistente. O Administrador de TI pode coordenar cursos sem mudar de perfil.</small>
                             </div>
                             <script>
                                 (function () {
                                     const role = document.getElementById('role'), field = document.getElementById('coordinated-courses-field');
                                     const toggle = () => { field.hidden = !['admin', 'coordinator'].includes(role.value); };
+                                    role.addEventListener('change', toggle); toggle();
+                                })();
+                            </script>
+
+                            {{-- Assistente da coordenação em cursos (coordenação, Admin TI e funcionários). --}}
+                            <div class="mb-3" id="assisted-courses-field">
+                                <input type="hidden" name="assisted_submitted" value="1">
+                                <span class="form-label fw-500 d-block">Cursos em que é assistente</span>
+                                <div class="d-grid gap-1 border rounded p-2" role="group" aria-label="Cursos em que é assistente">
+                                    @foreach ($courses as $course)
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="assisted_course_ids[]" value="{{ $course->id }}" id="assist-course-{{ $course->id }}"
+                                                @checked(in_array($course->id, old('assisted_course_ids', $assistedCourseIds)))>
+                                            <label class="form-check-label" for="assist-course-{{ $course->id }}">
+                                                {{ $course->name }} <span class="text-muted small">{{ $course->code }}</span>
+                                                @if ($course->coordinator)<span class="small text-muted">· coordenação: {{ $course->coordinator->name }}</span>@endif
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <small class="text-muted">O assistente apoia o coordenador e não muda quem sai no CCG-FOR-02. As permissões vêm do perfil: Coordenação planeja o semestre; Funcionário só consulta e importa.</small>
+                            </div>
+                            <script>
+                                (function () {
+                                    const role = document.getElementById('role'), field = document.getElementById('assisted-courses-field');
+                                    const toggle = () => { field.hidden = !['admin', 'coordinator', 'staff'].includes(role.value); };
                                     role.addEventListener('change', toggle); toggle();
                                 })();
                             </script>

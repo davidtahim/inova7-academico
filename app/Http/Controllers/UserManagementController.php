@@ -198,6 +198,7 @@ class UserManagementController extends Controller
             'professorCourseIds' => $user->professor?->courses->pluck('id')->all() ?? [],
             // Coordenação ou Administrador de TI que também coordena: cursos sob a coordenação dele.
             'coordinatedCourseIds' => $user->coordinatedCourses()->pluck('id')->all(),
+            'assistedCourseIds' => $user->assistedCourses()->pluck('courses.id')->all(),
         ]);
     }
 
@@ -223,6 +224,8 @@ class UserManagementController extends Controller
             'course_ids.*' => ['integer', 'exists:courses,id'],
             'coordinated_course_ids' => ['nullable', 'array'],
             'coordinated_course_ids.*' => ['integer', 'exists:courses,id'],
+            'assisted_course_ids' => ['nullable', 'array'],
+            'assisted_course_ids.*' => ['integer', 'exists:courses,id'],
         ];
 
         if (Schema::hasColumn('users', 'registration_number')) {
@@ -274,9 +277,21 @@ class UserManagementController extends Controller
             if ($request->has('coordinated_submitted') || ! $user->canCoordinate()) {
                 $ids = $user->canCoordinate() ? array_map('intval', $validated['coordinated_course_ids'] ?? []) : [];
                 \App\Models\Course::where('coordinator_user_id', $user->id)->when($user->canCoordinate(), fn ($q) => $q->where('active', true))->whereNotIn('id', $ids ?: [0])->update(['coordinator_user_id' => null]);
-                if ($ids) {
-                    \App\Models\Course::whereIn('id', $ids)->update(['coordinator_user_id' => $user->id]);
+                foreach (\App\Models\Course::whereIn('id', $ids)->get() as $course) {
+                    // Quem coordenava passa a assistente: não perde o vínculo com o curso.
+                    if ($course->coordinator_user_id && $course->coordinator_user_id !== $user->id) {
+                        $course->assistants()->syncWithoutDetaching([$course->coordinator_user_id]);
+                    }
+                    $course->update(['coordinator_user_id' => $user->id]);
+                    $course->assistants()->detach($user->id);
                 }
+            }
+
+            // Cursos em que é assistente (coordenação, Admin TI e funcionários).
+            if ($request->has('assisted_submitted') || ! $user->canAssistCourses()) {
+                $assisted = $user->canAssistCourses() ? array_map('intval', $validated['assisted_course_ids'] ?? []) : [];
+                $coordinated = \App\Models\Course::where('coordinator_user_id', $user->id)->pluck('id')->all();
+                $user->assistedCourses()->sync(array_values(array_diff($assisted, $coordinated)));
             }
 
             DB::commit();

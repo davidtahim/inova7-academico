@@ -36,4 +36,10 @@ class Course extends Model
     {
         return trim((string) $this->coordinator_name) ?: $this->coordinator?->name;
     }
+
+    /** Assistentes do curso: apoiam a coordenação (planejamento, disponibilidade dos professores). */
+    public function assistants()
+    {
+        return $this->belongsToMany(User::class, 'course_assistants')->withTimestamps();
+    }
 }

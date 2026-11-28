@@ -43,7 +43,15 @@
                             @forelse ($courses as $course)
                                 <tr>
                                     <td><strong class="matrix-code-pill">{{ $course->code }}</strong></td>
-                                    <td><span class="matrix-name-cell">{{ $course->name }}</span></td>
+                                    <td>
+                                        <span class="matrix-name-cell">{{ $course->name }}</span>
+                                        @if ($course->coordinator || $course->assistants->isNotEmpty())
+                                            <small class="d-block text-muted">
+                                                @if ($course->coordinator)Coordenação: {{ $course->coordinator->name }}@endif
+                                                @if ($course->assistants->isNotEmpty()){{ $course->coordinator ? ' · ' : '' }}Assistente{{ $course->assistants->count() > 1 ? 's' : '' }}: {{ $course->assistants->pluck('name')->implode(', ') }}@endif
+                                            </small>
+                                        @endif
+                                    </td>
                                     <td>{{ $course->degree ?? '—' }}</td>
                                     <td>
                                         @forelse ($course->matrices as $matrix)

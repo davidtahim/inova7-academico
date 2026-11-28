@@ -162,7 +162,7 @@ class AdminCatalogController extends Controller
 
         $query = trim((string) $request->query('q', ''));
 
-        $courses = Course::query()
+        $courses = Course::query()->with(['coordinator:id,name', 'assistants:id,name'])
             ->with(['matrices' => fn ($q) => $q->withCount('disciplinesForOffering')->orderBy('name')])
             ->when($query !== '', function ($queryBuilder) use ($query) {
                 $queryBuilder->where(function ($innerQuery) use ($query) {
@@ -180,6 +180,20 @@ class AdminCatalogController extends Controller
         ]);
     }
 
+    /** Assistentes do curso; o coordenador não entra como assistente do próprio curso. */
+    private function syncAssistants(Course $course, array $validated): void
+    {
+        $ids = collect($validated['assistant_ids'] ?? [])->map(fn ($id) => (int) $id)
+            ->reject(fn ($id) => $id === (int) $course->coordinator_user_id)->unique()->values()->all();
+        $course->assistants()->sync($ids);
+    }
+
+    /** Quem pode ser assistente: coordenação, Administrador de TI e funcionários ativos. */
+    private function assistantOptions()
+    {
+        return \App\Models\User::whereIn('role', ['admin', 'coordinator', 'staff'])->where('is_active', true)->orderBy('name')->get(['id', 'name', 'email', 'role']);
+    }
+
     /** Quem pode coordenar curso: coordenação e Administrador de TI ativos. */
     private function coordinatorOptions()
     {
@@ -193,6 +207,7 @@ class AdminCatalogController extends Controller
         return view('admin.courses.form', [
             'course' => new Course(),
             'coordinators' => $this->coordinatorOptions(),
+            'assistantOptions' => $this->assistantOptions(),
         ]);
     }
 
@@ -231,10 +246,13 @@ class AdminCatalogController extends Controller
             'degree' => ['nullable', 'string', 'max:255'],
             'coordinator_name' => ['nullable', 'string', 'max:255'],
             'coordinator_user_id' => ['nullable', 'integer', \Illuminate\Validation\Rule::exists('users', 'id')->whereIn('role', ['admin', 'coordinator'])],
+            'assistant_ids' => ['nullable', 'array'],
+            'assistant_ids.*' => ['integer', \Illuminate\Validation\Rule::exists('users', 'id')->whereIn('role', ['admin', 'coordinator', 'staff'])],
             'active' => ['nullable', 'boolean'],
         ]);
 
-        Course::create($validated);
+        $course = Course::create(\Illuminate\Support\Arr::except($validated, ['assistant_ids']));
+        $this->syncAssistants($course, $validated);
 
         return redirect()->route('admin.courses.index')->with('success', 'Curso cadastrado com sucesso!');
     }
@@ -246,6 +264,7 @@ class AdminCatalogController extends Controller
         return view('admin.courses.form', [
             'course' => $course,
             'coordinators' => $this->coordinatorOptions(),
+            'assistantOptions' => $this->assistantOptions(),
             'courseMatrices' => $course->matrices()->withCount('disciplinesForOffering')->orderBy('name')->get(),
             'otherMatrices' => CurriculumMatrix::with('course')->where('course_id', '!=', $course->id)->orderBy('name')->get(),
         ]);
@@ -284,10 +303,18 @@ class AdminCatalogController extends Controller
             'degree' => ['nullable', 'string', 'max:255'],
             'coordinator_name' => ['nullable', 'string', 'max:255'],
             'coordinator_user_id' => ['nullable', 'integer', \Illuminate\Validation\Rule::exists('users', 'id')->whereIn('role', ['admin', 'coordinator'])],
+            'assistant_ids' => ['nullable', 'array'],
+            'assistant_ids.*' => ['integer', \Illuminate\Validation\Rule::exists('users', 'id')->whereIn('role', ['admin', 'coordinator', 'staff'])],
             'active' => ['nullable', 'boolean'],
         ]);
 
-        $course->update($validated);
+        $previous = $course->coordinator_user_id;
+        $course->update(\Illuminate\Support\Arr::except($validated, ['assistant_ids']));
+        // Trocou o coordenador: o anterior vira assistente (pode ser desmarcado depois).
+        if ($previous && $previous !== (int) $course->coordinator_user_id) {
+            $validated['assistant_ids'] = array_merge($validated['assistant_ids'] ?? [], [$previous]);
+        }
+        $this->syncAssistants($course, $validated);
 
         return redirect()->route('admin.courses.index')->with('success', 'Curso atualizado com sucesso!');
     }
