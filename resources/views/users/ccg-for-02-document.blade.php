@@ -3,7 +3,7 @@
 {{--
     CCG-FOR-02 — Disponibilidade de horário de professor (modelo oficial, versão 06).
     Variáveis: $professorName, $termCode, $coordination, $courseLabel, $shifts, $marks, $subjects,
-    $hasPreferred, $logo (data URI ou null), $generatedAt.
+    $hasPreferred e $logo (data URI ou null).
 --}}
 <head>
     <meta charset="UTF-8">
@@ -35,7 +35,6 @@
         .subjects td { border: 1px solid #000; padding: 2px 6px; height: 15px; font-size: 11.5px; }
         .subjects td.n { width: 44px; text-align: center; font-size: 10.5px; }
         .signature { margin: 54px auto 0; width: 250px; border-top: 1px solid #000; text-align: center; padding-top: 3px; font-size: 10.5px; }
-        .generated { margin-top: 14px; text-align: center; font-size: 8px; color: #555; }
     </style>
 </head>
 
@@ -95,7 +94,6 @@
     </table>
 
     <div class="signature">Assinatura do Professor</div>
-    <div class="generated">Gerado pelo Inova7 Acadêmico em {{ $generatedAt }}.</div>
 </body>
 
 </html>
