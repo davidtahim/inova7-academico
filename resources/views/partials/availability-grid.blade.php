@@ -1,644 +1,299 @@
 {{--
-    Grade de disponibilidade docente (CCG-FOR-02), compartilhada entre a tela da coordenação
-    e o perfil do professor. Variáveis: AvailabilityGrid::build() + professor e isEditable.
+    Grade de disponibilidade docente (CCG-FOR-02), usada na área do professor, na tela da
+    coordenação e no perfil. Variáveis: AvailabilityGrid::build() + $professor e $isEditable.
+
+    Edição por "pincel": escolhe-se Preferido / Disponível / Indisponível e clica-se (ou
+    arrasta-se) sobre os horários; o cabeçalho do dia e o rótulo do horário preenchem a
+    coluna / a linha inteira. Cada mudança é salva logo em seguida, sempre no semestre
+    exibido, e o envio pendente é concluído mesmo se a pessoa sair da página.
 --}}
-<div class="availability-grid-component">
-        <div class="row g-3">
-            <!-- Calendário de Disponibilidade -->
-            <div class="col-lg-8">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-light border-0">
-                        <h5 class="mb-0">Grade de Horários {{ $isEditable ? '(Editável - Clique para mudar)' : '(Visualização)' }}</h5>
-                    </div>
-                    <div class="card-body">
-                        @if($isEditable)
-                            <div class="alert alert-info mb-3" role="alert">
-                                <strong>✏️ Clique nos horários</strong> para mudar o estado:
-                                <br><small>⚪ Cinza → 🟢 Verde (Preferido) → 🔵 Azul (Disponível) → ⚪ Cinza (Indisponível)</small>
-                            </div>
-                        @endif
-                        <div class="table-responsive">
-                            <table class="table table-sm table-bordered availability-grid">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th class="text-center" style="width: 12%;">Horário</th>
-                                        <th class="text-center">Seg</th>
-                                        <th class="text-center">Ter</th>
-                                        <th class="text-center">Qua</th>
-                                        <th class="text-center">Qui</th>
-                                        <th class="text-center">Sex</th>
-                                        <th class="text-center">Sáb</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($timeSlots as $slot)
-                                        <tr>
-                                            <td class="text-center fw-bold small">{{ $slot['time'] }}</td>
-                                            @foreach([1, 2, 3, 4, 5, 6] as $dayNum)
-                                                @php
-                                                    $horario = $slot['start'] . ' - ' . $slot['end'];
-                                                    $status = $savedAvailabilities[$dayNum][$horario] ?? 'unavailable';
-                                                    
-                                                    $class = match($status) {
-                                                        'preferred' => 'bg-success text-white',
-                                                        'available' => 'bg-info text-white',
-                                                        'unavailable' => 'bg-light text-muted',
-                                                        default => 'bg-light'
-                                                    };
-                                                    $label = match($status) {
-                                                        'preferred' => '✓ Preferido',
-                                                        'available' => '◐ Disponível',
-                                                        'unavailable' => '✗ Indisponível',
-                                                        default => '—'
-                                                    };
-                                                    $cellId = "slot-{$dayNum}-{$slot['start']}-{$slot['end']}";
-                                                @endphp
-                                                <td class="text-center p-0">
-                                                    <div class="availability-cell {{ $class }}" 
-                                                         data-cell-id="{{ $cellId }}"
-                                                         data-weekday="{{ $dayNum }}"
-                                                         data-start="{{ $slot['start'] }}"
-                                                         data-end="{{ $slot['end'] }}"
-                                                         data-status="{{ $status }}"
-                                                         title="{{ ['', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'][$dayNum] }}, {{ $slot['time'] }}" @if($isEditable) role="button" tabindex="0" @endif
-                                                         style="cursor: {{ $isEditable ? 'pointer' : 'default' }};">
-                                                        <small>{{ $label }}</small>
-                                                    </div>
-                                                </td>
-                                            @endforeach
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+@php
+    $days = [1 => 'Seg', 2 => 'Ter', 3 => 'Qua', 4 => 'Qui', 5 => 'Sex', 6 => 'Sáb'];
+    $dayNames = [1 => 'segunda', 2 => 'terça', 3 => 'quarta', 4 => 'quinta', 5 => 'sexta', 6 => 'sábado'];
+    // Turnos e letras dos blocos, como na grade das turmas (A, B, C…).
+    $shifts = [['Manhã', 0, 6], ['Tarde', 6, 5], ['Noite', 11, 4]];
+    $states = [
+        'preferred' => ['Preferido', '★', 'Prefiro dar aula neste horário'],
+        'available' => ['Disponível', '✓', 'Posso dar aula, se precisar'],
+        'unavailable' => ['Indisponível', '', 'Não posso'],
+    ];
+    $gridId = 'ag-' . $professor->id;
+@endphp
+
+<div class="availability-component" id="{{ $gridId }}" data-term-id="{{ $term?->id }}"
+    data-save-url="{{ route('admin.professors.update-availability', $professor) }}">
+
+    @if ($isEditable && ($copyFromTerm ?? null))
+        <div class="alert alert-info d-flex flex-wrap align-items-center gap-2" role="status">
+            <div class="me-auto">
+                <strong>A grade de {{ $term->code }} está vazia.</strong>
+                Há uma grade preenchida em {{ $copyFromTerm->code }}. Quer aproveitá-la como ponto de partida?
             </div>
+            <form method="POST" action="{{ route('admin.professors.copy-availability', $professor) }}" class="m-0">
+                @csrf
+                <input type="hidden" name="from_term_id" value="{{ $copyFromTerm->id }}">
+                <input type="hidden" name="to_term_id" value="{{ $term->id }}">
+                <button type="submit" class="btn btn-sm btn-primary">Copiar de {{ $copyFromTerm->code }}</button>
+            </form>
+        </div>
+    @endif
 
-            <!-- Legenda e Resumo -->
-            <div class="col-lg-4">
-                <div class="card border-0 shadow-sm mb-3">
-                    <div class="card-header bg-light border-0">
-                        <h5 class="mb-0">Legenda</h5>
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            {{-- Barra: pincel, ações e situação do salvamento --}}
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                @if ($isEditable)
+                    <div class="btn-group ag-brushes" role="radiogroup" aria-label="Marcar horários como">
+                        @foreach ($states as $value => [$label, $icon, $hint])
+                            <input type="radio" class="btn-check" name="{{ $gridId }}-brush" id="{{ $gridId }}-brush-{{ $value }}" value="{{ $value }}" @checked($value === 'preferred') autocomplete="off">
+                            <label class="btn btn-outline-secondary ag-brush ag-brush-{{ $value }}" for="{{ $gridId }}-brush-{{ $value }}" title="{{ $hint }}">
+                                <span class="ag-swatch ag-{{ $value }}" aria-hidden="true">{{ $icon }}</span> {{ $label }}
+                            </label>
+                        @endforeach
                     </div>
-                    <div class="card-body">
-                        @if($isEditable)
-                            <p class="text-muted small mb-3">Clique nos horários para alternar entre os estados:</p>
-                        @endif
-                        <div class="mb-3">
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <span class="badge bg-success" style="min-width: 50px;">✓</span>
-                                <span>Preferido - Horário preferencial</span>
-                            </div>
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <span class="badge bg-info" style="min-width: 50px;">◐</span>
-                                <span>Disponível - Pode estar</span>
-                            </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="badge bg-light text-muted" style="min-width: 50px;">✗</span>
-                                <span>Indisponível - Não pode estar</span>
-                            </div>
-                        </div>
-                        @if($isEditable)
-                            <div class="alert alert-info mb-0" role="alert">
-                                <small><strong>Dica:</strong> Clique várias vezes para mudar entre os estados!</small>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-
-                <div class="card border-0 shadow-sm mb-3">
-                    <div class="card-header bg-light border-0">
-                        <h5 class="mb-0">Resumo</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="stat-row mb-2">
-                            <span class="text-muted">Total de horários</span>
-                            <strong id="totalSlots">{{ $totalSlots }}</strong>
-                        </div>
-                        <div class="stat-row mb-2">
-                            <span class="text-muted">Preferidos</span>
-                            <span class="badge bg-success" id="preferredCount">{{ $preferredCount }}</span>
-                        </div>
-                        <div class="stat-row mb-2">
-                            <span class="text-muted">Disponíveis</span>
-                            <span class="badge bg-info" id="availableCount">{{ $availableCount }}</span>
-                        </div>
-                        <div class="stat-row">
-                            <span class="text-muted">Indisponíveis</span>
-                            <span class="badge bg-light text-muted" id="unavailableCount">{{ $unavailableCount }}</span>
-                        </div>
-                    </div>
-                </div>
-
-                @if($term)
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-light border-0">
-                            <h5 class="mb-0">Informações</h5>
-                        </div>
-                        <div class="card-body small">
-                            <div class="mb-2">
-                                <strong>Semestre:</strong><br>
-                                {{ $term->code }}
-                                @if($term->starts_at)
-                                    <br><strong>Período:</strong><br>
-                                    {{ $term->starts_at->format('d/m/Y') }} a {{ $term->ends_at->format('d/m/Y') }}
-                                @endif
-                            </div>
-                        </div>
-                    </div>
+                    <button type="button" class="btn btn-sm btn-link text-danger" data-ag-clear>Limpar tudo</button>
                 @endif
+                <span class="ms-auto small ag-status" data-ag-status role="status" aria-live="polite">
+                    @if ($isEditable)
+                        <span class="text-success">● Tudo salvo</span>
+                    @endif
+                </span>
             </div>
-        </div>
+            @if ($isEditable)
+                <p class="small text-muted mb-2">
+                    Escolha o tipo acima e <strong>clique ou arraste</strong> sobre os horários.
+                    Clique no <strong>dia</strong> ou no <strong>horário</strong> para preencher a coluna ou a linha inteira.
+                    As mudanças são salvas sozinhas.
+                </p>
+            @endif
 
-        <!-- Detalhamento de Horários (Carregado após salvar) -->
-        @if($isEditable)
-        <div id="detalhamentoContainer" style="margin-top: 30px; display: none;">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-light border-0 d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="mb-0">📋 Detalhamento de Horários</h5>
-                        <small class="text-muted">Horários salvos em tempo real - Clique para editar ou excluir</small>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table id="detalhamentoTable" class="table table-sm table-hover mb-0">
-                            <thead class="table-light">
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle text-center mb-0 ag-table" data-ag-table>
+                    <caption class="visually-hidden">Disponibilidade semanal de {{ $professor->name }} em {{ $term?->code }}</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col" class="ag-time-col">Horário</th>
+                            @foreach ($days as $num => $day)
+                                <th scope="col">
+                                    @if ($isEditable)
+                                        <button type="button" class="ag-head-btn" data-ag-fill-day="{{ $num }}" title="Preencher toda a {{ $dayNames[$num] }}">{{ $day }}</button>
+                                    @else
+                                        {{ $day }}
+                                    @endif
+                                </th>
+                            @endforeach
+                        </tr>
+                    </thead>
+                    @foreach ($shifts as [$shiftName, $offset, $count])
+                        <tbody>
+                            <tr class="ag-shift-row"><th colspan="7" scope="rowgroup" class="text-start">{{ $shiftName }}</th></tr>
+                            @foreach (array_slice($timeSlots, $offset, $count) as $i => $slot)
+                                @php $letter = chr(65 + $i); @endphp
                                 <tr>
-                                    <th style="width: 15%;">Dia da Semana</th>
-                                    <th style="width: 15%;">Horário</th>
-                                    <th style="width: 15%;">Preferência</th>
-                                    <th style="width: 35%;">Status</th>
-                                    <th style="width: 20%;" class="text-center">Ações</th>
+                                    <th scope="row" class="ag-time-col text-start">
+                                        @if ($isEditable)
+                                            <button type="button" class="ag-head-btn text-start" data-ag-fill-row="{{ $slot['start'] }}" title="Preencher este horário em todos os dias">
+                                                <strong>{{ $letter }}</strong> <span class="text-muted">{{ $slot['start'] }}<span class="ag-end">–{{ $slot['end'] }}</span></span>
+                                            </button>
+                                        @else
+                                            <strong>{{ $letter }}</strong> <span class="text-muted">{{ $slot['start'] }}<span class="ag-end">–{{ $slot['end'] }}</span></span>
+                                        @endif
+                                    </th>
+                                    @foreach ($days as $num => $day)
+                                        @php $status = $savedAvailabilities[$num][$slot['start'] . ' - ' . $slot['end']] ?? 'unavailable'; @endphp
+                                        <td class="p-0">
+                                            <button type="button" class="ag-cell ag-{{ $status }}" data-weekday="{{ $num }}" data-start="{{ $slot['start'] }}" data-end="{{ $slot['end'] }}"
+                                                data-status="{{ $status }}" aria-label="{{ ucfirst($dayNames[$num]) }}, {{ $slot['start'] }}: {{ $states[$status][0] }}"
+                                                @disabled(! $isEditable)>
+                                                <span aria-hidden="true">{{ $states[$status][1] }}</span>
+                                            </button>
+                                        </td>
+                                    @endforeach
                                 </tr>
-                            </thead>
-                            <tbody id="detalhamentoContent">
-                                <!-- Conteúdo carregado via JavaScript -->
-                            </tbody>
-                            <tfoot class="table-light" id="detalhamentoFooter" style="display: none;">
-                                <tr class="fw-bold">
-                                    <td colspan="5" class="text-end">
-                                        <span class="me-3">Total: <span id="footerTotal">0</span></span>
-                                        <span class="badge bg-success me-2">✓ Preferidos: <span id="footerPreferred">0</span></span>
-                                        <span class="badge bg-info me-2">◐ Disponíveis: <span id="footerAvailable">0</span></span>
-                                        <span class="badge bg-light text-muted">✗ Indisponíveis: <span id="footerUnavailable">0</span></span>
-                                    </td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
+                            @endforeach
+                        </tbody>
+                    @endforeach
+                </table>
+            </div>
+
+            <div class="d-flex flex-wrap gap-3 small mt-3" aria-live="polite">
+                @foreach ($states as $value => [$label, $icon, $hint])
+                    <span><span class="ag-swatch ag-{{ $value }}" aria-hidden="true">{{ $icon }}</span> {{ $label }}: <strong data-ag-count="{{ $value }}">{{ ['preferred' => $preferredCount, 'available' => $availableCount, 'unavailable' => $unavailableCount][$value] }}</strong></span>
+                @endforeach
+                <span class="text-muted ms-auto">{{ $term ? 'Semestre ' . $term->code : '' }}</span>
             </div>
         </div>
-        @endif
-
-        <!-- Modal para Editar Preferência -->
-        @if($isEditable)
-        <div class="modal fade" id="editPreferenceModal" tabindex="-1">
-            <div class="modal-dialog modal-sm">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Editar Preferência</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p class="mb-3"><strong id="editSlotInfo"></strong></p>
-                        <div class="btn-group w-100" role="group">
-                            <input type="radio" class="btn-check" name="preference" id="pref_preferred" value="preferred" autocomplete="off">
-                            <label class="btn btn-outline-success" for="pref_preferred">
-                                ✓ Preferido
-                            </label>
-
-                            <input type="radio" class="btn-check" name="preference" id="pref_available" value="available" autocomplete="off">
-                            <label class="btn btn-outline-info" for="pref_available">
-                                ◐ Disponível
-                            </label>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-primary" id="savePreferenceBtn">Salvar</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        @endif
+    </div>
 </div>
 
-    <style>
-        .availability-grid {
-            margin-bottom: 0;
-        }
+<style>
+    .ag-table { table-layout: fixed; }
+    .ag-table > :not(caption) > * > * { padding-top: .15rem; padding-bottom: .15rem; }
+    .ag-table th, .ag-table td { border-color: #e3e8ee; }
+    .ag-time-col { width: 9.5rem; font-size: .8rem; font-weight: 500; background: #fff; }
+    .ag-table thead th { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; background: #f8fafc; }
+    .ag-shift-row th { background: #eef2f6 !important; font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: #52606d; padding: .25rem .6rem; }
+    .ag-head-btn { border: 0; background: transparent; width: 100%; padding: .25rem; border-radius: .35rem; font: inherit; color: inherit; text-transform: inherit; }
+    .ag-head-btn:hover, .ag-head-btn:focus-visible { background: #e7eef6; }
+    .ag-cell { display: block; width: 100%; height: 2.1rem; border: 0; font-weight: 700; font-size: 1rem; transition: background-color .12s; touch-action: none; user-select: none; }
+    .ag-cell:disabled { cursor: default; opacity: 1; }
+    .ag-cell:not(:disabled) { cursor: pointer; }
+    .ag-cell:not(:disabled):hover { box-shadow: inset 0 0 0 2px rgba(12, 61, 103, .35); }
+    .ag-cell:focus-visible { outline: 3px solid #0c3d67; outline-offset: -3px; position: relative; }
+    .ag-preferred { background: #198754; color: #fff; }
+    .ag-available { background: #9fd3b3; color: #0f5132; }
+    .ag-unavailable { background: #f8f9fa; color: #adb5bd; }
+    .ag-swatch { display: inline-flex; align-items: center; justify-content: center; width: 1.1rem; height: 1.1rem; border-radius: .25rem; font-size: .7rem; border: 1px solid rgba(0, 0, 0, .1); vertical-align: -3px; }
+    .ag-brush { font-size: .875rem; }
+    .btn-check:checked + .ag-brush { background: #0c3d67; border-color: #0c3d67; color: #fff; }
+    @media (max-width: 575.98px) {
+        .ag-time-col { width: 4.4rem; white-space: nowrap; font-size: .72rem; }
+        .ag-time-col .ag-head-btn { padding-left: .15rem; }
+        .ag-end { display: none; }
+        .ag-table thead th { font-size: .7rem; letter-spacing: 0; }
+        .ag-head-btn { padding: .2rem 0; }
+    }
+    .ag-status .spinner-border { width: .8rem; height: .8rem; border-width: .15em; }
+</style>
 
-        .availability-cell {
-            padding: 8px 4px !important;
-            min-height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-            border-radius: 4px;
-        }
-
-        .availability-cell:hover {
-            opacity: 0.8;
-        }
-
-        .stat-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid #e9ecef;
-        }
-
-        .stat-row:last-child {
-            border-bottom: none;
-        }
-
-        .availability-cell:focus-visible {
-            outline: 3px solid #1264a3;
-            outline-offset: -3px;
-        }
-
-        .availability-cell.cursor-pointer {
-            cursor: pointer;
-        }
-
-        .availability-cell.cursor-pointer:hover {
-            box-shadow: inset 0 0 0 2px rgba(0,0,0,0.1);
-        }
-    </style>
-
-    @if($isEditable)
+@if ($isEditable)
     <script>
-        console.log('Script de edição carregado. isEditable:', true);
-        const formAction = "{{ route('admin.professors.update-availability', $professor) }}";
-        const csrfToken = "{{ csrf_token() }}";
-        let selectedSlots = new Map();
-        let saveTimeout;
+        (function () {
+            const root = document.getElementById(@json($gridId));
+            const cells = Array.from(root.querySelectorAll('.ag-cell'));
+            const status = root.querySelector('[data-ag-status]');
+            const labels = @json(collect($states)->map(fn ($s) => $s[0]));
+            const icons = @json(collect($states)->map(fn ($s) => $s[1]));
+            const dayNames = @json($dayNames);
+            const csrf = @json(csrf_token());
+            let dirty = false, saving = false, failed = false, timer = null, dragging = false;
 
-        // Aguardar DOM estar pronto antes de executar qualquer inicialização
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('✓ DOM carregado. Iniciando...');
-            
-            // Inicializar slots já selecionados a partir do banco de dados
-            // As células já têm data-status preenchido com os valores do banco
-            document.querySelectorAll('.availability-cell').forEach(cell => {
-                const status = cell.dataset.status;
-                const weekday = cell.dataset.weekday;
-                const start = cell.dataset.start;
-                const end = cell.dataset.end;
-                
-                console.log('Célula encontrada:', {
-                    weekday: weekday,
-                    start: start,
-                    end: end,
-                    status: status
+            const brush = () => root.querySelector('input[name="' + root.id + '-brush"]:checked').value;
+
+            function paint(cell, value) {
+                if (cell.dataset.status === value) return false;
+                cell.dataset.status = value;
+                cell.className = 'ag-cell ag-' + value;
+                cell.firstElementChild.textContent = icons[value];
+                cell.setAttribute('aria-label', dayNames[cell.dataset.weekday].replace(/^./, c => c.toUpperCase()) + ', ' + cell.dataset.start + ': ' + labels[value]);
+                return true;
+            }
+
+            function changed(any) {
+                if (!any) return;
+                counts();
+                dirty = true;
+                setStatus('pending');
+                clearTimeout(timer);
+                timer = setTimeout(save, 400); // salva logo; agrupa só cliques muito seguidos
+            }
+
+            function counts() {
+                ['preferred', 'available', 'unavailable'].forEach(v => {
+                    root.querySelector('[data-ag-count="' + v + '"]').textContent = cells.filter(c => c.dataset.status === v).length;
                 });
-                
-                if (status !== 'unavailable') {
-                    const key = `${weekday}-${start}-${end}`;
-                    selectedSlots.set(key, status);
-                    console.log('✓ Slot carregado do BD:', key, '=', status);
+            }
+
+            function setStatus(state, detail) {
+                const html = {
+                    pending: '<span class="text-warning-emphasis">● Alterações a salvar…</span>',
+                    saving: '<span class="text-primary"><span class="spinner-border" aria-hidden="true"></span> Salvando…</span>',
+                    saved: '<span class="text-success">● Salvo às ' + (detail || '') + '</span>',
+                    error: '<span class="text-danger">● Não foi possível salvar.</span> <button type="button" class="btn btn-sm btn-link p-0 align-baseline" data-ag-retry>Tentar de novo</button>',
+                }[state];
+                status.innerHTML = html;
+                status.querySelector('[data-ag-retry]')?.addEventListener('click', save);
+            }
+
+            function payload() {
+                return JSON.stringify({
+                    academic_term_id: Number(root.dataset.termId) || null,
+                    availability_slots: cells.filter(c => c.dataset.status !== 'unavailable').map(c => ({
+                        weekday: Number(c.dataset.weekday), starts_at: c.dataset.start, ends_at: c.dataset.end, preference: c.dataset.status,
+                    })),
+                });
+            }
+
+            async function save() {
+                clearTimeout(timer);
+                if (saving) { timer = setTimeout(save, 300); return; }
+                saving = true; dirty = false;
+                setStatus('saving');
+                try {
+                    // POST em vez de PUT: algumas hospedagens bloqueiam PUT; a rota aceita os dois.
+                    const response = await fetch(root.dataset.saveUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
+                        body: payload(),
+                    });
+                    if (!response.ok) throw new Error('HTTP ' + response.status);
+                    const data = await response.json();
+                    failed = false;
+                    setStatus(dirty ? 'pending' : 'saved', data.saved_at);
+                } catch (e) {
+                    failed = true; dirty = true;
+                    setStatus('error');
+                } finally {
+                    saving = false;
+                    if (dirty && !failed) timer = setTimeout(save, 300);
+                }
+            }
+
+            // Clique e arraste (mouse, caneta ou dedo).
+            root.querySelector('[data-ag-table]').addEventListener('pointerdown', ev => {
+                const cell = ev.target.closest('.ag-cell');
+                if (!cell || cell.disabled) return;
+                ev.preventDefault();
+                dragging = true;
+                changed(paint(cell, brush()));
+            });
+            root.querySelector('[data-ag-table]').addEventListener('pointerover', ev => {
+                if (!dragging) return;
+                const cell = ev.target.closest('.ag-cell');
+                if (cell) changed(paint(cell, brush()));
+            });
+            // Toque: o pointerover não dispara ao arrastar o dedo; usa a posição.
+            root.querySelector('[data-ag-table]').addEventListener('pointermove', ev => {
+                if (!dragging || ev.pointerType === 'mouse') return;
+                const cell = document.elementFromPoint(ev.clientX, ev.clientY)?.closest('.ag-cell');
+                if (cell && root.contains(cell)) changed(paint(cell, brush()));
+            });
+            window.addEventListener('pointerup', () => { dragging = false; });
+
+            // Teclado: Enter/Espaço aplica o pincel (o clique do botão já faz isso sem pointerdown).
+            cells.forEach(cell => cell.addEventListener('keydown', ev => {
+                if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); changed(paint(cell, brush())); }
+            }));
+
+            // Preencher coluna / linha: se tudo já está no pincel, volta para Indisponível.
+            function fill(list) {
+                const value = list.every(c => c.dataset.status === brush()) ? 'unavailable' : brush();
+                let any = false;
+                list.forEach(c => { any = paint(c, value) || any; });
+                changed(any);
+            }
+            root.querySelectorAll('[data-ag-fill-day]').forEach(b => b.addEventListener('click', () => fill(cells.filter(c => c.dataset.weekday === b.dataset.agFillDay))));
+            root.querySelectorAll('[data-ag-fill-row]').forEach(b => b.addEventListener('click', () => fill(cells.filter(c => c.dataset.start === b.dataset.agFillRow))));
+            root.querySelector('[data-ag-clear]').addEventListener('click', () => {
+                if (confirm('Marcar todos os horários como indisponíveis?')) {
+                    let any = false;
+                    cells.forEach(c => { any = paint(c, 'unavailable') || any; });
+                    changed(any);
                 }
             });
-            
-            console.log('✓ Slots inicializados do banco de dados');
-            console.log('selectedSlots.size:', selectedSlots.size);
-            console.log('selectedSlots:', Array.from(selectedSlots.entries()));
-            
-            // Renderizar detalhamento na inicialização
-            console.log('Chamando renderDetalhamento() na inicialização...');
-            renderDetalhamento();
-            console.log('✓ renderDetalhamento() completo');
-            
-            // Um único tratador por célula (antes havia também um onclick inline, e cada clique
-            // avançava dois estados: Indisponível → Preferido → Disponível).
-            document.querySelectorAll('.availability-cell').forEach(cell => {
-                cell.addEventListener('click', function () {
-                    toggleAvailability(this);
-                });
-                cell.addEventListener('keydown', function (e) {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        toggleAvailability(this);
-                    }
-                });
-            });
-            
-            // Salvar mudança de preferência
-            const saveBtn = document.getElementById('savePreferenceBtn');
-            if (saveBtn) {
-                saveBtn.addEventListener('click', function() {
-                    const newPreference = document.querySelector('input[name="preference"]:checked').value;
-                    const slotKey = window.currentEditSlot;
-                    
-                    if (slotKey && newPreference) {
-                        // Atualizar no Map
-                        selectedSlots.set(slotKey, newPreference);
-                        
-                        // Fechar modal
-                        bootstrap.Modal.getInstance(document.getElementById('editPreferenceModal')).hide();
-                        
-                        // Atualizar resumo
-                        updateSummary();
-                        
-                        // Atualizar detalhamento
-                        renderDetalhamento();
-                        
-                        // Agendar auto-save
-                        clearTimeout(saveTimeout);
-                        saveTimeout = setTimeout(() => {
-                            saveAvailability();
-                        }, 1000);
-                    }
-                });
-            }
-        });
 
-        function toggleAvailability(element) {
-            console.log('toggleAvailability chamado', element.dataset);
-            
-            const weekday = element.dataset.weekday;
-            const start = element.dataset.start;
-            const end = element.dataset.end;
-            const key = `${weekday}-${start}-${end}`;
-            
-            const currentStatus = element.dataset.status;
-            console.log('Status atual:', currentStatus);
-            let newStatus;
-
-            // Ciclo: unavailable → preferred → available → unavailable
-            switch(currentStatus) {
-                case 'unavailable':
-                    newStatus = 'preferred';
-                    element.className = 'availability-cell bg-success text-white';
-                    element.innerHTML = '<small>✓ Preferido</small>';
-                    selectedSlots.set(key, 'preferred');
-                    break;
-                case 'preferred':
-                    newStatus = 'available';
-                    element.className = 'availability-cell bg-info text-white';
-                    element.innerHTML = '<small>◐ Disponível</small>';
-                    selectedSlots.set(key, 'available');
-                    break;
-                case 'available':
-                    newStatus = 'unavailable';
-                    element.className = 'availability-cell bg-light text-muted';
-                    element.innerHTML = '<small>✗ Indisponível</small>';
-                    selectedSlots.delete(key);
-                    break;
-                default:
-                    newStatus = 'unavailable';
-                    element.className = 'availability-cell bg-light text-muted';
-                    element.innerHTML = '<small>✗ Indisponível</small>';
-                    selectedSlots.delete(key);
-            }
-
-            element.dataset.status = newStatus;
-            console.log('Novo status:', newStatus);
-            updateSummary();
-            
-            // Auto-salvar após 1 segundo de inatividade
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(() => {
-                saveAvailability();
-            }, 1000);
-        }
-
-        function updateSummary() {
-            let preferred = 0;
-            let available = 0;
-
-            document.querySelectorAll('.availability-cell').forEach(cell => {
-                const status = cell.dataset.status;
-                if (status === 'preferred') preferred++;
-                else if (status === 'available') available++;
-            });
-
-            document.getElementById('preferredCount').textContent = preferred;
-            document.getElementById('availableCount').textContent = available;
-            document.getElementById('unavailableCount').textContent = 
-                parseInt(document.getElementById('totalSlots').textContent) - preferred - available;
-        }
-
-        function saveAvailability() {
-            // Preparar dados
-            const slots = [];
-            selectedSlots.forEach((preference, key) => {
-                const [weekday, start, end] = key.split('-');
-                slots.push({
-                    weekday: parseInt(weekday),
-                    starts_at: start,
-                    ends_at: end,
-                    preference: preference
-                });
-            });
-
-            fetch(formAction, {
-                method: 'PUT',
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken,
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify({
-                    availability_slots: slots
-                })
-            })
-            .then(async response => {
-                if (!response.ok) {
-                    const error = await response.text();
-                    console.error('Erro do servidor:', error);
-                    throw new Error(`HTTP error! status: ${response.status}`);
+            // Ao sair da página: envia o que estiver pendente (keepalive sobrevive à navegação)
+            // e avisa se o último envio falhou.
+            window.addEventListener('pagehide', () => {
+                if (dirty) {
+                    fetch(root.dataset.saveUrl, {
+                        method: 'POST', keepalive: true,
+                        headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
+                        body: payload(),
+                    });
                 }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    // Mostrar toast de sucesso
-                    showNotification('✓ Disponibilidade salva automaticamente!', 'success');
-                    // Renderizar detalhamento
-                    renderDetalhamento();
-                } else {
-                    showNotification('Erro ao salvar: ' + data.message, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Erro:', error);
-                showNotification('❌ Erro ao salvar: ' + error.message, 'error');
             });
-        }
-
-        function renderDetalhamento() {
-            console.log('renderDetalhamento() chamada');
-            const container = document.getElementById('detalhamentoContainer');
-            const tbody = document.getElementById('detalhamentoContent');
-            const footer = document.getElementById('detalhamentoFooter');
-            
-            console.log('selectedSlots.size:', selectedSlots.size);
-            console.log('selectedSlots:', selectedSlots);
-            
-            if (selectedSlots.size === 0) {
-                console.log('Nenhum slot selecionado, escondendo container');
-                container.style.display = 'none';
-                footer.style.display = 'none';
-                return;
-            }
-
-            const dayNames = {
-                1: 'Segunda-feira',
-                2: 'Terça-feira',
-                3: 'Quarta-feira',
-                4: 'Quinta-feira',
-                5: 'Sexta-feira',
-                6: 'Sábado'
-            };
-
-            const preferenceLabel = {
-                'preferred': '✓ Preferido',
-                'available': '◐ Disponível'
-            };
-
-            const preferenceBadge = {
-                'preferred': '<span class="badge bg-success">✓ Preferido</span>',
-                'available': '<span class="badge bg-info">◐ Disponível</span>'
-            };
-
-            // Montar array de slots ordenado
-            const slots = [];
-            selectedSlots.forEach((preference, key) => {
-                const [weekday, start, end] = key.split('-');
-                slots.push({
-                    weekday: parseInt(weekday),
-                    day: dayNames[weekday],
-                    start: start,
-                    end: end,
-                    horario: `${start} - ${end}`,
-                    preference: preference,
-                    label: preferenceLabel[preference],
-                    badge: preferenceBadge[preference],
-                    key: key
-                });
-            });
-
-            // Ordenar por weekday e horário
-            slots.sort((a, b) => {
-                if (a.weekday !== b.weekday) return a.weekday - b.weekday;
-                return a.start.localeCompare(b.start);
-            });
-
-            // Montar linhas da tabela
-            let html = '';
-            slots.forEach((slot, index) => {
-                const now = new Date();
-                const registeredAt = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                
-                html += `
-                    <tr data-slot-key="${slot.key}">
-                        <td><strong>${slot.day}</strong></td>
-                        <td>${slot.horario}</td>
-                        <td>${slot.badge}</td>
-                        <td><small class="text-muted">Registrado em ${registeredAt}</small></td>
-                        <td class="text-center">
-                            <button class="btn btn-sm btn-outline-primary" onclick="editarPreferencia('${slot.key}', '${slot.horario}', '${slot.preference}')">
-                                ✏️ Editar
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="excluirHorario('${slot.key}')">
-                                🗑️ Excluir
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-
-            tbody.innerHTML = html;
-            container.style.display = 'block';
-
-            // Atualizar footer com resumo
-            let preferredCount = 0;
-            let availableCount = 0;
-
-            selectedSlots.forEach((preference) => {
-                if (preference === 'preferred') preferredCount++;
-                else if (preference === 'available') availableCount++;
-            });
-
-            const totalSlots = 90; // 15 horários × 6 dias
-            const unavailableCount = totalSlots - preferredCount - availableCount;
-
-            document.getElementById('footerTotal').textContent = selectedSlots.size;
-            document.getElementById('footerPreferred').textContent = preferredCount;
-            document.getElementById('footerAvailable').textContent = availableCount;
-            document.getElementById('footerUnavailable').textContent = unavailableCount;
-
-            footer.style.display = 'table-footer-group';
-        }
-
-        function editarPreferencia(slotKey, horario, currentPreference) {
-            // Armazenar dados no modal
-            window.currentEditSlot = slotKey;
-            
-            document.getElementById('editSlotInfo').textContent = horario;
-            
-            // Marcar a preferência atual
-            document.getElementById('pref_preferred').checked = currentPreference === 'preferred';
-            document.getElementById('pref_available').checked = currentPreference === 'available';
-            
-            // Mostrar modal
-            const modal = new bootstrap.Modal(document.getElementById('editPreferenceModal'));
-            modal.show();
-        }
-
-        function excluirHorario(slotKey) {
-            if (confirm('Tem certeza que deseja excluir este horário?')) {
-                // Remover do Map
-                selectedSlots.delete(slotKey);
-                
-                // Atualizar resumo
-                updateSummary();
-                
-                // Atualizar detalhamento
-                renderDetalhamento();
-                
-                // Atualizar célula na tabela
-                const [weekday, start, end] = slotKey.split('-');
-                const cell = document.querySelector(`.availability-cell[data-weekday="${weekday}"][data-start="${start}"][data-end="${end}"]`);
-                if (cell) {
-                    cell.className = 'availability-cell bg-light text-muted';
-                    cell.innerHTML = '<small>✗ Indisponível</small>';
-                    cell.dataset.status = 'unavailable';
-                }
-                
-                // Agendar auto-save
-                clearTimeout(saveTimeout);
-                saveTimeout = setTimeout(() => {
-                    saveAvailability();
-                }, 1000);
-                
-                showNotification('✓ Horário excluído!', 'success');
-            }
-        }
-
-        function showNotification(message, type) {
-            // Remover notificação anterior se existir
-            const existing = document.getElementById('notification-toast');
-            if (existing) existing.remove();
-
-            const toast = document.createElement('div');
-            toast.id = 'notification-toast';
-            toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} position-fixed`;
-            toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
-            toast.innerHTML = `${message}`;
-            
-            document.body.appendChild(toast);
-
-            // Remover após 3 segundos se sucesso
-            if (type === 'success') {
-                setTimeout(() => toast.remove(), 3000);
-            }
-        }
+            window.addEventListener('beforeunload', ev => { if (failed) { ev.preventDefault(); ev.returnValue = ''; } });
+        })();
     </script>
-    @endif
+@endif

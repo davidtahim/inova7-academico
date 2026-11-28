@@ -81,7 +81,8 @@ class UserController extends Controller
             'registration' => ['required', 'string', 'max:30', Rule::unique('professors', 'registration')->ignore($professor->id)],
             'chapa' => ['required', 'string', 'max:30'],
             'qualification' => ['required', Rule::in(TeacherDashboard::QUALIFICATIONS)],
-            'lattes' => ['nullable', 'url', 'max:255'],
+            // Chega sem "http(s)://" (ver Professor::normalizeLattes); aceita endereço ou número.
+            'lattes' => ['nullable', 'string', 'max:255', 'regex:/^(https?:\/\/)?[\w.-]+\.[a-z]{2,}(\/\S*)?$|^\d{10,20}$/i'],
         ], [
             'registration.unique' => 'Esta matrícula já pertence a outro professor.',
             'qualification.in' => 'Selecione uma formação da lista.',
@@ -113,10 +114,7 @@ class UserController extends Controller
 
     private function selectedTerm(): ?AcademicTerm
     {
-        $selectedTermId = session('selected_academic_term_id');
-        $term = $selectedTermId ? AcademicTerm::find($selectedTermId) : null;
-
-        return $term ?? AcademicTerm::latest('id')->first();
+        return AcademicTerm::current();
     }
 
     public function editProfile(AvailabilityGrid $grid)
@@ -144,7 +142,7 @@ class UserController extends Controller
             'allSubjects' => $assignedSubjects,
             'selectedSubjectIds' => $selectedSubjectIds,
             'hasAvailabilityGrid' => $professor !== null,
-            'isEditable' => $professor !== null && Gate::allows('updateAvailability', $professor),
+            'isEditable' => $professor !== null && Gate::allows('updateAvailability', $professor) && ! $term?->isClosed(),
         ]));
     }
 

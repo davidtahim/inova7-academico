@@ -48,10 +48,8 @@
                     </div>
                     <div class="topbar-actions">
                         @php
-                            $academicTerms = \App\Models\AcademicTerm::orderByDesc('id')->get();
-                            $selectedAcademicTermId = session('selected_academic_term_id');
-                            $selectedAcademicTerm =
-                                $academicTerms->firstWhere('id', $selectedAcademicTermId) ?? $academicTerms->first();
+                            $academicTerms = \App\Models\AcademicTerm::orderByDesc('code')->get();
+                            $selectedAcademicTerm = \App\Models\AcademicTerm::current();
                         @endphp
                         @if ($academicTerms->isNotEmpty())
                             <form method="POST" action="{{ route('academic-term.select') }}"
@@ -60,10 +58,9 @@
                                 <label for="academic_term_id" class="small text-secondary mb-0">Semestre</label>
                                 <select id="academic_term_id" name="academic_term_id"
                                     class="form-select form-select-sm topbar-semester-select" onchange="this.form.submit()">
-                                    @foreach ($academicTerms as $term)
-                                        <option value="{{ $term->id }}"
-                                            {{ optional($selectedAcademicTerm)->id == $term->id ? 'selected' : '' }}>
-                                            {{ $term->code }}
+                                    @foreach ($academicTerms as $optionTerm)
+                                        <option value="{{ $optionTerm->id }}" @selected(optional($selectedAcademicTerm)->id == $optionTerm->id)>
+                                            {{ $optionTerm->code }}{{ $optionTerm->isClosed() ? ' (concluído)' : '' }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -76,6 +73,24 @@
                         </form>
                     </div>
                 </header>
+                @php
+                    // Semestre concluído: avisa nas telas que alteram dados do semestre.
+                    $closedTerm = \App\Models\AcademicTerm::current();
+                    $closedTerm = $closedTerm?->isClosed() && request()->routeIs('allocation.*', 'enrollment.*', 'planning.*', 'teacher.availability', 'admin.professors.availability', 'profile.edit') ? $closedTerm : null;
+                    $openTerm = $closedTerm ? \App\Models\AcademicTerm::where('status', '!=', 'closed')->orderByDesc('code')->first() : null;
+                @endphp
+                @if ($closedTerm)
+                    <div class="alert alert-secondary d-flex flex-wrap align-items-center gap-2 mt-3 mb-0" role="status">
+                        <span class="me-auto"><strong>{{ $closedTerm->code }} é um semestre concluído:</strong> somente consulta, nenhuma alteração é aceita.</span>
+                        @if ($openTerm)
+                            <form method="POST" action="{{ route('academic-term.select') }}" class="m-0">
+                                @csrf
+                                <input type="hidden" name="academic_term_id" value="{{ $openTerm->id }}">
+                                <button type="submit" class="btn btn-sm btn-primary">Ir para {{ $openTerm->code }}</button>
+                            </form>
+                        @endif
+                    </div>
+                @endif
                 @if (session('success'))
                     <div class="alert alert-success mt-3">{{ session('success') }}</div>
                 @endif
@@ -94,6 +109,15 @@
         </div>
     @endauth
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Mod_Security da hospedagem recusa formulários que enviam links (http://...): campos
+        // marcados com data-strip-scheme vão sem o protocolo, e o servidor o recoloca.
+        document.addEventListener('submit', function (ev) {
+            ev.target.querySelectorAll('[data-strip-scheme]').forEach(function (input) {
+                input.value = input.value.trim().replace(/^https?:\/\//i, '');
+            });
+        }, true);
+    </script>
     @auth
         <script>
             (function () {

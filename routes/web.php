@@ -74,7 +74,8 @@ Route::middleware('auth')->group(function () {
     });
 
     // Planejamento do semestre (coordenação e admin).
-    Route::middleware('can:manage-planning')->prefix('planejamento')->group(function () {
+    // term.open: num semestre concluído, o planejamento é só consulta.
+    Route::middleware(['can:manage-planning', 'term.open'])->prefix('planejamento')->group(function () {
         Route::redirect('/', '/planejamento/grade')->name('planning.home');
 
         Route::name('allocation.')->group(function () {
@@ -171,7 +172,9 @@ Route::middleware('auth')->group(function () {
         // (coordenação edita; funcionário consulta; o próprio professor usa /docente).
         Route::prefix('professores/{professor}')->name('professors.')->controller(ProfessorAvailabilityController::class)->group(function () {
             Route::get('/disponibilidade', 'show')->name('availability')->can('view', 'professor');
-            Route::put('/disponibilidade', 'updateAvailability')->name('update-availability')->can('updateAvailability', 'professor');
+            // PUT ou POST: hospedagens compartilhadas às vezes bloqueiam PUT vindo de fetch().
+            Route::match(['put', 'post'], '/disponibilidade', 'updateAvailability')->name('update-availability')->can('updateAvailability', 'professor');
+            Route::post('/disponibilidade/copiar', 'copyAvailability')->name('copy-availability')->can('updateAvailability', 'professor');
             Route::get('/disciplinas', 'showSubjects')->name('subjects')->can('view', 'professor');
             Route::put('/disciplinas', 'updateSubjects')->name('update-subjects')->can('updateSubjects', 'professor');
         });
