@@ -553,6 +553,10 @@ class AdminCatalogController extends Controller
 
         $view = (string) $request->query('matriz', session('subjects.view', $matrices->first()?->id ?? 'todas'));
         if (! in_array($view, ['todas', 'sem'], true) && ! $matrices->contains('id', (int) $view)) {
+            // Matriz inexistente (excluída, id digitado errado): avisa em vez de trocar de visão calado.
+            if ($request->filled('matriz')) {
+                session()->now('warning', "A matriz #{$view} não foi encontrada. Escolha uma das matrizes abaixo.");
+            }
             $view = 'todas';
         }
         session(['subjects.view' => $view]);
