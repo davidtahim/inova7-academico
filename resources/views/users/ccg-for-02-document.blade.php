@@ -1,186 +1,101 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
+{{--
+    CCG-FOR-02 — Disponibilidade de horário de professor (modelo oficial, versão 06).
+    Variáveis: $professorName, $termCode, $coordination, $courseLabel, $shifts, $marks, $subjects,
+    $hasPreferred, $logo (data URI ou null), $generatedAt.
+--}}
 <head>
     <meta charset="UTF-8">
-    <title>CCG-FOR-02 - Disponibilidade de horário do professor</title>
+    <title>CCG-FOR-02 - Disponibilidade de horário de professor</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            color: #1f2937;
-            font-size: 12px;
-            margin: 28px;
-        }
-
-        .document {
-            border: 1px solid #d1d5db;
-            padding: 22px 26px;
-            background: #ffffff;
-        }
-
-        .header {
-            border-bottom: 2px solid #0f172a;
-            padding-bottom: 10px;
-            margin-bottom: 18px;
-        }
-
-        .header-title {
-            font-size: 22px;
-            font-weight: bold;
-            letter-spacing: 0.04em;
-            margin: 0;
-        }
-
-        .header-subtitle {
-            font-size: 11px;
-            color: #475569;
-            margin-top: 4px;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-        }
-
-        .meta {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 18px;
-        }
-
-        .meta td {
-            padding: 7px 0;
-            border-bottom: 1px solid #e5e7eb;
-            vertical-align: top;
-        }
-
-        .meta .label {
-            width: 180px;
-            font-weight: bold;
-            color: #334155;
-        }
-
-        .section-title {
-            font-size: 14px;
-            font-weight: bold;
-            color: #0f172a;
-            margin: 18px 0 8px;
-            padding-bottom: 4px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 8px;
-        }
-
-        th,
-        td {
-            border: 1px solid #cbd5e1;
-            padding: 8px 10px;
-            text-align: left;
-            vertical-align: top;
-        }
-
-        th {
-            background: #f8fafc;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            color: #334155;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 10px;
-            font-weight: bold;
-            background: #e0f2fe;
-            color: #075985;
-        }
-
-        .badge-preferred {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .badge-unavailable {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .footer {
-            margin-top: 26px;
-            border-top: 1px solid #e2e8f0;
-            padding-top: 12px;
-            font-size: 10px;
-            color: #64748b;
-        }
+        @page { margin: 26px 34px 30px; }
+        body { font-family: Arial, Helvetica, sans-serif; color: #000; font-size: 10.5px; margin: 0; }
+        table { border-collapse: collapse; width: 100%; }
+        .head td { border: 1px solid #000; padding: 2px 5px; font-weight: bold; }
+        .head .logo { width: 92px; text-align: center; padding: 2px; }
+        .head .logo img { height: 34px; }
+        .head .title { text-align: center; font-size: 12px; }
+        .head .code { width: 118px; text-align: center; font-size: 9.5px; }
+        .head .small { font-size: 8.5px; }
+        .field { margin-top: 16px; font-size: 11px; font-weight: bold; }
+        .field .label { display: inline-block; width: 175px; white-space: nowrap; }
+        .field .value { display: inline-block; border-bottom: 1px solid #000; min-width: 360px; padding: 0 4px 1px; }
+        .grid { margin-top: 16px; }
+        .grid th, .grid td { border: 1px solid #000; text-align: center; padding: 1px 3px; height: 14px; }
+        .grid th { font-size: 11px; }
+        .grid td.time { font-weight: bold; text-align: left; white-space: nowrap; width: 100px; }
+        .grid .shift td { background: #d9d9d9; font-weight: bold; font-size: 11px; }
+        .grid .mark { font-weight: bold; font-size: 11px; }
+        .obs { margin-top: 12px; font-weight: bold; }
+        .obs span { font-weight: normal; }
+        .subtitle { margin-top: 18px; text-align: center; font-weight: bold; font-size: 11.5px; text-decoration: underline; }
+        .intro { margin-top: 14px; font-size: 11px; }
+        .subjects { margin-top: 6px; }
+        .subjects td { border: 1px solid #000; padding: 2px 6px; height: 15px; font-size: 11.5px; }
+        .subjects td.n { width: 44px; text-align: center; font-size: 10.5px; }
+        .signature { margin: 54px auto 0; width: 250px; border-top: 1px solid #000; text-align: center; padding-top: 3px; font-size: 10.5px; }
+        .generated { margin-top: 14px; text-align: center; font-size: 8px; color: #555; }
     </style>
 </head>
 
 <body>
-    <div class="document">
-        <div class="header">
-            <div class="header-title">CCG-FOR-02</div>
-            <div class="header-subtitle">Disponibilidade de horário do professor</div>
-        </div>
+    <table class="head">
+        <tr>
+            <td class="logo" rowspan="2">@if ($logo)<img src="{{ $logo }}" alt="">@endif</td>
+            <td class="title" colspan="3" rowspan="2">DISPONIBILIDADE DE HORÁRIO DE PROFESSOR</td>
+            <td class="code">CÓDIGO:</td>
+        </tr>
+        <tr><td class="code">CCG-FOR-02</td></tr>
+        <tr class="small">
+            <td colspan="2">APROVADO POR: SUPERINTENDENTE ACADÊMICA</td>
+            <td style="width: 44px">DATA:</td>
+            <td style="width: 78px">05/02/2020</td>
+            <td>VERSÃO: &nbsp; 06</td>
+        </tr>
+    </table>
 
-        <table class="meta">
-            <tr>
-                <td class="label">Professor:</td>
-                <td>{{ $professor?->name ?? $user->name }}</td>
-            </tr>
-            <tr>
-                <td class="label">E-mail:</td>
-                <td>{{ $user->email }}</td>
-            </tr>
-            <tr>
-                <td class="label">Semestre / período:</td>
-                <td>{{ $term?->code ?? 'Sem semestre informado' }}</td>
-            </tr>
-        </table>
+    <div class="field"><span class="label">COORDENAÇÃO DO CURSO:</span><span class="value">{{ $coordination }}</span></div>
+    <div class="field"><span class="label">SEMESTRE LETIVO:</span><span class="value" style="min-width: 120px">{{ $termCode }}</span></div>
+    <div class="field"><span class="label">PROFESSOR:</span><span class="value">{{ $professorName }}</span></div>
 
-        @if ($slots->isEmpty())
-            <p style="margin: 20px 0; color: #475569;">Não há registros de disponibilidade cadastrados para o semestre
-                atual.</p>
-        @else
-            @foreach ($grouped as $dayNumber => $entries)
-                <div class="section-title">{{ $weekdays[$dayNumber] ?? 'Dia ' . $dayNumber }}</div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Início</th>
-                            <th>Fim</th>
-                            <th>Preferência</th>
-                            <th>Observação</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($entries as $entry)
-                            <tr>
-                                <td>{{ $entry->starts_at }}</td>
-                                <td>{{ $entry->ends_at }}</td>
-                                <td>
-                                    @if ($entry->preference === 'preferred')
-                                        <span class="badge badge-preferred">Preferencial</span>
-                                    @elseif ($entry->preference === 'unavailable')
-                                        <span class="badge badge-unavailable">Indisponível</span>
-                                    @else
-                                        <span class="badge">Disponível</span>
-                                    @endif
-                                </td>
-                                <td>{{ $entry->notes ?: '-' }}</td>
-                            </tr>
+    <table class="grid">
+        <thead>
+            <tr>
+                <th>Horário</th>
+                @foreach (['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'] as $day)
+                    <th>{{ $day }}</th>
+                @endforeach
+            </tr>
+        </thead>
+        <tbody>
+            @foreach ($shifts as $shiftName => $rows)
+                <tr class="shift"><td colspan="7">{{ $shiftName }}</td></tr>
+                @foreach ($rows as [$label, $start])
+                    <tr>
+                        <td class="time">{{ $label }}</td>
+                        @foreach (range(1, 6) as $day)
+                            @php $pref = $marks[$day . '|' . $start] ?? null; @endphp
+                            <td class="mark">{{ $pref ? ($pref === 'preferred' ? 'x*' : 'x') : '' }}</td>
                         @endforeach
-                    </tbody>
-                </table>
+                    </tr>
+                @endforeach
             @endforeach
-        @endif
+        </tbody>
+    </table>
 
-        <div class="footer">
-            Documento gerado pelo sistema INOVA7 Acadêmico em {{ now()->format('d/m/Y') }}.
-        </div>
-    </div>
+    <div class="obs">OBS: Marque com um X os horários disponíveis.@if ($hasPreferred) <span>(* horário de preferência do professor)</span>@endif</div>
+
+    <div class="subtitle">DISPONIBILIDADE DE DISCIPLINAS</div>
+    <div class="intro">Indique as disciplinas da Graduação em <strong>{{ $courseLabel }}</strong>, que você se considera habilitado para lecionar:</div>
+    <table class="subjects">
+        @foreach ($subjects as $i => $subject)
+            <tr><td class="n">{{ $i + 1 }}</td><td>{{ $subject }}</td></tr>
+        @endforeach
+    </table>
+
+    <div class="signature">Assinatura do Professor</div>
+    <div class="generated">Gerado pelo Inova7 Acadêmico em {{ $generatedAt }}.</div>
 </body>
 
 </html>

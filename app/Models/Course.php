@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Course extends Model
 {
-    protected $fillable = ['code', 'name', 'degree', 'active'];
+    protected $fillable = ['code', 'name', 'degree', 'coordinator_name', 'active'];
     protected function casts(): array
     {
         return ['active' => 'boolean'];

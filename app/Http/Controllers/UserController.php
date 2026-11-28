@@ -241,42 +241,85 @@ class UserController extends Controller
         $term = $this->selectedTerm();
         $professor = $user->resolveProfessor();
 
-        $slots = $term && $professor
-            ? ProfessorAvailability::where('professor_id', $professor->id)
-            ->where('academic_term_id', $term->id)
-            ->orderBy('weekday')
-            ->orderBy('starts_at')
-            ->get()
-            : collect();
-
-        $weekdays = [
-            1 => 'Segunda-feira',
-            2 => 'Terça-feira',
-            3 => 'Quarta-feira',
-            4 => 'Quinta-feira',
-            5 => 'Sexta-feira',
-            6 => 'Sábado',
-        ];
-
-        $grouped = collect(range(1, 6))->mapWithKeys(function ($day) use ($weekdays, $slots) {
-            return [$day => $slots->filter(fn($slot) => (int) $slot->weekday === $day)->values()];
-        })->filter(fn($items) => $items->isNotEmpty());
-
-        $html = view('users.ccg-for-02-document', [
-            'user' => $user,
-            'professor' => $professor,
-            'term' => $term,
-            'slots' => $slots,
-            'weekdays' => $weekdays,
-            'grouped' => $grouped,
-        ])->render();
+        $html = view('users.ccg-for-02-document', $this->ccgFor02Data($professor, $term, $user->name))->render();
 
         $pdf = Pdf::loadHTML($html)
             ->setPaper('a4', 'portrait');
 
-        $filename = 'CCG-FOR-02-Disponibilidade-' . ($term ? $term->code : 'semestre') . '.pdf';
+        $filename = 'CCG-FOR-02 - DISPONIBILIDADE DE HORARIO - ' . \Illuminate\Support\Str::upper(\Illuminate\Support\Str::ascii($professor?->name ?? $user->name)) . ' - ' . ($term ? $term->code : 'semestre') . '.pdf';
 
         return $pdf->download($filename);
+    }
+
+    /**
+     * Dados do CCG-FOR-02 no modelo oficial (versão 06): grade com "x" nos horários disponíveis
+     * e lista das disciplinas em que o professor está habilitado.
+     */
+    private function ccgFor02Data(?Professor $professor, ?AcademicTerm $term, string $fallbackName): array
+    {
+        $marks = $term && $professor
+            ? ProfessorAvailability::where('professor_id', $professor->id)->where('academic_term_id', $term->id)
+                ->where('preference', '!=', 'unavailable')->get()
+                ->mapWithKeys(fn ($a) => [$a->weekday . '|' . substr((string) $a->starts_at, 0, 5) => $a->preference])->all()
+            : [];
+
+        // Cursos do professor; sem cursos marcados, os cursos das matrizes das disciplinas em que é habilitado.
+        $subjectIds = $professor ? $professor->subjects()->pluck('subjects.id') : collect();
+        $courses = $professor ? $professor->courses()->orderBy('name')->get() : collect();
+        if ($courses->isEmpty() && $subjectIds->isNotEmpty()) {
+            $courses = \App\Models\Course::whereIn('id', \Illuminate\Support\Facades\DB::table('curriculum_matrix_discipline')
+                ->join('curriculum_matrices', 'curriculum_matrices.id', '=', 'curriculum_matrix_discipline.curriculum_matrix_id')
+                ->whereIn('curriculum_matrix_discipline.subject_id', $subjectIds)->pluck('curriculum_matrices.course_id'))
+                ->orderBy('name')->get();
+        }
+        $upper = fn (?string $v) => mb_strtoupper(trim((string) $v));
+        $coordination = $courses->map(function ($course) use ($upper) {
+            $coordinator = preg_replace('/^prof(a|\.ª|ª)?\.?\s+/iu', '', trim((string) $course->coordinator_name));
+            return $upper($course->name) . ($coordinator !== '' ? ' – PROF. ' . $upper($coordinator) : '');
+        })->implode(' / ');
+
+        $subjects = $professor ? $professor->subjects()->orderBy('name')->pluck('name')
+            ->map(fn ($name) => self::titleCase($name))->values()->all() : [];
+        // O formulário tem 10 linhas; com mais disciplinas, a lista cresce.
+        $subjects = array_pad($subjects, max(10, count($subjects)), '');
+
+        $label = fn ($s, $e, $night) => $night
+            ? str_replace(':', 'h', $s) . ' às ' . str_replace(':', 'h', $e)
+            : $s . ' às ' . $e;
+        $rows = fn (array $slots, bool $night = false) => array_map(fn ($p) => [$label($p[0], $p[1], $night), $p[0]], $slots);
+
+        $logoPath = resource_path('images/ccg-for-02-logo.png');
+
+        return [
+            'professorName' => $upper($professor?->name ?? $fallbackName),
+            'termCode' => $term?->code ?? '',
+            'coordination' => $coordination,
+            'courseLabel' => $courses->pluck('name')->implode(', ') ?: 'Sistemas de Informação',
+            'shifts' => [
+                'MANHÃ' => $rows([['07:30', '08:20'], ['08:20', '09:10'], ['09:10', '10:00'], ['10:10', '11:00'], ['11:00', '11:50'], ['11:50', '12:40']]),
+                'TARDE' => $rows([['13:10', '14:00'], ['14:00', '14:50'], ['14:50', '15:40'], ['15:50', '16:40'], ['16:40', '17:30']]),
+                'NOITE' => $rows([['18:30', '19:20'], ['19:20', '20:10'], ['20:20', '21:10'], ['21:10', '22:00']], true),
+            ],
+            'marks' => $marks,
+            'hasPreferred' => in_array('preferred', $marks, true),
+            'subjects' => $subjects,
+            'logo' => is_file($logoPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath)) : null,
+            'generatedAt' => now()->format('d/m/Y H:i'),
+        ];
+    }
+
+    /** "SISTEMAS DE APOIO À DECISÃO" → "Sistemas de Apoio à Decisão" (siglas e algarismos romanos mantidos). */
+    private static function titleCase(string $name): string
+    {
+        $small = ['de', 'da', 'do', 'das', 'dos', 'e', 'a', 'à', 'o', 'em', 'para', 'com', 'na', 'no', 'por'];
+        $words = preg_split('/\s+/u', mb_strtolower(trim($name)));
+
+        return implode(' ', array_map(function ($w, $i) use ($small) {
+            if (preg_match('/^\(?(i{1,3}|iv|v|vi{0,3}|ix|x)\)?$/u', $w)) {
+                return mb_strtoupper($w);
+            }
+            return $i > 0 && in_array($w, $small, true) ? $w : mb_convert_case($w, MB_CASE_TITLE);
+        }, $words, array_keys($words)));
     }
 
     private function assignedSubjectsForProfessor(?Professor $professor, ?AcademicTerm $term = null)
