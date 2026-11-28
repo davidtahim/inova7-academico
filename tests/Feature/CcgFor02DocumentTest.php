@@ -40,6 +40,7 @@ class CcgFor02DocumentTest extends TestCase
         $this->assertSame(2, substr_count($html, '<td class="mark">x</td>'));
         $this->assertStringContainsString('Sistemas de Apoio à Decisão', $html);
         $this->assertStringContainsString('data:image/png;base64,', $html);
+        $this->assertStringNotContainsString('Gerado pelo', $html);
     }
 
     public function test_coordinator_name_is_saved_on_the_course(): void

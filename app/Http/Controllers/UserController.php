@@ -304,7 +304,6 @@ class UserController extends Controller
             'hasPreferred' => in_array('preferred', $marks, true),
             'subjects' => $subjects,
             'logo' => is_file($logoPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath)) : null,
-            'generatedAt' => now()->format('d/m/Y H:i'),
         ];
     }
 
