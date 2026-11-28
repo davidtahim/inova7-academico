@@ -27,6 +27,13 @@ class UserController extends Controller
         }
 
         if ($user->isTeacher()) {
+            // O painel docente mora em /docente; /perfil continua valendo (links antigos).
+            if (request()->routeIs('profile')) {
+                $query = request()->getQueryString();
+
+                return redirect(route('teacher.dashboard') . ($query ? '?' . $query : ''));
+            }
+
             return $this->teacherDashboard($user, $dashboard);
         }
 
@@ -101,7 +108,7 @@ class UserController extends Controller
         }
         $user->save();
 
-        return redirect()->route('profile')->with('success', 'Dados funcionais atualizados.');
+        return redirect()->route('teacher.dashboard')->with('success', 'Dados funcionais atualizados.');
     }
 
     private function selectedTerm(): ?AcademicTerm
@@ -232,10 +239,9 @@ class UserController extends Controller
             abort(403, 'Apenas professores podem exportar a disponibilidade.');
         }
 
-        $term = AcademicTerm::latest('id')->first();
-        $professor = Professor::where('email', $user->email)
-            ->orWhere('name', $user->name)
-            ->first();
+        // Mesmo semestre selecionado e mesmo vínculo usados no painel e na grade.
+        $term = $this->selectedTerm();
+        $professor = $user->resolveProfessor();
 
         $slots = $term && $professor
             ? ProfessorAvailability::where('professor_id', $professor->id)

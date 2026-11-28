@@ -20,6 +20,34 @@ class ProfessorAvailabilityController extends Controller
         'LABORATORIO_CIENCIAS' => 'Lab. Ciências',
     ];
 
+    /** /docente/disponibilidade: grade do próprio professor, sem id na URL. */
+    public function myAvailability(Request $request, AvailabilityGrid $grid)
+    {
+        return $this->show($this->ownProfessor($request), $grid);
+    }
+
+    /** /docente/disciplinas: habilitação do próprio professor. */
+    public function mySubjects(Request $request, TeachingQualificationCatalog $catalog)
+    {
+        return $this->showSubjects($this->ownProfessor($request), $catalog);
+    }
+
+    private function ownProfessor(Request $request): Professor
+    {
+        $professor = $request->user()->resolveProfessor();
+        abort_unless($professor, 403, 'Seu usuário ainda não está vinculado a um cadastro de professor. Procure a coordenação.');
+
+        return $professor;
+    }
+
+    /** Depois de salvar, o professor volta para /docente; a coordenação, para /cadastros. */
+    private function backTo(Request $request, Professor $professor, string $page)
+    {
+        $own = $request->user()->isTeacher() && (int) $request->user()->resolveProfessor()?->id === (int) $professor->id;
+
+        return $own ? redirect()->route('teacher.' . $page) : redirect()->route('admin.professors.' . $page, $professor);
+    }
+
     public function show(Professor $professor, AvailabilityGrid $grid)
     {
         return view('admin.professors-availability', array_merge(
@@ -85,7 +113,7 @@ class ProfessorAvailabilityController extends Controller
             return response()->json(['success' => true, 'message' => 'Disponibilidade atualizada com sucesso!']);
         }
 
-        return redirect()->route('admin.professors.availability', $professor)
+        return $this->backTo($request, $professor, 'availability')
             ->with('success', 'Disponibilidade atualizada com sucesso!');
     }
 
@@ -118,7 +146,7 @@ class ProfessorAvailabilityController extends Controller
         $subjectIds = collect($validated['subject_ids'] ?? [])->unique()->all();
         $professor->subjects()->sync($subjectIds);
 
-        return redirect()->route('admin.professors.subjects', $professor)
+        return $this->backTo($request, $professor, 'subjects')
             ->with('success', 'Disciplinas atualizadas com sucesso!');
     }
 }

@@ -137,7 +137,7 @@ class ProfessorAccessTest extends TestCase
 
         $this->actingAs($teacher)
             ->put(route('admin.professors.update-subjects', $this->professor), ['subject_ids' => [$subject->id]])
-            ->assertRedirect(route('admin.professors.subjects', $this->professor));
+            ->assertRedirect(route('teacher.subjects'));
 
         $this->assertDatabaseHas('professor_subject', ['professor_id' => $this->professor->id, 'subject_id' => $subject->id]);
     }

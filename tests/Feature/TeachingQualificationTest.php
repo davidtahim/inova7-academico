@@ -138,7 +138,7 @@ class TeachingQualificationTest extends TestCase
             ->put(route('admin.professors.update-subjects', $this->professor), [
                 'subject_ids' => [$this->algoritmos->id, $this->algoritmos->id, $this->eticaEad->id],
             ])
-            ->assertRedirect(route('admin.professors.subjects', $this->professor));
+            ->assertRedirect(route('teacher.subjects'));
 
         $this->assertEqualsCanonicalizing(
             [$this->algoritmos->id, $this->eticaEad->id],

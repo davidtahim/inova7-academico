@@ -6,7 +6,10 @@
         <div>
             <h2>{{ $term?->code ?? 'Semestre não cadastrado' }}</h2>
             <p>Planejamento docente, horários e documentos de auditoria em um único fluxo.</p>
-        </div><a class="btn btn-primary" href="{{ route('planning.index') }}">Abrir planejamento</a>
+        </div>
+        @can('manage-planning')
+            <a class="btn btn-primary" href="{{ route('allocation.board') }}">Abrir grade global</a>
+        @endcan
     </section>
     <div class="row g-3 mb-4">
         @foreach ([['Cursos', $courses, 'estrutura multicurso'], ['Professores', $professors, 'cadastros ativos'], ['Ofertas', $offerings, 'no semestre selecionado'], ['Pendências', $pending, 'aguardando fechamento']] as [$label, $number, $note])

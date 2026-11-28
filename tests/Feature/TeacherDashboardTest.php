@@ -67,7 +67,7 @@ class TeacherDashboardTest extends TestCase
     public function test_teacher_lands_on_dashboard_after_login(): void
     {
         $this->post('/login', ['email' => 'david@prof.local', 'password' => 'senha1234'])
-            ->assertRedirect(route('profile'));
+            ->assertRedirect(route('teacher.dashboard'));
     }
 
     public function test_dashboard_lists_semester_classes_with_kpis_and_schedule(): void
@@ -89,12 +89,12 @@ class TeacherDashboardTest extends TestCase
 
         // Antes de publicar, o professor vê as turmas, mas o horário fica "em elaboração".
         $this->actingAs($this->teacher)->withSession(['selected_academic_term_id' => $this->term->id])
-            ->get(route('profile'))->assertSee('Em elaboração')->assertDontSee('Seg 18:30–19:20');
+            ->get(route('teacher.dashboard'))->assertSee('Em elaboração')->assertDontSee('Seg 18:30–19:20');
         $this->term->update(['schedule_published_at' => now()]);
 
         $this->actingAs($this->teacher)
             ->withSession(['selected_academic_term_id' => $this->term->id])
-            ->get(route('profile'))
+            ->get(route('teacher.dashboard'))
             ->assertOk()
             ->assertSee('Minhas turmas em 2027.1')
             ->assertSee('SI0301N')
@@ -109,7 +109,7 @@ class TeacherDashboardTest extends TestCase
     public function test_professional_data_row_and_missing_fields_are_shown(): void
     {
         $this->actingAs($this->teacher)
-            ->get(route('profile'))
+            ->get(route('teacher.dashboard'))
             ->assertOk()
             ->assertSeeInOrder(['Nome', 'Matrícula', 'Chapa', 'Formação', 'Status', 'Ações'])
             ->assertSee('UNI727720')
@@ -130,7 +130,7 @@ class TeacherDashboardTest extends TestCase
                 'lattes' => 'http://lattes.cnpq.br/123',
                 'active' => '0', // status não é editável pelo professor
             ])
-            ->assertRedirect(route('profile'))
+            ->assertRedirect(route('teacher.dashboard'))
             ->assertSessionHas('success');
 
         $this->professor->refresh();
@@ -146,14 +146,14 @@ class TeacherDashboardTest extends TestCase
         Professor::create(['name' => 'Outro', 'registration' => 'UNI000001', 'active' => true]);
 
         $this->actingAs($this->teacher)
-            ->from(route('profile'))
+            ->from(route('teacher.dashboard'))
             ->put(route('profile.professional.update'), [
                 'name' => 'David',
                 'registration' => 'UNI000001',
                 'chapa' => '',
                 'qualification' => 'Importado',
             ])
-            ->assertRedirect(route('profile'))
+            ->assertRedirect(route('teacher.dashboard'))
             ->assertSessionHasErrorsIn('professional', ['registration', 'chapa', 'qualification']);
 
         $this->assertSame('UNI727720', $this->professor->refresh()->registration);
@@ -180,7 +180,7 @@ class TeacherDashboardTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->actingAs($legacy)->get(route('profile'))->assertOk()->assertSee('UNI727720');
+        $this->actingAs($legacy)->get(route('teacher.dashboard'))->assertOk()->assertSee('UNI727720');
 
         $this->assertSame($this->professor->id, $legacy->refresh()->professor_id);
         $this->assertSame(1, Professor::count());
@@ -191,7 +191,7 @@ class TeacherDashboardTest extends TestCase
         $orphan = User::create(['name' => 'Sem vínculo', 'email' => 'semvinculo@prof.local', 'password' => 'senha1234', 'role' => 'teacher', 'is_active' => true]);
 
         $this->actingAs($orphan)
-            ->get(route('profile'))
+            ->get(route('teacher.dashboard'))
             ->assertOk()
             ->assertSee('ainda não está vinculado a um cadastro docente');
     }

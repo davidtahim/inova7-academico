@@ -4,50 +4,39 @@
      * Cada item: label, url, icon e "active" (padrões de rota que o destacam).
      */
     $user = Auth::user();
-    $isTeacher = $user->isTeacher();
-    $teacherProfessor = $isTeacher && $user->professor_id ? $user->professor : null;
+    $isTeacher = Gate::allows('teach');
+    $canPlan = Gate::allows('manage-planning');
     $canManageCatalog = Gate::allows('manage-catalog');
 
     $sections = [];
 
+    // Início: cada perfil tem o seu ponto de partida.
     $sections[] = ['label' => null, 'items' => array_values(array_filter([
         $isTeacher
-            ? ['label' => 'Meu painel docente', 'url' => route('profile'), 'icon' => 'home', 'active' => ['profile']]
-            : ['label' => 'Painel', 'url' => route('dashboard'), 'icon' => 'home', 'active' => ['dashboard']],
-        ['label' => 'Horários das turmas', 'url' => route('schedules.index'), 'icon' => 'clock', 'active' => ['schedules.*']],
-        Gate::allows('manage-planning')
-            ? ['label' => 'Montagem de horários', 'url' => route('allocation.index'), 'icon' => 'grid', 'active' => ['allocation.index', 'allocation.update', 'allocation.copy']]
-            : null,
-        Gate::allows('manage-planning')
-            ? ['label' => 'Grade global', 'url' => route('allocation.board'), 'icon' => 'layers', 'active' => ['allocation.board*']]
-            : null,
-        Gate::allows('manage-planning')
-            ? ['label' => 'Enturmação', 'url' => route('enrollment.index'), 'icon' => 'users', 'active' => ['enrollment.*']]
-            : null,
-        Gate::allows('manage-planning')
-            ? ['label' => 'Planejamento de turmas', 'url' => route('planning.index'), 'icon' => 'calendar', 'active' => ['planning.*']]
-            : null,
+            ? ['label' => 'Meu painel docente', 'url' => route('teacher.dashboard'), 'icon' => 'home', 'active' => ['teacher.dashboard']]
+            : ($user->isStudent() ? null : ['label' => 'Painel do semestre', 'url' => route('dashboard'), 'icon' => 'home', 'active' => ['dashboard']]),
+        ['label' => $user->isStudent() ? 'Meus horários' : 'Horários das turmas', 'url' => route('schedules.index'), 'icon' => 'clock', 'active' => ['schedules.*']],
     ]))];
 
     if ($isTeacher) {
         $sections[] = ['label' => 'Docência', 'items' => [
-            [
-                'label' => 'Minhas disciplinas',
-                'url' => $teacherProfessor ? route('admin.professors.subjects', $teacherProfessor) : route('profile.edit') . '#disciplinas',
-                'icon' => 'book',
-                'active' => ['admin.professors.subjects'],
-            ],
-            [
-                'label' => 'Minha disponibilidade',
-                'url' => $teacherProfessor ? route('admin.professors.availability', $teacherProfessor) : route('profile.edit') . '#disponibilidade',
-                'icon' => 'clock',
-                'active' => ['admin.professors.availability'],
-            ],
+            ['label' => 'Minhas disciplinas', 'url' => route('teacher.subjects'), 'icon' => 'book', 'active' => ['teacher.subjects']],
+            ['label' => 'Minha disponibilidade', 'url' => route('teacher.availability'), 'icon' => 'calendar', 'active' => ['teacher.availability']],
+        ]];
+    }
+
+    // Fluxo do semestre, na ordem em que a coordenação trabalha.
+    if ($canPlan) {
+        $sections[] = ['label' => 'Planejamento', 'items' => [
+            ['label' => 'Professores por turma', 'url' => route('planning.index'), 'icon' => 'teacher', 'active' => ['planning.*']],
+            ['label' => 'Grade global', 'url' => route('allocation.board'), 'icon' => 'layers', 'active' => ['allocation.board*', 'allocation.solver.*']],
+            ['label' => 'Montagem por turma', 'url' => route('allocation.index'), 'icon' => 'grid', 'active' => ['allocation.index', 'allocation.update', 'allocation.copy']],
+            ['label' => 'Enturmação', 'url' => route('enrollment.index'), 'icon' => 'users', 'active' => ['enrollment.*']],
         ]];
     }
 
     if ($canManageCatalog) {
-        $sections[] = ['label' => 'Cadastros acadêmicos', 'items' => [
+        $sections[] = ['label' => 'Cadastros', 'items' => [
             ['label' => 'Visão geral', 'url' => route('admin.planejamento.index'), 'icon' => 'grid', 'active' => ['admin.planejamento.index']],
             ['label' => 'Cursos', 'url' => route('admin.courses.index'), 'icon' => 'cap', 'active' => ['admin.courses.*']],
             ['label' => 'Matrizes curriculares', 'url' => route('admin.matrices.index'), 'icon' => 'layers', 'active' => ['admin.matrices.*', 'admin.import-scopes.*']],
@@ -110,7 +99,7 @@
 
 <aside class="sidebar" id="sidebar" aria-label="Menu principal">
     <div class="sidebar-head">
-        <a class="brand" href="{{ $isTeacher ? route('profile') : route('dashboard') }}" title="Inova7 Acadêmico — início">
+        <a class="brand" href="{{ $isTeacher ? route('teacher.dashboard') : route('dashboard') }}" title="Inova7 Acadêmico — início">
             <span class="brand-mark">7</span>
             <span class="brand-text"><strong>INOVA7</strong><small>Gestão Acadêmica</small></span>
         </a>
@@ -154,10 +143,8 @@
             <small>{{ $user->role_label }}</small>
         </span>
         <span class="sidebar-user-actions">
-            @unless ($isTeacher)
-                <a href="{{ route('profile') }}" class="sidebar-icon-btn {{ request()->routeIs('profile', 'profile.edit') ? 'is-active' : '' }}"
-                    title="Meu perfil" aria-label="Meu perfil">{!! $icon('user') !!}</a>
-            @endunless
+            <a href="{{ $isTeacher ? route('profile.edit') : route('profile') }}" class="sidebar-icon-btn {{ request()->routeIs('profile', 'profile.edit') ? 'is-active' : '' }}"
+                title="Meu perfil e senha" aria-label="Meu perfil e senha">{!! $icon('user') !!}</a>
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit" class="sidebar-icon-btn" title="Sair" aria-label="Sair">{!! $icon('logout') !!}</button>

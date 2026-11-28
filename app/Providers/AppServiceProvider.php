@@ -20,5 +20,6 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('manage-planning', fn (User $user) => $user->canManagePlanning());
         Gate::define('access-imports', fn (User $user) => $user->canAccessImports());
         Gate::define('access-audit', fn (User $user) => $user->canAccessAudit());
+        Gate::define('teach', fn (User $user) => $user->isTeacher());
     }
 }

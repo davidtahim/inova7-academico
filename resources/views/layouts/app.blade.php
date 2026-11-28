@@ -23,7 +23,27 @@
                         aria-expanded="false" aria-label="Abrir menu">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" /></svg>
                     </button>
-                    <div class="topbar-title"><small class="text-uppercase text-secondary">Inova7 Acadêmico</small>
+                    @php
+                        // Trilha da área atual (primeiro segmento da URL), com link para o início da área.
+                        $areas = [
+                            'docente' => ['Área docente', 'teacher.dashboard'],
+                            'planejamento' => ['Planejamento', 'allocation.board'],
+                            'cadastros' => ['Cadastros acadêmicos', Gate::allows('manage-catalog') ? 'admin.planejamento.index' : 'admin.professors.index'],
+                            'consultas' => ['Consultas', 'catalog.courses'],
+                            'importacoes' => ['Importações', 'imports.ubiqua.index'],
+                            'sistema' => ['Sistema', Gate::allows('manage-users') ? 'admin.users.index' : 'audit.index'],
+                            'horarios' => ['Horários', 'schedules.index'],
+                            'perfil' => ['Meu perfil', 'profile'],
+                        ];
+                        // Em páginas de erro a área pode estar fora do perfil: não oferecer o link.
+                        $area = isset($exception) ? ['Inova7 Acadêmico', null] : ($areas[request()->segment(1)] ?? ['Inova7 Acadêmico', null]);
+                    @endphp
+                    <div class="topbar-title">
+                        @if ($area[1] && Route::has($area[1]))
+                            <a href="{{ route($area[1]) }}" class="text-uppercase text-secondary small text-decoration-none topbar-area">{{ $area[0] }}</a>
+                        @else
+                            <small class="text-uppercase text-secondary">{{ $area[0] }}</small>
+                        @endif
                         <h1>@yield('page-title', 'Painel')</h1>
                     </div>
                     <div class="topbar-actions">

@@ -74,7 +74,7 @@ class RbacTest extends TestCase
         }
     }
 
-    public function test_coordinator_lands_on_catalog_admin_after_login(): void
+    public function test_coordinator_lands_on_semester_dashboard_after_login(): void
     {
         User::create([
             'name' => 'Coordenação SI',
@@ -85,7 +85,7 @@ class RbacTest extends TestCase
         ]);
 
         $this->post('/login', ['email' => 'coord@inova7.local', 'password' => 'senha1234'])
-            ->assertRedirect(route('admin.planejamento.index'));
+            ->assertRedirect(route('dashboard'));
 
         $this->get(route('admin.planejamento.index'))->assertOk()->assertDontSee(route('admin.users.index'));
         $this->get(route('admin.matrices.index'))->assertOk();
