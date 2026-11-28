@@ -1,5 +1,7 @@
 # Históricos escolares → CSV de enturmação
 
+> **Mais simples:** em **Planejamento › Enturmação › Importar históricos escolares (PDF)**, envie os PDFs direto, sem CSV. O roteiro abaixo fica como alternativa (linha de comando).
+
 Converte os PDFs de histórico (UNI7) num CSV com **apenas** o necessário para a enturmação:
 matrícula, nome, currículo, turno e a situação de cada disciplina. CPF, RG e data de
 nascimento **não** são lidos. Não versione os PDFs nem o CSV gerado (dados pessoais).
