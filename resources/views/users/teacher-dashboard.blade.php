@@ -48,7 +48,10 @@
         @else
             {{-- Checklist de prontidão para o semestre --}}
             <section class="mb-4" aria-labelledby="checklist-title">
-                <h3 id="checklist-title" class="h6 text-uppercase text-secondary mb-3">Prepare-se para {{ $term->code ?? 'o semestre' }}</h3>
+                <div class="d-flex flex-wrap align-items-baseline gap-2 mb-3">
+                    <h3 id="checklist-title" class="h6 text-uppercase text-secondary mb-0 me-auto">Prepare-se para {{ $term->code ?? 'o semestre' }}</h3>
+                    <a href="{{ asset('docs/tutorial-disponibilidade-professor.pdf') }}" class="small" target="_blank" rel="noopener" download>Dúvidas? Baixe o tutorial (PDF)</a>
+                </div>
                 <ol class="row g-3 list-unstyled mb-0">
                     @php
                         $steps = [

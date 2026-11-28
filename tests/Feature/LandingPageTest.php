@@ -42,4 +42,16 @@ class LandingPageTest extends TestCase
     {
         $this->get('/horarios')->assertRedirect(route('login'));
     }
+
+    public function test_teacher_tutorial_pdf_is_published_and_linked(): void
+    {
+        $this->assertFileExists(public_path('docs/tutorial-disponibilidade-professor.pdf'));
+
+        $professor = \App\Models\Professor::create(['name' => 'Prof', 'active' => true]);
+        $teacher = User::create(['name' => 'Prof', 'email' => 'p@prof.local', 'password' => 'senha1234', 'role' => 'teacher', 'is_active' => true, 'professor_id' => $professor->id]);
+        \App\Models\AcademicTerm::create(['code' => '2027.1', 'status' => 'planning']);
+
+        $this->actingAs($teacher)->get(route('teacher.availability'))->assertOk()->assertSee('docs/tutorial-disponibilidade-professor.pdf', false)->assertSee('Tutorial (PDF)');
+        $this->actingAs($teacher)->get(route('teacher.dashboard'))->assertOk()->assertSee('Baixe o tutorial (PDF)');
+    }
 }
