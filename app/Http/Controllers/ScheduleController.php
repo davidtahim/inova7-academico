@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ClassOffering;
 use App\Models\Course;
+use App\Services\AllocationModal;
 use App\Services\AvailabilityGrid;
 use App\Services\EnrollmentPlanner;
 use App\Services\TimeBlocks;
@@ -15,7 +16,7 @@ use Illuminate\Http\Request;
  */
 class ScheduleController extends Controller
 {
-    public function index(Request $request, EnrollmentPlanner $planner)
+    public function index(Request $request, EnrollmentPlanner $planner, AllocationModal $modal)
     {
         $term = AvailabilityGrid::selectedTerm();
         $user = $request->user();
@@ -30,7 +31,7 @@ class ScheduleController extends Controller
         $courseId = $request->integer('course') ?: $courses->first()?->id;
 
         $offerings = $term && $courseId
-            ? ClassOffering::with(['subject', 'slots', 'assignments.professor'])
+            ? ClassOffering::with(['subject', 'slots', 'assignments.professor', 'matrixDiscipline'])
                 ->where('academic_term_id', $term->id)
                 ->where('course_id', $courseId)
                 ->where('occurs', true)
@@ -46,6 +47,10 @@ class ScheduleController extends Controller
         $selected = $offerings->where('class_code', $classCode)->sortBy(fn ($o) => $o->subject->name)->values();
         $shift = $selected->first()?->shift ?? 'NOITE';
 
+        // Coordenação/admin editam a disciplina num modal (mesmo da Montagem), se o semestre não está concluído.
+        $editable = $canPreview && $term && ! $term->isClosed() && $selected->isNotEmpty();
+        $allocContext = $editable ? $modal->context($term) : null;
+
         return view('schedules.index', [
             'term' => $term,
             'courses' => $courses,
@@ -60,6 +65,9 @@ class ScheduleController extends Controller
             'entries' => $this->entries($selected),
             'letters' => TimeBlocks::forShift($shift),
             'weekdays' => TimeBlocks::SHORT_WEEKDAYS,
+            'editable' => $editable,
+            'allocContext' => $allocContext,
+            'allocModal' => $editable ? $modal->forOfferings($selected, $allocContext) : [],
             'isDraft' => $term && ! $term->isSchedulePublished(),
             'myOfferings' => $myOfferings->sortBy(fn ($o) => $o->subject->name)->values(),
             'myGrids' => $myOfferings->groupBy('shift')->map(fn ($group, $shift) => [

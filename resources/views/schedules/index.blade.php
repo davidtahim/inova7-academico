@@ -67,16 +67,26 @@
             </div>
         </form>
 
+        @php $feedback = session('allocation'); @endphp
+        @if ($feedback['saved'] ?? false)
+            <div class="alert alert-success">✓ Alocação salva.
+                @foreach ($feedback['warnings'] ?? [] as $warning)<span class="d-block text-warning-emphasis">⚠ {{ $warning }}</span>@endforeach
+            </div>
+        @endif
+
         @if ($offerings->isEmpty())
             <div class="alert alert-secondary">Nenhuma turma ofertada para este curso no semestre selecionado.</div>
         @else
             <section class="card border-0 shadow-sm mb-3" aria-label="Grade semanal da turma {{ $classCode }}">
                 <div class="card-header bg-white border-0 d-flex flex-wrap gap-2 justify-content-between align-items-center">
                     <strong>Turma {{ $classCode }} · {{ $shift }}</strong>
-                    <small class="text-muted">Aulas de 50 minutos</small>
+                    <small class="text-muted">
+                        @if ($editable)Clique numa aula ou disciplina para editar · @endif
+                        Aulas de 50 minutos
+                    </small>
                 </div>
                 <div class="card-body pt-0">
-                    @include('partials.weekly-grid')
+                    @include('partials.weekly-grid', ['editable' => $editable])
                 </div>
             </section>
 
@@ -84,13 +94,14 @@
                 <div class="card-header bg-white border-0"><strong>Disciplinas da turma</strong></div>
                 <div class="table-responsive">
                     <table class="table align-middle mb-0">
-                        <thead><tr><th>Disciplina</th><th>Professor</th><th>Dias e horários</th><th>Sala</th></tr></thead>
+                        <thead><tr><th>Disciplina</th><th>Professor</th><th>Dias e horários</th><th>Sala</th>@if ($editable)<th class="text-end"><span class="visually-hidden">Ações</span></th>@endif</tr></thead>
                         <tbody>
                             @foreach ($offerings as $offering)
                                 @php
                                     $slots = $offering->slots->sortBy(fn ($s) => [$s->weekday, $s->starts_at]);
                                 @endphp
-                                <tr>
+                                @php $feedback = session('allocation'); $mine = ($feedback['id'] ?? null) === $offering->id; @endphp
+                                <tr id="oferta-{{ $offering->id }}" class="{{ $mine ? (($feedback['saved'] ?? false) ? 'table-success' : 'table-danger') : '' }}">
                                     <td><strong>{{ $offering->subject->name }}</strong><br><small class="text-muted">{{ $offering->subject->code }}</small></td>
                                     <td>{{ $offering->assignments->first()?->professor?->name ?? 'A definir' }}</td>
                                     <td class="small">
@@ -101,6 +112,9 @@
                                         @endforelse
                                     </td>
                                     <td>{{ $slots->pluck('room')->filter()->unique()->implode(', ') ?: '—' }}</td>
+                                    @if ($editable)
+                                        <td class="text-end"><button type="button" class="btn btn-sm btn-outline-primary" data-edit="{{ $offering->id }}" aria-haspopup="dialog">Editar<span class="visually-hidden"> {{ $offering->subject->name }}</span></button></td>
+                                    @endif
                                 </tr>
                             @endforeach
                         </tbody>
@@ -109,4 +123,8 @@
             </section>
         @endif
     </div>
+
+    @if ($editable)
+        @include('partials.allocation-modal', ['allocModal' => $allocModal, 'allocContext' => $allocContext])
+    @endif
 @endsection

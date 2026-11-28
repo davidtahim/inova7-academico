@@ -317,4 +317,39 @@ class ScheduleAllocationTest extends TestCase
         $this->actingAs($coordinator)->withSession(['allocation' => ['id' => $second->id, 'errors' => ['A turma já tem Lógica']]])
             ->get(route('allocation.index'))->assertSee('"open":true', false);
     }
+
+    public function test_schedule_page_opens_the_same_edit_modal_for_coordination(): void
+    {
+        $first = $this->offering('CSE0280101NNA', 'Lógica de Programação');
+        $coordinator = User::create(['name' => 'Coord', 'email' => 'c3@x.local', 'password' => 'senha1234', 'role' => 'coordinator', 'is_active' => true]);
+        $this->allocator->apply($first, ['placements' => [2 => ['A', 'B']], 'professor_id' => $this->ana->id, 'room' => 'Sala 40']);
+        $url = route('schedules.index', ['course' => $this->course->id, 'turma' => 'CSE0280101NNA']);
+
+        $this->actingAs($coordinator)->get($url)->assertOk()
+            ->assertSee('allocModal', false)
+            ->assertSee('weekly-grid-edit', false)
+            ->assertSee('data-edit="' . $first->id . '"', false)
+            ->assertSee('Clique numa aula ou disciplina para editar');
+
+        // Salvar pelo modal volta para a mesma turma em Horários.
+        $this->actingAs($coordinator)->from($url)
+            ->put(route('allocation.update', $first), ['per_day' => 1, 'professor_id' => $this->bruno->id, 'room' => 'Sala 40', 'placements' => ['4' => ['C', 'D']]])
+            ->assertRedirect($url . '#oferta-' . $first->id);
+        $this->assertSame([4 => ['C', 'D']], $this->allocator->currentInput($first->fresh(['slots', 'assignments']))['placements']);
+
+        // Semestre concluído: só consulta, sem modal.
+        $this->term->update(['status' => 'closed']);
+        $this->actingAs($coordinator)->get($url)->assertOk()->assertDontSee('allocModal', false)->assertDontSee('data-edit=', false);
+    }
+
+    public function test_students_do_not_get_the_edit_modal(): void
+    {
+        $first = $this->offering('CSE0280101NNA', 'Lógica de Programação');
+        $this->allocator->apply($first, ['placements' => [2 => ['A', 'B']], 'room' => 'Sala 40']);
+        $this->term->update(['schedule_published_at' => now()]);
+        $student = User::create(['name' => 'Aluno', 'email' => 'a@x.local', 'password' => 'senha1234', 'role' => 'student', 'is_active' => true]);
+
+        $this->actingAs($student)->get(route('schedules.index', ['course' => $this->course->id]))->assertOk()
+            ->assertSee('Lógica de Programação')->assertDontSee('allocModal', false)->assertDontSee('data-edit=', false);
+    }
 }

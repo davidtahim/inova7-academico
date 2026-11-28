@@ -5,8 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AcademicTerm;
 use App\Models\ClassOffering;
 use App\Models\Course;
-use App\Models\Professor;
-use App\Models\Room;
+use App\Services\AllocationModal;
 use App\Services\AvailabilityGrid;
 use App\Services\ConflictDetector;
 use App\Services\ScheduleAllocator;
@@ -20,7 +19,7 @@ use Illuminate\Validation\Rule;
  */
 class AllocationController extends Controller
 {
-    public function index(Request $request, ScheduleAllocator $allocator, ConflictDetector $detector)
+    public function index(Request $request, ConflictDetector $detector, AllocationModal $modal)
     {
         $term = AvailabilityGrid::selectedTerm();
         $courses = Course::where('active', true)->orderBy('name')->get();
@@ -43,26 +42,7 @@ class AllocationController extends Controller
             ? ClassOffering::where('academic_term_id', $term->id)->when($courseId, fn ($q) => $q->where('course_id', $courseId))->distinct()->orderBy('period')->pluck('period')
             : collect();
 
-        $qualified = Professor::with('subjects:id')->get()->mapWithKeys(fn ($p) => [$p->id => $p->subjects->pluck('id')->all()]);
-
-        // Para a mini grade do modal: onde cada professor já dá aula no semestre ("dia|HH:MM")
-        // e a grade de disponibilidade dele (preferred | available | unavailable).
-        $busy = [];
-        if ($term) {
-            $allSlots = \App\Models\ScheduleSlot::with('offering.subject')->whereNotNull('professor_id')
-                ->whereHas('offering', fn ($q) => $q->where('academic_term_id', $term->id))->get();
-            foreach ($allSlots as $slot) {
-                $o = $slot->offering;
-                foreach (str_split(TimeBlocks::lettersFor($slot->starts_at, $slot->ends_at, $o->shift) ?: '') as $letter) {
-                    $start = TimeBlocks::forShift($o->shift)[$letter]['start'] ?? null;
-                    if ($start) {
-                        $busy[$slot->professor_id][$slot->weekday . '|' . $start][] = ['offering' => $o->id, 'label' => ($o->subject?->short_label ?? '') . ' · ' . $o->class_code];
-                    }
-                }
-            }
-        }
-        $availability = $term ? \App\Models\ProfessorAvailability::where('academic_term_id', $term->id)->get()
-            ->groupBy('professor_id')->map(fn ($rows) => $rows->mapWithKeys(fn ($a) => [$a->weekday . '|' . substr((string) $a->starts_at, 0, 5) => $a->preference]))->all() : [];
+        $context = $modal->context($term);
 
         return view('allocation.index', [
             'term' => $term,
@@ -70,16 +50,12 @@ class AllocationController extends Controller
             'courseId' => $courseId,
             'periods' => $periods,
             'classes' => $classes,
-            'inputs' => $offerings->mapWithKeys(fn ($o) => [$o->id => $allocator->currentInput($o)]),
-            'professors' => Professor::where('active', true)->orderBy('name')->get(),
-            'qualified' => $qualified,
-            'rooms' => Room::where('active', true)->orderBy('code')->get(),
             'weekdays' => TimeBlocks::SHORT_WEEKDAYS,
             'conflicts' => $term ? $detector->forTerm($term->id) : collect(),
             'sourceTerms' => $term ? AcademicTerm::whereKeyNot($term->id)->whereHas('offerings.slots')->orderByDesc('code')->get() : collect(),
-            'directedStudyMax' => ScheduleAllocator::DIRECTED_STUDY_MAX_STUDENTS,
-            'professorBusy' => $busy,
-            'professorAvailability' => $availability,
+            // Modal de edição (compartilhado com Horários das turmas).
+            'allocContext' => $context,
+            'allocModal' => $modal->forOfferings($offerings, $context),
         ]);
     }
 
