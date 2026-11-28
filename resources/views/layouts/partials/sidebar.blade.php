@@ -19,6 +19,9 @@
             ? ['label' => 'Montagem de horários', 'url' => route('allocation.index'), 'icon' => 'grid', 'active' => ['allocation.*']]
             : null,
         Gate::allows('manage-planning')
+            ? ['label' => 'Enturmação', 'url' => route('enrollment.index'), 'icon' => 'users', 'active' => ['enrollment.*']]
+            : null,
+        Gate::allows('manage-planning')
             ? ['label' => 'Planejamento de turmas', 'url' => route('planning.index'), 'icon' => 'calendar', 'active' => ['planning.*']]
             : null,
     ]))];

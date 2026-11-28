@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ClassOffering;
 use App\Models\Course;
 use App\Services\AvailabilityGrid;
+use App\Services\EnrollmentPlanner;
 use App\Services\TimeBlocks;
 use Illuminate\Http\Request;
 
@@ -14,9 +15,11 @@ use Illuminate\Http\Request;
  */
 class ScheduleController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, EnrollmentPlanner $planner)
     {
         $term = AvailabilityGrid::selectedTerm();
+        $user = $request->user();
+        $myOfferings = $term && $user->isStudent() ? $planner->enrolledOfferings($user, $term) : collect();
         $courses = Course::where('active', true)
             ->when($term, fn ($q) => $q->whereHas('offerings', fn ($o) => $o->where('academic_term_id', $term->id)))
             ->orderBy('name')->get();
@@ -53,6 +56,11 @@ class ScheduleController extends Controller
             'entries' => $this->entries($selected),
             'letters' => TimeBlocks::forShift($shift),
             'weekdays' => TimeBlocks::SHORT_WEEKDAYS,
+            'myOfferings' => $myOfferings->sortBy(fn ($o) => $o->subject->name)->values(),
+            'myGrids' => $myOfferings->groupBy('shift')->map(fn ($group, $shift) => [
+                'letters' => TimeBlocks::forShift($shift),
+                'entries' => self::entries($group),
+            ]),
         ]);
     }
 

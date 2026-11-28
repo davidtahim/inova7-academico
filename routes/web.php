@@ -28,6 +28,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/horarios', [\App\Http\Controllers\ScheduleController::class, 'index'])->name('schedules.index');
 
     // Montagem de horários (coordenação): professor, dia, blocos e sala com validação de choques.
+    // Enturmação de alunos de matrizes antigas (históricos importados).
+    Route::middleware('can:manage-planning')->prefix('enturmacao')->name('enrollment.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\EnrollmentController::class, 'index'])->name('index');
+        Route::post('/gerar', [\App\Http\Controllers\EnrollmentController::class, 'plan'])->name('plan');
+        Route::post('/abrir-turma', [\App\Http\Controllers\EnrollmentController::class, 'openClass'])->name('open-class');
+    });
+
     Route::middleware('can:manage-planning')->prefix('alocacao')->name('allocation.')->group(function () {
         Route::get('/', [\App\Http\Controllers\AllocationController::class, 'index'])->name('index');
         Route::post('/copiar', [\App\Http\Controllers\AllocationController::class, 'copy'])->name('copy');

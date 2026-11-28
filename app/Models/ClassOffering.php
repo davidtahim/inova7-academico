@@ -9,6 +9,7 @@ class ClassOffering extends Model {
     public function subject(){ return $this->belongsTo(Subject::class); }
     public function slots(){ return $this->hasMany(ScheduleSlot::class); }
     public function assignments(){ return $this->hasMany(TeachingAssignment::class); }
+    public function enrollments(){ return $this->hasMany(ClassEnrollment::class); }
     
     /**
      * Obter o vínculo de matriz-disciplina que originou esta oferta.

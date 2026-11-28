@@ -20,6 +20,8 @@ class User extends Authenticatable
         'is_active',
         'must_change_password',
         'professor_id',
+        'curriculum_matrix_id',
+        'shift',
     ];
 
     protected $hidden = [
@@ -147,6 +149,21 @@ class User extends Authenticatable
     public function professor()
     {
         return $this->belongsTo(Professor::class);
+    }
+
+    public function curriculumMatrix()
+    {
+        return $this->belongsTo(CurriculumMatrix::class);
+    }
+
+    public function subjectStatuses()
+    {
+        return $this->hasMany(StudentSubjectStatus::class);
+    }
+
+    public function enrollments()
+    {
+        return $this->hasMany(ClassEnrollment::class);
     }
 
     /**

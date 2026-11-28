@@ -11,6 +11,32 @@
             </div>
         </div>
 
+        @if ($myOfferings->isNotEmpty())
+            <section class="card border-0 shadow-sm mb-4 border-start border-4 border-primary" aria-labelledby="meu-horario">
+                <div class="card-header bg-white border-0">
+                    <h3 id="meu-horario" class="h5 mb-0">Meu horário — {{ $term->code }}</h3>
+                    <small class="text-muted">Turmas em que você foi enturmado ({{ $myOfferings->count() }} disciplinas).</small>
+                </div>
+                <div class="card-body pt-0">
+                    @foreach ($myGrids as $gridShift => $grid)
+                        @if ($myGrids->count() > 1)<div class="fw-semibold small text-uppercase text-muted mt-2 mb-1">{{ $gridShift }}</div>@endif
+                        @include('partials.weekly-grid', ['letters' => $grid['letters'], 'entries' => $grid['entries']])
+                    @endforeach
+                    <ul class="small mt-3 mb-0">
+                        @foreach ($myOfferings as $mine)
+                            <li>
+                                <strong>{{ $mine->subject->name }}</strong> · turma <code>{{ $mine->class_code }}</code>
+                                · {{ $mine->assignments->first()?->professor?->name ?? 'professor a definir' }}
+                                @if ($mine->slots->isEmpty()) · <span class="text-muted">horário a definir</span>@endif
+                                @if ($mine->directed_study) <span class="badge bg-info-subtle text-info-emphasis">Estudo dirigido</span>@endif
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            </section>
+            <h3 class="h6 text-uppercase text-muted">Horários por turma</h3>
+        @endif
+
         <form method="GET" class="card border-0 shadow-sm mb-3">
             <div class="card-body row g-2 align-items-end">
                 <div class="col-md-5">
