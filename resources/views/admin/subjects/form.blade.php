@@ -80,6 +80,14 @@
                                     value="{{ old('extension_hours', $subject->extension_hours ?? 0) }}">
                             </div>
 
+                            {{-- Art. 8º III: carga prática > 0 = disciplina usa laboratório de informática. --}}
+                            <div class="mb-4">
+                                <label class="form-label" for="required_software">Softwares necessários no laboratório</label>
+                                <textarea id="required_software" name="required_software" rows="2" class="form-control"
+                                    placeholder="Ex.: VS Code, Python, MySQL Workbench">{{ old('required_software', $subject->required_software ?? '') }}</textarea>
+                                <div class="form-text">Com carga <strong>prática</strong> maior que zero, a disciplina só é alocada em laboratório de informática que tenha estes softwares (separe por vírgula). Sem carga prática, ela não usa laboratório na grade regular.</div>
+                            </div>
+
                             <div class="d-flex justify-content-end gap-2">
                                 <a href="{{ route('admin.subjects.index', array_filter(['matriz' => request('matriz')])) }}"
                                     class="btn btn-outline-secondary">Cancelar</a>

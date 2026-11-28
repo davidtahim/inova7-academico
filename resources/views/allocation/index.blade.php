@@ -203,14 +203,30 @@
                             </div>
                             <div>
                                 <label class="visually-hidden" for="r-{{ $offering->id }}">Sala</label>
-                                <select id="r-{{ $offering->id }}" name="room" class="form-select form-select-sm">
-                                    <option value="">— Sala —</option>
-                                    @foreach ($rooms->sortBy(fn ($r) => [$link?->required_room_type && $r->type !== $link->required_room_type ? 1 : 0, $r->code]) as $roomOption)
+                                @php
+                                    // Art. 8º III: prática → só laboratórios aptos (capacidade e softwares); teórica → sem laboratórios.
+                                    $practical = \App\Services\LabRules::offeringRequiresLab($offering);
+                                    $eligible = \App\Services\LabRules::eligibleRooms($offering, $rooms);
+                                    $currentRoom = $room ? $rooms->firstWhere('code', $room) : null;
+                                @endphp
+                                <select id="r-{{ $offering->id }}" name="room" class="form-select form-select-sm"
+                                    title="{{ $practical ? 'Disciplina prática: só laboratórios de informática aptos' : 'Disciplina teórica: salas comuns' }}">
+                                    <option value="">{{ $practical ? '— Laboratório —' : '— Sala —' }}</option>
+                                    @foreach ($eligible as $roomOption)
                                         <option value="{{ $roomOption->code }}" @selected($room === $roomOption->code)>
-                                            {{ $roomOption->code }}{{ $roomOption->type === 'LABORATORIO_INFORMATICA' ? ' (lab)' : '' }}
+                                            {{ $roomOption->code }}{{ $roomOption->isComputerLab() ? ' · ' . ($roomOption->computers ? $roomOption->computers . ' PCs' : 'lab') : '' }}
                                         </option>
                                     @endforeach
+                                    @if ($currentRoom && ! $eligible->contains('id', $currentRoom->id))
+                                        <option value="{{ $currentRoom->code }}" selected>{{ $currentRoom->code }} (não permitida: troque)</option>
+                                    @endif
                                 </select>
+                                @if ($practical)
+                                    <span class="badge bg-warning-subtle text-warning-emphasis mt-1">Prática: laboratório</span>
+                                    @if ($eligible->isEmpty())
+                                        <div class="small text-danger mt-1">Nenhum laboratório apto (computadores ou softwares).</div>
+                                    @endif
+                                @endif
                             </div>
                             <div class="text-end">
                                 <button type="submit" class="btn btn-primary btn-sm">Salvar</button>

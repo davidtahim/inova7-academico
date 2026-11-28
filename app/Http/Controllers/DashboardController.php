@@ -18,6 +18,9 @@ class DashboardController extends Controller
         if ($user->isTeacher()) {
             return redirect()->route('teacher.dashboard');
         }
+        if ($user->isLabManager()) {
+            return redirect()->route('labs.index', ['area' => $user->lab_area]);
+        }
         if ($user->role === 'student') {
             return redirect()->route('schedules.index');
         }

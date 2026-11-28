@@ -38,14 +38,7 @@ class CurriculumMatrixDisciplineController extends Controller
                 'ELETIVA' => 'Eletiva',
                 'INTEGRADORA' => 'Integradora',
             ],
-            'roomTypes' => [
-                'SALA_COMUM' => 'Sala Comum',
-                'LABORATORIO_INFORMATICA' => 'Laboratório de Informática',
-                'LABORATORIO_ENGENHARIA' => 'Laboratório de Engenharia',
-                'SALA_PRATICA' => 'Sala de Prática',
-                'ESTUDIO_PRODUCAO' => 'Estúdio de Produção',
-                'LABORATORIO_CIENCIAS' => 'Laboratório de Ciências',
-            ],
+            'roomTypes' => \App\Models\Room::TYPES,
         ];
     }
 
@@ -85,14 +78,7 @@ class CurriculumMatrixDisciplineController extends Controller
             'allows_shared_class' => ['nullable', 'boolean'],
             'required_room_type' => [
                 'nullable',
-                Rule::in([
-                    'SALA_COMUM',
-                    'LABORATORIO_INFORMATICA',
-                    'LABORATORIO_ENGENHARIA',
-                    'SALA_PRATICA',
-                    'ESTUDIO_PRODUCAO',
-                    'LABORATORIO_CIENCIAS',
-                ]),
+                Rule::in(array_keys(\App\Models\Room::TYPES)),
             ],
             'max_consecutive_classes' => ['nullable', 'integer', 'min:1', 'max:6'],
         ]);
@@ -106,6 +92,11 @@ class CurriculumMatrixDisciplineController extends Controller
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Esta disciplina já está vinculada neste período da matriz.');
+        }
+
+        // Art. 8º III: sem tipo de sala informado, disciplina com carga prática exige laboratório.
+        if (empty($validated['required_room_type']) && (int) Subject::whereKey($validated['subject_id'])->value('practice_hours') > 0) {
+            $validated['required_room_type'] = 'LABORATORIO_INFORMATICA';
         }
 
         $link = CurriculumMatrixDiscipline::create([
@@ -141,14 +132,7 @@ class CurriculumMatrixDisciplineController extends Controller
             'allows_shared_class' => ['nullable', 'boolean'],
             'required_room_type' => [
                 'nullable',
-                Rule::in([
-                    'SALA_COMUM',
-                    'LABORATORIO_INFORMATICA',
-                    'LABORATORIO_ENGENHARIA',
-                    'SALA_PRATICA',
-                    'ESTUDIO_PRODUCAO',
-                    'LABORATORIO_CIENCIAS',
-                ]),
+                Rule::in(array_keys(\App\Models\Room::TYPES)),
             ],
             'max_consecutive_classes' => ['nullable', 'integer', 'min:1', 'max:6'],
         ]);

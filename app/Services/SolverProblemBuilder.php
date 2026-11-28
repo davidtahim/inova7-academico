@@ -22,7 +22,7 @@ class SolverProblemBuilder
 
     public function build(AcademicTerm $term): array
     {
-        $all = ClassOffering::with(['subject', 'slots', 'assignments', 'matrixDiscipline'])
+        $all = ClassOffering::with(['subject', 'slots', 'assignments', 'matrixDiscipline', 'term'])
             ->where('academic_term_id', $term->id)->where('occurs', true)->get();
         $isVariable = fn (ClassOffering $o) => ! $o->isDistance() && $o->classesToSchedule() > 0;
         $offerings = $all->filter($isVariable)->values();
@@ -55,7 +55,8 @@ class SolverProblemBuilder
                 'candidates' => array_values($candidates),
                 'fixedProfessor' => $assignment && $assignment->status === 'confirmed' ? $assignment->professor_id : null,
                 'professor' => $assignment?->professor_id,
-                'rooms' => $rooms->filter(fn ($r) => ! $required || $r->type === $required)->pluck('code')->values()->all(),
+                // Art. 8º III: prática só em laboratório apto; teórica fora dos laboratórios de informática.
+                'rooms' => LabRules::eligibleRooms($o, $rooms)->pluck('code')->values()->all(),
                 'room' => $current['room'],
                 'placements' => $current['placements'],
                 'frozen' => false,

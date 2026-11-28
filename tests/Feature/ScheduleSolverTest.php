@@ -89,9 +89,9 @@ class ScheduleSolverTest extends TestCase
 
         $response = $this->actingAs($this->coordinator)->postJson(route('allocation.solver.apply'), ['solution' => [
             ['id' => $lp->id, 'professor_id' => $this->ana->id, 'room' => 'Sala 40', 'placements' => ['1' => ['A', 'B']]],
-            ['id' => $ma->id, 'professor_id' => $this->bruno->id, 'room' => 'Li41', 'placements' => ['2' => ['A', 'B']]],
+            ['id' => $ma->id, 'professor_id' => $this->bruno->id, 'room' => 'Sala 40', 'placements' => ['2' => ['A', 'B']]],
             // Ana em duas turmas ao mesmo tempo: o servidor recusa.
-            ['id' => $bd->id, 'professor_id' => $this->ana->id, 'room' => 'Li41', 'placements' => ['1' => ['A', 'B']]],
+            ['id' => $bd->id, 'professor_id' => $this->ana->id, 'room' => 'Sala 40', 'placements' => ['1' => ['A', 'B']]],
         ]])->assertOk()->json();
 
         $this->assertSame(2, $response['saved']);

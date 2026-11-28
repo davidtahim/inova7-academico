@@ -31,6 +31,7 @@
                             'cadastros' => ['Cadastros acadêmicos', Gate::allows('manage-catalog') ? 'admin.planejamento.index' : 'admin.professors.index'],
                             'consultas' => ['Consultas', 'catalog.courses'],
                             'importacoes' => ['Importações', 'imports.ubiqua.index'],
+                            'laboratorios' => ['Laboratórios', 'labs.index'],
                             'sistema' => ['Sistema', Gate::allows('manage-users') ? 'admin.users.index' : 'audit.index'],
                             'horarios' => ['Horários', 'schedules.index'],
                             'perfil' => ['Meu perfil', 'profile'],

@@ -86,6 +86,28 @@
                                 <small class="text-muted">O perfil define as permissões no sistema</small>
                             </div>
 
+                            {{-- Gestor de laboratórios: área administrada --}}
+                            <div class="mb-3" id="lab-area-field">
+                                <label for="lab_area" class="form-label fw-500">Área dos laboratórios *</label>
+                                <select class="form-select @error('lab_area') is-invalid @enderror" id="lab_area" name="lab_area">
+                                    <option value="">— Selecione a área —</option>
+                                    @foreach (\App\Support\LabAreas::options() as $areaKey => $areaLabel)
+                                        <option value="{{ $areaKey }}" @selected(old('lab_area', $user->lab_area ?? null) === $areaKey)>{{ $areaLabel }}</option>
+                                    @endforeach
+                                </select>
+                                @error('lab_area')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <small class="text-muted">O gestor aprova as reservas e mantém o cadastro dos laboratórios desta área.</small>
+                            </div>
+                            <script>
+                                (function () {
+                                    const role = document.getElementById('role'), field = document.getElementById('lab-area-field');
+                                    const toggle = () => { const on = role.value === 'lab_manager'; field.hidden = !on; document.getElementById('lab_area').required = on; };
+                                    role.addEventListener('change', toggle); toggle();
+                                })();
+                            </script>
+
                             <!-- Senha -->
                             <div class="mb-3">
                                 <label for="password" class="form-label fw-500">Senha Temporária *</label>

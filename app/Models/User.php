@@ -16,6 +16,7 @@ class User extends Authenticatable
         'password',
         'registration_number',
         'role',
+        'lab_area',
         'photo_path',
         'is_active',
         'must_change_password',
@@ -44,13 +45,27 @@ class User extends Authenticatable
             'teacher' => 'Professor',
             'coordinator' => 'Coordenador',
             'staff' => 'Funcionário (Secretaria/CRA)',
+            'lab_manager' => 'Gestor de laboratórios',
             'admin' => 'Administrador de TI',
         ];
     }
 
+    public function isLabManager(): bool
+    {
+        return $this->role === 'lab_manager';
+    }
+
+    /** Pode administrar (aprovar, cadastrar) os laboratórios desta área? Admin TI: todas. */
+    public function managesLabArea(?string $area): bool
+    {
+        return $this->isAdminTi() || ($this->isLabManager() && $area !== null && $this->lab_area === $area);
+    }
+
     public function getRoleLabelAttribute(): string
     {
-        return self::roleOptions()[$this->role] ?? ucfirst(str_replace('_', ' ', $this->role));
+        $label = self::roleOptions()[$this->role] ?? ucfirst(str_replace('_', ' ', $this->role));
+
+        return $this->isLabManager() && $this->lab_area ? $label . ' — ' . \App\Support\LabAreas::label($this->lab_area) : $label;
     }
 
     // Métodos de verificação de permissão (RBAC)

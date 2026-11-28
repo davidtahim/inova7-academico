@@ -13,13 +13,38 @@ class Room extends Model
         'SALA_PRATICA' => 'Sala de prática',
         'ESTUDIO_PRODUCAO' => 'Estúdio de produção',
         'LABORATORIO_CIENCIAS' => 'Laboratório de Ciências',
+        'LABORATORIO_SAUDE' => 'Laboratório de Saúde',
+        'LABORATORIO_COMUNICACAO' => 'Laboratório de Comunicação',
+        'LABORATORIO_ARQUITETURA' => 'Laboratório de Arquitetura / Ateliê',
     ];
 
-    protected $fillable = ['code', 'name', 'type', 'capacity', 'active'];
+    protected $fillable = ['code', 'name', 'type', 'capacity', 'computers', 'softwares', 'active'];
 
     protected function casts(): array
     {
-        return ['active' => 'boolean', 'capacity' => 'integer'];
+        return ['active' => 'boolean', 'capacity' => 'integer', 'computers' => 'integer'];
+    }
+
+    public function isComputerLab(): bool
+    {
+        return $this->type === 'LABORATORIO_INFORMATICA';
+    }
+
+    /** Laboratório de qualquer área (TI, Saúde, Comunicação, Engenharias, Arquitetura). */
+    public function isLab(): bool
+    {
+        return \App\Support\LabAreas::isLabType($this->type);
+    }
+
+    public function labArea(): ?string
+    {
+        return \App\Support\LabAreas::areaOfType($this->type);
+    }
+
+    /** Softwares instalados, normalizados (sem acento, minúsculas). */
+    public function softwareList(): array
+    {
+        return \App\Services\LabRules::softwareList($this->softwares);
     }
 
     /** "Li30" → laboratório de informática; demais → sala comum. */

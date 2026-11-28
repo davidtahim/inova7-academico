@@ -201,12 +201,12 @@
                                         <option value="">Selecione…</option>
                                         <optgroup label="Ainda não estão nesta matriz">
                                             @foreach ($availableSubjects->reject(fn ($s) => in_array($s->id, $linkedIds, true)) as $s)
-                                                <option value="{{ $s->id }}" @selected((int) old('subject_id', session('link_subject')) === $s->id)>{{ $s->name }} — {{ $s->code }}</option>
+                                                <option value="{{ $s->id }}" data-practice="{{ (int) $s->practice_hours }}" @selected((int) old('subject_id', session('link_subject')) === $s->id)>{{ $s->name }} — {{ $s->code }}{{ $s->practice_hours ? ' · prática' : '' }}</option>
                                             @endforeach
                                         </optgroup>
                                         <optgroup label="Já estão nesta matriz (outro período)">
                                             @foreach ($availableSubjects->filter(fn ($s) => in_array($s->id, $linkedIds, true)) as $s)
-                                                <option value="{{ $s->id }}">{{ $s->name }} — {{ $s->code }}</option>
+                                                <option value="{{ $s->id }}" data-practice="{{ (int) $s->practice_hours }}">{{ $s->name }} — {{ $s->code }}{{ $s->practice_hours ? ' · prática' : '' }}</option>
                                             @endforeach
                                         </optgroup>
                                     </select>
@@ -298,6 +298,12 @@
                         }
                     });
                     modal.addEventListener('shown.bs.modal', () => ($('subjectField').hidden ? $('linkWeekly') : $('linkSubject')).focus());
+                    // Art. 8º III: disciplina com carga prática → sugere laboratório de informática.
+                    $('linkSubject').addEventListener('change', () => {
+                        const practice = Number($('linkSubject').selectedOptions[0]?.dataset.practice || 0);
+                        if (practice > 0) $('linkRoom').value = 'LABORATORIO_INFORMATICA';
+                        else if ($('linkRoom').value === 'LABORATORIO_INFORMATICA') $('linkRoom').value = '';
+                    });
                     @if (session('link_subject') || ($errors->any() && old('subject_id')))
                         // Disciplina recém-cadastrada (ou erro de validação): reabre o modal para concluir o vínculo.
                         window.addEventListener('load', () => document.querySelector('[data-link-new]')?.click());
@@ -340,7 +346,7 @@
                                         @if ($matrices->isNotEmpty())
                                             <button type="button" class="btn btn-sm {{ $subject->offeringLinks->isEmpty() ? 'btn-primary' : 'btn-outline-primary' }}"
                                                 data-bs-toggle="modal" data-bs-target="#catalogLinkModal"
-                                                data-subject-id="{{ $subject->id }}" data-subject-name="{{ $subject->name }}">Adicionar à matriz</button>
+                                                data-subject-id="{{ $subject->id }}" data-subject-name="{{ $subject->name }}" data-practice="{{ (int) $subject->practice_hours }}">Adicionar à matriz</button>
                                         @endif
                                         <a href="{{ route('admin.subjects.edit', $subject) }}" class="btn btn-sm btn-outline-secondary">Editar</a>
                                         <form action="{{ route('admin.subjects.destroy', $subject) }}" method="POST" class="d-inline-block">
@@ -446,6 +452,8 @@
                             const d = ev.relatedTarget?.dataset || {};
                             document.getElementById('catalogLinkSubject').value = d.subjectId || '';
                             document.getElementById('catalogLinkName').textContent = d.subjectName || '';
+                            // Carga prática → laboratório de informática (Art. 8º III).
+                            document.getElementById('catalogLinkRoom').value = Number(d.practice || 0) > 0 ? 'LABORATORIO_INFORMATICA' : '';
                         });
                         // A rota de gravação é da matriz escolhida.
                         form.addEventListener('submit', ev => {

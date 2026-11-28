@@ -12,6 +12,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DiagnosticsController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\ImportController;
+use App\Http\Controllers\LabReservationController;
 use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\PlanningController;
 use App\Http\Controllers\ScenarioController;
@@ -41,12 +42,16 @@ Route::middleware('guest')->group(function () {
 |   /planejamento/.. Grade global, diagnóstico, versões, montagem, enturmação  admin, coordenação (manage-planning)
 |   /cadastros/...   Cursos, matrizes, disciplinas, professores   admin, coordenação (manage-catalog)
 |   /consultas/...   Catálogo somente leitura                     admin, coordenação, funcionário (access-catalog)
+|   /laboratorios/.. Reservas de laboratórios (NTI)               todos exceto aluno; aprovação: admin (manage-labs)
 |   /importacoes/..  Oferta Ubíqua, TOTVS, professores            admin, coordenação, funcionário (access-imports)
 |   /sistema/...     Usuários e manutenção (manage-users), auditoria (access-audit)
 |   /perfil          Meus dados e senha                           todos
 |
 | Os nomes das rotas foram mantidos; os endereços antigos redirecionam (301).
 */
+
+// Calendário público dos laboratórios (sem login): só reservas aprovadas, sem dados de quem pediu.
+Route::get('/calendario-laboratorios', [LabReservationController::class, 'publicCalendar'])->name('labs.public');
 
 Route::middleware('auth')->group(function () {
     /*
@@ -178,6 +183,21 @@ Route::middleware('auth')->group(function () {
             Route::post('/disponibilidade/copiar', 'copyAvailability')->name('copy-availability')->can('updateAvailability', 'professor');
             Route::get('/disciplinas', 'showSubjects')->name('subjects')->can('view', 'professor');
             Route::put('/disciplinas', 'updateSubjects')->name('update-subjects')->can('updateSubjects', 'professor');
+        });
+    });
+
+    // Laboratórios de informática (NTI): grade de cada laboratório, pedidos e aprovação.
+    Route::middleware('can:view-labs')->prefix('laboratorios')->name('labs.')->controller(LabReservationController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('/reservas', 'store')->name('reservations.store');
+        Route::post('/reservas/{reservation}/cancelar', 'cancel')->name('reservations.cancel');
+        Route::middleware('can:manage-labs')->group(function () {
+            Route::post('/reservas/{reservation}/aprovar', 'approve')->name('reservations.approve');
+            Route::post('/reservas/{reservation}/recusar', 'reject')->name('reservations.reject');
+            Route::post('/sincronizar', 'sync')->name('sync');
+            Route::get('/cadastro', 'rooms')->name('rooms');
+            Route::post('/cadastro', 'storeRoom')->name('rooms.store');
+            Route::put('/cadastro/{room}', 'updateRoom')->name('rooms.update');
         });
     });
 
