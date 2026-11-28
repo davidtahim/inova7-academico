@@ -76,7 +76,7 @@ class MaintenanceController extends Controller
         try {
             Artisan::call('storage:link');
         } catch (Throwable $e) {
-            return back()->with('error', 'Não foi possível criar o link: ' . $e->getMessage());
+            return back()->with('warning', 'A hospedagem não permitiu criar o link (' . $e->getMessage() . '). Não tem problema: as fotos continuam sendo entregues pelo Laravel.');
         }
 
         return back()->with('success', 'Link public/storage criado: fotos de perfil e arquivos enviados passam a aparecer.');
@@ -105,7 +105,10 @@ class MaintenanceController extends Controller
                 'detail' => app()->environment() . (config('app.debug') ? ' · APP_DEBUG ligado (desligue em produção)' : ' · APP_DEBUG desligado')],
             ['label' => 'Banco de dados', 'ok' => $db, 'detail' => $dbDetail],
             ['label' => 'Pasta storage gravável', 'ok' => is_writable(storage_path('framework')) && is_writable(storage_path('logs')), 'detail' => 'storage/framework e storage/logs'],
-            ['label' => 'Link public/storage', 'ok' => is_link(public_path('storage')) || is_dir(public_path('storage')), 'detail' => 'necessário para fotos de perfil'],
+            // Sem o link, a rota storage.public entrega os arquivos: não é mais um problema.
+            ['label' => 'Fotos e arquivos públicos', 'ok' => true, 'detail' => is_link(public_path('storage')) || is_dir(public_path('storage'))
+                ? 'entregues pelo servidor web (link public/storage)'
+                : 'entregues pelo Laravel (a hospedagem não permite o link public/storage; não é preciso fazer nada)'],
             ['label' => 'Versão do código', 'ok' => $commit !== null, 'detail' => $commit ?? 'não identificada (pasta .git ausente)'],
         ];
     }

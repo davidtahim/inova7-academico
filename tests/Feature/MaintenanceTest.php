@@ -6,6 +6,8 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 /**
@@ -56,5 +58,17 @@ class MaintenanceTest extends TestCase
             $this->actingAs($user)->get(route('system.maintenance'))->assertForbidden();
             $this->actingAs($user)->post(route('system.maintenance.migrate'))->assertForbidden();
         }
+    }
+
+    public function test_public_files_are_served_by_laravel_without_the_symlink(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->putFileAs('profile-photos', UploadedFile::fake()->image('foto.jpg'), 'foto.jpg');
+        $user = $this->user('teacher');
+
+        $this->get('/storage/profile-photos/foto.jpg')->assertRedirect(route('login'));
+        $this->actingAs($user)->get('/storage/profile-photos/foto.jpg')->assertOk()->assertHeader('content-type', 'image/jpeg');
+        $this->actingAs($user)->get('/storage/profile-photos/nao-existe.jpg')->assertNotFound();
+        $this->actingAs($user)->get('/storage/../.env')->assertNotFound();
     }
 }
