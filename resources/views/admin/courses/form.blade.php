@@ -54,6 +54,25 @@
                                 <div class="form-text">Usuários da coordenação ou Administrador de TI.</div>
                             </div>
 
+                            @php $assistantIds = array_map('intval', old('assistant_ids', $course->exists ? $course->assistants()->pluck('users.id')->all() : [])); @endphp
+                            <div class="mb-3">
+                                <span class="form-label d-block">Assistentes do curso</span>
+                                <div class="d-grid gap-1 border rounded p-2" role="group" aria-label="Assistentes do curso" style="max-height: 14rem; overflow:auto">
+                                    @forelse ($assistantOptions ?? [] as $assistantUser)
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="assistant_ids[]" value="{{ $assistantUser->id }}" id="assistant-{{ $assistantUser->id }}"
+                                                @checked(in_array($assistantUser->id, $assistantIds, true))>
+                                            <label class="form-check-label" for="assistant-{{ $assistantUser->id }}">
+                                                {{ $assistantUser->name }} <span class="text-muted small">· {{ ['admin' => 'Administrador de TI', 'coordinator' => 'Coordenação', 'staff' => 'Funcionário'][$assistantUser->role] ?? $assistantUser->role }}</span>
+                                            </label>
+                                        </div>
+                                    @empty
+                                        <span class="text-muted small">Nenhum usuário da coordenação, TI ou secretaria.</span>
+                                    @endforelse
+                                </div>
+                                <div class="form-text">Apoiam a coordenação. O curso continua com um coordenador só, que é quem sai no CCG-FOR-02.</div>
+                            </div>
+
                             <div class="mb-3">
                                 <label class="form-label" for="coordinator_name">Nome no CCG-FOR-02 <span class="text-muted fw-normal">(opcional)</span></label>
                                 <input type="text" id="coordinator_name" name="coordinator_name" class="form-control" maxlength="255"

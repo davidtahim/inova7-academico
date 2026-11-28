@@ -148,6 +148,18 @@ class User extends Authenticatable
         return $this->hasMany(Course::class, 'coordinator_user_id');
     }
 
+    /** Cursos em que este usuário é assistente da coordenação. */
+    public function assistedCourses()
+    {
+        return $this->belongsToMany(Course::class, 'course_assistants')->withTimestamps();
+    }
+
+    /** Pode ser assistente de curso: coordenação, Administrador de TI ou funcionário (Secretaria/CRA). */
+    public function canAssistCourses(): bool
+    {
+        return $this->hasRole(['admin', 'coordinator', 'staff']);
+    }
+
     public function canCoordinate(): bool
     {
         return $this->hasRole(['admin', 'coordinator']);

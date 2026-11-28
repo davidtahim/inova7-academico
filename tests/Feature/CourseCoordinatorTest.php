@@ -81,4 +81,54 @@ class CourseCoordinatorTest extends TestCase
         $data = (new \ReflectionMethod($controller, 'ccgFor02Data'))->invoke($controller, $professor->fresh(), $term, 'x');
         $this->assertSame('SISTEMAS DE INFORMAÇÃO – PROF. DAVID TAHIM', $data['coordination']);
     }
+
+    public function test_new_coordinator_keeps_the_previous_one_as_assistant(): void
+    {
+        $ianelli = User::create(['name' => 'Ianelli Exemplo', 'email' => 'ianelli@x.local', 'password' => 'senha1234', 'role' => 'coordinator', 'is_active' => true]);
+        $si = Course::create(['code' => 'SI', 'name' => 'Sistemas de Informação', 'coordinator_user_id' => $this->admin->id]);
+
+        // Marcar Ianelli como coordenadora no usuário dela: David vira assistente.
+        $this->actingAs($this->admin)->put(route('admin.users.update', $ianelli), $this->payload($ianelli, [
+            'coordinated_submitted' => 1, 'coordinated_course_ids' => [$si->id],
+        ]))->assertRedirect();
+        $this->assertSame($ianelli->id, $si->fresh()->coordinator_user_id);
+        $this->assertSame([$this->admin->id], $si->assistants()->pluck('users.id')->all());
+
+        // E pelo cadastro do curso: volta David como coordenador e Ianelli fica como assistente.
+        $this->actingAs($this->admin)->put(route('admin.courses.update', $si), [
+            'code' => 'SI', 'name' => 'Sistemas de Informação', 'coordinator_user_id' => $this->admin->id, 'assistant_ids' => [$this->admin->id], 'active' => 1,
+        ])->assertRedirect();
+        $si->refresh();
+        $this->assertSame($this->admin->id, $si->coordinator_user_id);
+        $this->assertSame([$ianelli->id], $si->assistants()->pluck('users.id')->all());
+
+        $this->actingAs($this->admin)->get(route('admin.courses.index'))->assertOk()
+            ->assertSee('Coordenação: David Tahim Alves Brito')->assertSee('Assistente: Ianelli Exemplo');
+    }
+
+    public function test_assistant_courses_from_the_user_page(): void
+    {
+        $staff = User::create(['name' => 'Secretaria', 'email' => 's@x.local', 'password' => 'senha1234', 'role' => 'staff', 'is_active' => true]);
+        $ads = Course::create(['code' => 'ADS', 'name' => 'Análise e Desenvolvimento de Sistemas', 'coordinator_user_id' => $this->admin->id]);
+
+        $this->actingAs($this->admin)->get(route('admin.users.edit', $staff))->assertOk()->assertSee('Cursos em que é assistente');
+        $this->actingAs($this->admin)->put(route('admin.users.update', $staff), $this->payload($staff, [
+            'assisted_submitted' => 1, 'assisted_course_ids' => [$ads->id],
+        ]))->assertRedirect();
+        $this->assertSame([$ads->id], $staff->assistedCourses()->pluck('courses.id')->all());
+        $this->assertSame($this->admin->id, $ads->fresh()->coordinator_user_id);
+    }
+
+    public function test_migration_turns_ianelli_into_assistant_and_restores_david(): void
+    {
+        $ianelli = User::create(['name' => 'Ianelli Teste', 'email' => 'ianelli@x.local', 'password' => 'senha1234', 'role' => 'coordinator', 'is_active' => true]);
+        $si = Course::create(['code' => 'SI', 'name' => 'Sistemas de Informação', 'coordinator_user_id' => $ianelli->id]);
+        $other = Course::create(['code' => 'X', 'name' => 'Outro', 'coordinator_user_id' => $ianelli->id]);
+
+        (require database_path('migrations/2026_11_28_160000_create_course_assistants.php'))->up();
+
+        $this->assertSame($this->admin->id, $si->fresh()->coordinator_user_id);
+        $this->assertSame([$ianelli->id], $si->assistants()->pluck('users.id')->all());
+        $this->assertSame($ianelli->id, $other->fresh()->coordinator_user_id);
+    }
 }
