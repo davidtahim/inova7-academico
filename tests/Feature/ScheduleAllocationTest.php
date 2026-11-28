@@ -250,7 +250,7 @@ class ScheduleAllocationTest extends TestCase
         $this->actingAs($coordinator)
             ->from(route('allocation.index'))
             ->put(route('allocation.update', $second), ['professor_id' => $this->ana->id, 'weekdays' => [1], 'letters' => ['A'], 'room' => 'Li41'])
-            ->assertSessionHas('allocation', fn ($f) => ! isset($f['saved']) && str_contains($f['errors'][0], 'Ana já leciona'));
+            ->assertSessionHas('allocation', fn ($f) => ! isset($f['saved']) && collect($f['errors'])->contains(fn ($e) => str_contains($e, 'Ana já leciona')));
 
         $this->assertSame(0, $second->slots()->count());
     }

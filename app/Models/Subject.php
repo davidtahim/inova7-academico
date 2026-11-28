@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Subject extends Model
 {
-    protected $fillable = ['code', 'name', 'abbreviation', 'syllabus', 'total_hours', 'presential_hours', 'online_hours', 'practice_hours', 'extension_hours'];
+    protected $fillable = ['code', 'name', 'abbreviation', 'syllabus', 'total_hours', 'presential_hours', 'online_hours', 'practice_hours', 'extension_hours', 'required_software'];
 
     /** Sigla para a grade compacta: a cadastrada ou uma gerada a partir do nome. */
     public function getShortLabelAttribute(): string

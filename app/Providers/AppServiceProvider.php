@@ -21,5 +21,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('access-imports', fn (User $user) => $user->canAccessImports());
         Gate::define('access-audit', fn (User $user) => $user->canAccessAudit());
         Gate::define('teach', fn (User $user) => $user->isTeacher());
+        // Laboratórios de informática: NTI (Administrador de TI) aprova e cadastra; demais perfis (exceto aluno) consultam e pedem.
+        Gate::define('view-labs', fn (User $user) => ! $user->isStudent());
+        Gate::define('manage-labs', fn (User $user) => $user->isAdminTi());
     }
 }

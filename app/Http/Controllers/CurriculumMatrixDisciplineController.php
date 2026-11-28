@@ -108,6 +108,11 @@ class CurriculumMatrixDisciplineController extends Controller
                 ->with('error', 'Esta disciplina já está vinculada neste período da matriz.');
         }
 
+        // Art. 8º III: sem tipo de sala informado, disciplina com carga prática exige laboratório.
+        if (empty($validated['required_room_type']) && (int) Subject::whereKey($validated['subject_id'])->value('practice_hours') > 0) {
+            $validated['required_room_type'] = 'LABORATORIO_INFORMATICA';
+        }
+
         $link = CurriculumMatrixDiscipline::create([
             'curriculum_matrix_id' => $matrix->id,
             'subject_id' => $validated['subject_id'],

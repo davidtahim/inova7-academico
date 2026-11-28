@@ -68,6 +68,14 @@ class ScheduleAllocator
         if ($room && $link?->required_room_type && $room->type !== $link->required_room_type) {
             $errors[] = 'A disciplina exige ' . (Room::TYPES[$link->required_room_type] ?? $link->required_room_type)
                 . ", mas {$room->code} é " . Str::lower($room->type_label) . '.';
+        } elseif ($room) {
+            // Laboratório de informática (Art. 8º III): prática ↔ laboratório, capacidade e softwares.
+            $students = array_key_exists('student_count', $input) && $input['student_count'] !== null ? (int) $input['student_count'] : null;
+            array_push($errors, ...LabRules::roomErrors($offering, $room, $students));
+        }
+        if ($room?->isComputerLab() && $dayIntervals !== []) {
+            // Reserva aprovada pelo NTI (prova, evento, avulsa) no mesmo laboratório e horário.
+            array_push($errors, ...LabRules::reservationConflicts($offering, $room, $dayIntervals));
         }
 
         if ($dayIntervals !== []) {
@@ -176,6 +184,7 @@ class ScheduleAllocator
             }
 
             ScheduleSlot::where('class_offering_id', $offering->id)->delete();
+            $offering->unsetRelation('slots');
             foreach ($schedule as $weekday => $dayLetters) {
                 foreach (TimeBlocks::intervals($dayLetters, $offering->shift) as $interval) {
                     ScheduleSlot::create([
@@ -190,6 +199,9 @@ class ScheduleAllocator
                 }
             }
         });
+
+        // Reservas semestrais do laboratório acompanham a grade (Art. 16 I).
+        app(GradeLaboratorioSyncService::class)->syncOffering($offering->fresh(['slots', 'term', 'subject']));
 
         return ['saved' => true] + $result;
     }
@@ -277,6 +289,14 @@ class ScheduleAllocator
             $previous = $this->currentInput($match);
             $professorId = $offering->assignments->first()?->professor_id ?? $previous['professor_id'];
             $input = ['professor_id' => $professorId] + $previous;
+
+            // Sala do semestre anterior que não serve mais (Art. 8º III, capacidade, softwares):
+            // copia os horários e deixa a sala para a coordenação escolher.
+            $oldRoom = $input['room'] ? Room::where('code', $input['room'])->first() : null;
+            if ($oldRoom && LabRules::roomErrors($offering->loadMissing(['subject', 'matrixDiscipline']), $oldRoom) !== []) {
+                $input['room'] = null;
+                $report['room_cleared'] = ($report['room_cleared'] ?? 0) + 1;
+            }
 
             $result = $this->apply($offering, $input, 'planned');
             if ($result['saved']) {

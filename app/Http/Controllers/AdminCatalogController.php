@@ -599,7 +599,7 @@ class AdminCatalogController extends Controller
                 'periods' => $matrix->disciplinesForOffering()->distinct()->count('period'),
             ],
             // Para "adicionar à matriz": as que ainda não estão nela vêm primeiro.
-            'availableSubjects' => Subject::orderBy('name')->get(['id', 'code', 'name'])
+            'availableSubjects' => Subject::orderBy('name')->get(['id', 'code', 'name', 'practice_hours'])
                 ->sortBy(fn ($s) => in_array($s->id, $linkedIds, true) ? 1 : 0)->values(),
             'linkedIds' => $linkedIds,
         ]);
@@ -628,6 +628,7 @@ class AdminCatalogController extends Controller
             'online_hours' => ['nullable', 'integer', 'min:0'],
             'practice_hours' => ['nullable', 'integer', 'min:0'],
             'extension_hours' => ['nullable', 'integer', 'min:0'],
+            'required_software' => ['nullable', 'string', 'max:2000'],
         ]);
 
         $subject = Subject::create($validated);
@@ -667,6 +668,7 @@ class AdminCatalogController extends Controller
             'online_hours' => ['nullable', 'integer', 'min:0'],
             'practice_hours' => ['nullable', 'integer', 'min:0'],
             'extension_hours' => ['nullable', 'integer', 'min:0'],
+            'required_software' => ['nullable', 'string', 'max:2000'],
         ]);
 
         $subject->update($validated);

@@ -238,6 +238,10 @@ class ScheduleScenarios
                 ], $status);
 
                 $result['saved'] ? $saved++ : $rejected[] = "{$offering->class_code} · {$offering->subject->name}: " . $result['errors'][0];
+                if (! $result['saved']) {
+                    // Recusada: os horários antigos já foram limpos; libera também o laboratório.
+                    app(GradeLaboratorioSyncService::class)->syncOffering($offering->fresh(['slots', 'term', 'subject']));
+                }
             }
         });
 

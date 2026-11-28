@@ -56,6 +56,13 @@
         ]];
     }
 
+    if (Gate::allows('view-labs')) {
+        $sections[] = ['label' => 'Laboratórios', 'items' => array_values(array_filter([
+            ['label' => 'Reservas de laboratórios', 'url' => route('labs.index'), 'icon' => 'calendar', 'active' => ['labs.index', 'labs.reservations.*']],
+            Gate::allows('manage-labs') ? ['label' => 'Cadastro de laboratórios', 'url' => route('labs.rooms'), 'icon' => 'database', 'active' => ['labs.rooms*']] : null,
+        ]))];
+    }
+
     if (Gate::allows('access-imports')) {
         $sections[] = ['label' => 'Importações', 'items' => [
             ['label' => 'Oferta Ubíqua', 'url' => route('imports.ubiqua.index'), 'icon' => 'upload', 'active' => ['imports.ubiqua.*']],

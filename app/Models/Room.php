@@ -15,11 +15,22 @@ class Room extends Model
         'LABORATORIO_CIENCIAS' => 'Laboratório de Ciências',
     ];
 
-    protected $fillable = ['code', 'name', 'type', 'capacity', 'active'];
+    protected $fillable = ['code', 'name', 'type', 'capacity', 'computers', 'softwares', 'active'];
 
     protected function casts(): array
     {
-        return ['active' => 'boolean', 'capacity' => 'integer'];
+        return ['active' => 'boolean', 'capacity' => 'integer', 'computers' => 'integer'];
+    }
+
+    public function isComputerLab(): bool
+    {
+        return $this->type === 'LABORATORIO_INFORMATICA';
+    }
+
+    /** Softwares instalados, normalizados (sem acento, minúsculas). */
+    public function softwareList(): array
+    {
+        return \App\Services\LabRules::softwareList($this->softwares);
     }
 
     /** "Li30" → laboratório de informática; demais → sala comum. */
