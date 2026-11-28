@@ -142,6 +142,17 @@ class User extends Authenticatable
         return $this->canManagePlanning() && $target->isTeacher() && $target->is_active && $target->id !== $this->id;
     }
 
+    /** Cursos que este usuário coordena (coordenação ou Administrador de TI que também coordena). */
+    public function coordinatedCourses()
+    {
+        return $this->hasMany(Course::class, 'coordinator_user_id');
+    }
+
+    public function canCoordinate(): bool
+    {
+        return $this->hasRole(['admin', 'coordinator']);
+    }
+
     public function canManagePlanning(): bool
     {
         return $this->hasRole(['admin', 'coordinator']);

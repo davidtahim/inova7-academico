@@ -274,7 +274,7 @@ class UserController extends Controller
         }
         $upper = fn (?string $v) => mb_strtoupper(trim((string) $v));
         $coordination = $courses->map(function ($course) use ($upper) {
-            $coordinator = preg_replace('/^prof(a|\.ª|ª)?\.?\s+/iu', '', trim((string) $course->coordinator_name));
+            $coordinator = preg_replace('/^prof(a|\.ª|ª)?\.?\s+/iu', '', trim((string) $course->coordinatorDisplayName()));
             return $upper($course->name) . ($coordinator !== '' ? ' – PROF. ' . $upper($coordinator) : '');
         })->implode(' / ');
 

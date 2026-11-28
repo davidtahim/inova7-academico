@@ -42,10 +42,23 @@
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label" for="coordinator_name">Coordenador(a) do curso</label>
+                                <label class="form-label" for="coordinator_user_id">Coordenador(a) do curso</label>
+                                <select id="coordinator_user_id" name="coordinator_user_id" class="form-select">
+                                    <option value="">— Sem coordenador —</option>
+                                    @foreach ($coordinators ?? [] as $coordinatorUser)
+                                        <option value="{{ $coordinatorUser->id }}" @selected((int) old('coordinator_user_id', $course->coordinator_user_id ?? 0) === $coordinatorUser->id)>
+                                            {{ $coordinatorUser->name }} · {{ $coordinatorUser->role === 'admin' ? 'Administrador de TI' : 'Coordenação' }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <div class="form-text">Usuários da coordenação ou Administrador de TI.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" for="coordinator_name">Nome no CCG-FOR-02 <span class="text-muted fw-normal">(opcional)</span></label>
                                 <input type="text" id="coordinator_name" name="coordinator_name" class="form-control" maxlength="255"
-                                    value="{{ old('coordinator_name', $course->coordinator_name ?? '') }}" placeholder="Ex.: Prof. Maria Souza">
-                                <div class="form-text">Sai no formulário CCG-FOR-02 dos professores: "SISTEMAS DE INFORMAÇÃO – PROF. …".</div>
+                                    value="{{ old('coordinator_name', $course->coordinator_name ?? '') }}" placeholder="Ex.: Prof. David Tahim">
+                                <div class="form-text">Como o nome sai no formulário dos professores ("SISTEMAS DE INFORMAÇÃO – PROF. …"). Vazio: usa o nome do usuário coordenador.</div>
                             </div>
 
                             <div class="form-check form-switch mb-4">
