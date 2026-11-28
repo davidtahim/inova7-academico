@@ -13,6 +13,7 @@ use App\Http\Controllers\DiagnosticsController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\PlanningController;
+use App\Http\Controllers\ScenarioController;
 use App\Http\Controllers\ProfessorAvailabilityController;
 use App\Http\Controllers\ScheduleBoardController;
 use App\Http\Controllers\ScheduleController;
@@ -36,7 +37,7 @@ Route::middleware('guest')->group(function () {
 |   /                Início (redireciona conforme o perfil)       todos
 |   /horarios        Horários das turmas                          todos
 |   /docente/...     Painel, disciplinas e disponibilidade        professor (teach)
-|   /planejamento/.. Grade global, diagnóstico, montagem, enturmação  admin, coordenação (manage-planning)
+|   /planejamento/.. Grade global, diagnóstico, versões, montagem, enturmação  admin, coordenação (manage-planning)
 |   /cadastros/...   Cursos, matrizes, disciplinas, professores   admin, coordenação (manage-catalog)
 |   /consultas/...   Catálogo somente leitura                     admin, coordenação, funcionário (access-catalog)
 |   /importacoes/..  Oferta Ubíqua, TOTVS, professores            admin, coordenação, funcionário (access-imports)
@@ -71,6 +72,14 @@ Route::middleware('auth')->group(function () {
             Route::post('/resolvedor/aplicar', [SolverController::class, 'apply'])->name('solver.apply');
             Route::get('/diagnostico', [DiagnosticsController::class, 'index'])->name('diagnosis');
             Route::get('/diagnostico/dados', [DiagnosticsController::class, 'data'])->name('diagnosis.data');
+
+            Route::get('/versoes', [ScenarioController::class, 'index'])->name('scenarios');
+            Route::post('/versoes', [ScenarioController::class, 'store'])->name('scenarios.store');
+            Route::get('/versoes/exportar', [ScenarioController::class, 'export'])->name('scenarios.export');
+            Route::post('/versoes/importar', [ScenarioController::class, 'import'])->name('scenarios.import');
+            Route::get('/versoes/{scenario}/arquivo', [ScenarioController::class, 'download'])->name('scenarios.download');
+            Route::post('/versoes/{scenario}/restaurar', [ScenarioController::class, 'restore'])->name('scenarios.restore');
+            Route::delete('/versoes/{scenario}', [ScenarioController::class, 'destroy'])->name('scenarios.destroy');
 
             Route::get('/montagem', [AllocationController::class, 'index'])->name('index');
             Route::post('/montagem/copiar', [AllocationController::class, 'copy'])->name('copy');

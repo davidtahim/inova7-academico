@@ -67,6 +67,63 @@
             @endforeach
         </div>
 
+        {{-- Mapa de disputa por horário (RF02): onde faltam professores livres. --}}
+        @if ($contention)
+            <section class="card border-0 shadow-sm mb-3" aria-labelledby="contention-title">
+                <div class="card-body">
+                    <div class="d-flex flex-wrap align-items-baseline gap-2 mb-2">
+                        <h3 class="h6 mb-0" id="contention-title">Mapa de disputa por horário</h3>
+                        <span class="small text-muted">professores livres em cada horário × turmas do turno. Passe o mouse para ver quem está livre.</span>
+                    </div>
+                    <div class="d-flex flex-wrap gap-3 small mb-2" aria-hidden="true">
+                        <span><span class="ct-swatch ct-none"></span> ninguém livre</span>
+                        <span><span class="ct-swatch ct-short"></span> menos professores que turmas</span>
+                        <span><span class="ct-swatch ct-tight"></span> apertado</span>
+                        <span><span class="ct-swatch ct-ok"></span> folga</span>
+                    </div>
+                    <div class="row g-3">
+                        @foreach ($contention as $shift => $map)
+                            <div class="col-lg-6 col-xxl-4">
+                                <div class="small fw-semibold mb-1">
+                                    {{ ucfirst($map['label']) }} · {{ $map['turmas'] }} {{ $map['turmas'] === 1 ? 'turma' : 'turmas' }} · {{ $map['professors'] }} professores
+                                </div>
+                                <div class="table-responsive">
+                                <table class="table table-sm table-bordered text-center mb-1 ct-table">
+                                    <caption class="visually-hidden">Disputa na {{ $map['label'] }}</caption>
+                                    <thead>
+                                        <tr>
+                                            <th scope="col"></th>
+                                            @foreach (\App\Services\ScheduleDiagnostics::DAYS as $day)
+                                                <th scope="col">{{ $day }}</th>
+                                            @endforeach
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($map['letters'] as $letter => $start)
+                                            <tr>
+                                                <th scope="row" class="text-nowrap">{{ $letter }} <small class="text-muted fw-normal">{{ $start }}</small></th>
+                                                @foreach (array_keys(\App\Services\ScheduleDiagnostics::DAYS) as $d)
+                                                    @php($c = $map['cells'][$d . '|' . $start])
+                                                    <td class="ct-{{ $c['level'] }}"
+                                                        title="{{ $c['free'] }} com grade livre{{ $c['preferred'] ? ' (' . $c['preferred'] . ' preferem)' : '' }}{{ $map['no_grid'] ? ' + ' . $map['no_grid'] . ' sem grade' : '' }}{{ $c['names'] ? ': ' . implode(', ', $c['names']) : '' }}">
+                                                        {{ $c['supply'] }}
+                                                    </td>
+                                                @endforeach
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                                </div>
+                                @if ($map['no_grid'])
+                                    <div class="small text-muted">Inclui {{ $map['no_grid'] }} {{ $map['no_grid'] === 1 ? 'professor sem grade, contado' : 'professores sem grade, contados' }} como livre{{ $map['no_grid'] === 1 ? '' : 's' }} em todos os horários.</div>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </section>
+        @endif
+
         @if ($issues === [])
             <p class="text-muted">Nada a apontar para este semestre.</p>
         @else
@@ -136,6 +193,14 @@
         .diag-blocker { border-left-color: var(--bs-danger) !important; }
         .diag-risk { border-left-color: var(--bs-warning) !important; }
         .diag-info { border-left-color: var(--bs-secondary) !important; }
+        .ct-table { font-size: .8rem; }
+        .ct-table td { font-weight: 600; font-variant-numeric: tabular-nums; padding: .25rem; }
+        .ct-table th { padding: .25rem .35rem; }
+        .ct-none { background: #f8d7da !important; color: #842029; }
+        .ct-short { background: #fde2c4 !important; color: #7a3d00; }
+        .ct-tight { background: #fff3cd !important; color: #664d03; }
+        .ct-ok { background: #d1e7dd !important; color: #0f5132; }
+        .ct-swatch { display: inline-block; width: .9rem; height: .9rem; border-radius: 3px; vertical-align: -2px; border: 1px solid rgba(0,0,0,.08); }
     </style>
     <script>
         // Filtro por gravidade (sem recarregar a análise).
