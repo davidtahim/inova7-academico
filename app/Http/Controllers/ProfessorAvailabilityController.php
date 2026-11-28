@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AcademicTerm;
 use App\Models\Professor;
 use App\Models\ProfessorAvailability;
 use App\Services\AvailabilityGrid;
 use App\Services\TeachingQualificationCatalog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 class ProfessorAvailabilityController extends Controller
@@ -54,67 +56,96 @@ class ProfessorAvailabilityController extends Controller
             $grid->build($professor, AvailabilityGrid::selectedTerm()),
             [
                 'professor' => $professor,
-                'isEditable' => Gate::allows('updateAvailability', $professor),
+                // Semestre concluído: a grade fica só para consulta.
+                'isEditable' => Gate::allows('updateAvailability', $professor) && ! AvailabilityGrid::selectedTerm()?->isClosed(),
             ]
         ));
     }
 
+    /**
+     * Grava a grade inteira do semestre exibido na tela (academic_term_id), não do
+     * semestre da sessão: se o seletor mudar em outra aba, nada é gravado no lugar errado.
+     */
     public function updateAvailability(Request $request, Professor $professor)
     {
-        $term = AvailabilityGrid::selectedTerm();
-
-        if (!$term) {
-            if ($request->wantsJson()) {
-                return response()->json(['success' => false, 'message' => 'Nenhum período acadêmico disponível.'], 400);
-            }
-            return redirect()->back()->with('error', 'Nenhum período acadêmico disponível.');
-        }
-
         $validated = $request->validate([
+            'academic_term_id' => ['nullable', 'integer', 'exists:academic_terms,id'],
             'availability_slots' => ['array'],
-            'availability_slots.*.weekday' => ['integer', 'between:1,6'],
-            'availability_slots.*.starts_at' => ['date_format:H:i'],
-            'availability_slots.*.ends_at' => ['date_format:H:i'],
-            'availability_slots.*.preference' => ['string', 'in:preferred,available,unavailable'],
+            'availability_slots.*.weekday' => ['required', 'integer', 'between:1,6'],
+            'availability_slots.*.starts_at' => ['required', 'date_format:H:i'],
+            'availability_slots.*.ends_at' => ['required', 'date_format:H:i'],
+            'availability_slots.*.preference' => ['required', 'string', 'in:preferred,available,unavailable'],
         ]);
+        $term = ! empty($validated['academic_term_id']) ? AcademicTerm::find($validated['academic_term_id']) : AvailabilityGrid::selectedTerm();
 
-        \Log::info('updateAvailability chamado', [
-            'professor_id' => $professor->id,
-            'term_id' => $term->id,
-            'slots_count' => count($validated['availability_slots'] ?? []),
-            'slots' => $validated['availability_slots'] ?? []
-        ]);
-
-        // Remover todas as disponibilidades do período atual
-        ProfessorAvailability::where('professor_id', $professor->id)
-            ->where('academic_term_id', $term->id)
-            ->delete();
-
-        // Adicionar novas disponibilidades
-        foreach ($validated['availability_slots'] ?? [] as $slot) {
-            $created = ProfessorAvailability::create([
-                'professor_id' => $professor->id,
-                'academic_term_id' => $term->id,
-                'weekday' => $slot['weekday'],
-                'starts_at' => $slot['starts_at'],
-                'ends_at' => $slot['ends_at'],
-                'preference' => $slot['preference'],
-            ]);
-            \Log::info('Slot criado', $created->toArray());
+        if ($term?->isClosed()) {
+            return \App\Http\Middleware\EnsureTermIsOpen::refuse($request, $term);
         }
 
-        $allSlots = ProfessorAvailability::where('professor_id', $professor->id)
-            ->where('academic_term_id', $term->id)
-            ->get();
+        if (! $term) {
+            return $request->wantsJson()
+                ? response()->json(['success' => false, 'message' => 'Nenhum semestre cadastrado.'], 422)
+                : back()->with('error', 'Nenhum semestre cadastrado.');
+        }
 
-        \Log::info('Total de slots após salvar', ['count' => $allSlots->count()]);
+        $slots = collect($validated['availability_slots'] ?? [])
+            ->reject(fn ($slot) => $slot['preference'] === 'unavailable')
+            ->unique(fn ($slot) => $slot['weekday'] . '|' . $slot['starts_at']);
+
+        DB::transaction(function () use ($professor, $term, $slots) {
+            ProfessorAvailability::where('professor_id', $professor->id)->where('academic_term_id', $term->id)->delete();
+            foreach ($slots as $slot) {
+                ProfessorAvailability::create([
+                    'professor_id' => $professor->id,
+                    'academic_term_id' => $term->id,
+                    'weekday' => $slot['weekday'],
+                    'starts_at' => $slot['starts_at'],
+                    'ends_at' => $slot['ends_at'],
+                    'preference' => $slot['preference'],
+                ]);
+            }
+        });
 
         if ($request->wantsJson()) {
-            return response()->json(['success' => true, 'message' => 'Disponibilidade atualizada com sucesso!']);
+            return response()->json([
+                'success' => true,
+                'saved' => $slots->count(),
+                'term' => $term->code,
+                'saved_at' => now()->format('H:i'),
+                'message' => 'Disponibilidade salva.',
+            ]);
         }
 
+        return $this->backTo($request, $professor, 'availability')->with('success', 'Disponibilidade salva.');
+    }
+
+    /** Copia a grade de outro semestre para o semestre exibido (substitui a atual). */
+    public function copyAvailability(Request $request, Professor $professor)
+    {
+        $data = $request->validate([
+            'from_term_id' => ['required', 'integer', 'exists:academic_terms,id'],
+            'to_term_id' => ['required', 'integer', 'exists:academic_terms,id', 'different:from_term_id'],
+        ]);
+        $from = AcademicTerm::find($data['from_term_id']);
+        $to = AcademicTerm::find($data['to_term_id']);
+        if ($to->isClosed()) {
+            return \App\Http\Middleware\EnsureTermIsOpen::refuse($request, $to);
+        }
+
+        $source = ProfessorAvailability::where('professor_id', $professor->id)->where('academic_term_id', $from->id)->get();
+        DB::transaction(function () use ($professor, $to, $source) {
+            ProfessorAvailability::where('professor_id', $professor->id)->where('academic_term_id', $to->id)->delete();
+            foreach ($source as $item) {
+                ProfessorAvailability::create([
+                    'professor_id' => $professor->id, 'academic_term_id' => $to->id, 'weekday' => $item->weekday,
+                    'starts_at' => substr((string) $item->starts_at, 0, 5), 'ends_at' => substr((string) $item->ends_at, 0, 5), 'preference' => $item->preference,
+                ]);
+            }
+        });
+        session(['selected_academic_term_id' => $to->id]);
+
         return $this->backTo($request, $professor, 'availability')
-            ->with('success', 'Disponibilidade atualizada com sucesso!');
+            ->with('success', "Grade de {$from->code} copiada para {$to->code} ({$source->count()} horários). Confira e ajuste se precisar.");
     }
 
     public function showSubjects(Professor $professor, TeachingQualificationCatalog $catalog)

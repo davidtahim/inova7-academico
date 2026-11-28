@@ -49,6 +49,18 @@ Route::middleware('guest')->group(function () {
 */
 
 Route::middleware('auth')->group(function () {
+    /*
+     * Arquivos do disco "public" (fotos de perfil). Normalmente o Apache entrega
+     * direto pelo link public/storage; na HostGator o symlink não pode ser criado,
+     * então, sem o link, a requisição cai aqui e o Laravel entrega o arquivo.
+     */
+    Route::get('/storage/{path}', function (string $path) {
+        $disk = \Illuminate\Support\Facades\Storage::disk('public');
+        abort_if(str_contains($path, '..') || ! $disk->exists($path), 404);
+
+        return $disk->response($path, null, ['Cache-Control' => 'private, max-age=86400']);
+    })->where('path', '.*')->name('storage.public');
+
     Route::get('/', DashboardController::class)->name('dashboard');
     Route::post('/semestre/selecionar', [DashboardController::class, 'selectAcademicTerm'])->name('academic-term.select');
     Route::get('/horarios', [ScheduleController::class, 'index'])->name('schedules.index');
@@ -62,7 +74,8 @@ Route::middleware('auth')->group(function () {
     });
 
     // Planejamento do semestre (coordenação e admin).
-    Route::middleware('can:manage-planning')->prefix('planejamento')->group(function () {
+    // term.open: num semestre concluído, o planejamento é só consulta.
+    Route::middleware(['can:manage-planning', 'term.open'])->prefix('planejamento')->group(function () {
         Route::redirect('/', '/planejamento/grade')->name('planning.home');
 
         Route::name('allocation.')->group(function () {
@@ -159,7 +172,9 @@ Route::middleware('auth')->group(function () {
         // (coordenação edita; funcionário consulta; o próprio professor usa /docente).
         Route::prefix('professores/{professor}')->name('professors.')->controller(ProfessorAvailabilityController::class)->group(function () {
             Route::get('/disponibilidade', 'show')->name('availability')->can('view', 'professor');
-            Route::put('/disponibilidade', 'updateAvailability')->name('update-availability')->can('updateAvailability', 'professor');
+            // PUT ou POST: hospedagens compartilhadas às vezes bloqueiam PUT vindo de fetch().
+            Route::match(['put', 'post'], '/disponibilidade', 'updateAvailability')->name('update-availability')->can('updateAvailability', 'professor');
+            Route::post('/disponibilidade/copiar', 'copyAvailability')->name('copy-availability')->can('updateAvailability', 'professor');
             Route::get('/disciplinas', 'showSubjects')->name('subjects')->can('view', 'professor');
             Route::put('/disciplinas', 'updateSubjects')->name('update-subjects')->can('updateSubjects', 'professor');
         });

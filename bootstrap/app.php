@@ -11,7 +11,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // As regras de autenticação serão adicionadas na próxima etapa.
+        $middleware->alias(['term.open' => \App\Http\Middleware\EnsureTermIsOpen::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Mantém os tratamentos padrão do Laravel.

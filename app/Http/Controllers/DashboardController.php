@@ -22,14 +22,7 @@ class DashboardController extends Controller
             return redirect()->route('schedules.index');
         }
 
-        $selectedTermId = session('selected_academic_term_id');
-        $term = AcademicTerm::find($selectedTermId)
-            ?? AcademicTerm::where('status', 'planning')->latest('id')->first()
-            ?? AcademicTerm::latest('id')->first();
-
-        if ($term) {
-            session(['selected_academic_term_id' => $term->id]);
-        }
+        $term = AcademicTerm::current();
 
         $offerings = $term ? ClassOffering::where('academic_term_id', $term->id) : ClassOffering::query()->whereRaw('1=0');
         return view('dashboard.index', [

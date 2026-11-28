@@ -555,13 +555,13 @@ class UserLoginTest extends TestCase
 
         // Grade oficial de 50 min (a mesma da tela da coordenação), sem horários inventados.
         $response->assertOk();
-        $response->assertSee('07:30 às 08:20');
-        $response->assertSee('10:10 às 11:00');
-        $response->assertSee('13:10 às 14:00');
-        $response->assertSee('18:30 às 19:20');
-        $response->assertSee('21:10 às 22:00');
-        $response->assertDontSee('10:50 às 11:40');
-        $response->assertDontSee('21:00 às 21:50');
+        $response->assertSee('data-start="07:30" data-end="08:20"', false);
+        $response->assertSee('data-start="10:10" data-end="11:00"', false);
+        $response->assertSee('data-start="13:10" data-end="14:00"', false);
+        $response->assertSee('data-start="18:30" data-end="19:20"', false);
+        $response->assertSee('data-start="21:10" data-end="22:00"', false);
+        $response->assertDontSee('data-start="10:50"', false);
+        $response->assertDontSee('data-start="21:00"', false);
     }
 
     public function test_teacher_sees_only_subjects_allocated_by_coordinator(): void
@@ -894,8 +894,8 @@ class UserLoginTest extends TestCase
 
         // O professor preenche a própria grade (CCG-FOR-02), como na tela da coordenação.
         $response->assertOk();
-        $response->assertSee('Clique nos horários');
-        $response->assertSee('availability-cell', false);
+        $response->assertSee('clique ou arraste', false);
+        $response->assertSee('ag-cell', false);
         $response->assertDontSee('A disponibilidade é preenchida pela oferta Ubíqua');
         $response->assertDontSee('name="subjects[]"');
         $response->assertDontSee('+ Adicionar horário');

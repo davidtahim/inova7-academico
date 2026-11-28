@@ -70,7 +70,7 @@
                         <form method="POST" action="{{ route('system.maintenance.storage-link') }}">
                             @csrf
                             <button type="submit" class="btn btn-outline-secondary w-100">Criar link de arquivos públicos</button>
-                            <div class="form-text">Necessário uma vez para as fotos de perfil aparecerem.</div>
+                            <div class="form-text">Opcional: deixa o servidor web entregar as fotos direto. Se a hospedagem não permitir, as fotos continuam funcionando pelo Laravel.</div>
                         </form>
                     </div>
                 </section>

@@ -57,9 +57,9 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Lattes</label>
-                                    <input type="url" name="lattes" class="form-control"
-                                        value="{{ old('lattes', $professor->lattes ?? '') }}">
-                                    <div class="form-text">URL do Currículo Lattes.</div>
+                                    <input type="text" inputmode="url" name="lattes" class="form-control" data-strip-scheme
+                                        value="{{ old('lattes', $professor->lattes ?? '') }}" placeholder="lattes.cnpq.br/1234567890123456">
+                                    <div class="form-text">Endereço ou número do Currículo Lattes.</div>
                                 </div>
                             </div>
 

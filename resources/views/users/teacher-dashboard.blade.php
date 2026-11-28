@@ -182,8 +182,8 @@
                         </div>
                         <div class="col-md-5">
                             <label for="pf-lattes" class="form-label fw-semibold">Currículo Lattes <span class="text-muted fw-normal">(opcional)</span></label>
-                            <input id="pf-lattes" name="lattes" type="url" class="form-control @error('lattes', 'professional') is-invalid @enderror"
-                                value="{{ old('lattes', $professor->lattes) }}" placeholder="http://lattes.cnpq.br/…">
+                            <input id="pf-lattes" name="lattes" type="text" inputmode="url" data-strip-scheme class="form-control @error('lattes', 'professional') is-invalid @enderror"
+                                value="{{ old('lattes', $professor->lattes) }}" placeholder="lattes.cnpq.br/1234567890123456">
                             @error('lattes', 'professional')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-md-3">

@@ -16,10 +16,7 @@ class PlanningController extends Controller
 {
     public function index(Request $request, ConflictDetector $detector, ProfessorAllocationService $allocationService)
     {
-        $selectedTermId = session('selected_academic_term_id');
-        $term = AcademicTerm::find($request->integer('term'))
-            ?? AcademicTerm::find($selectedTermId)
-            ?? AcademicTerm::latest('id')->first();
+        $term = AcademicTerm::find($request->integer('term')) ?? AcademicTerm::current();
 
         if ($term) {
             session(['selected_academic_term_id' => $term->id]);

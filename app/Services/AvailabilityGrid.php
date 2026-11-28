@@ -33,10 +33,7 @@ class AvailabilityGrid
 
     public static function selectedTerm(): ?AcademicTerm
     {
-        $selectedTermId = session('selected_academic_term_id');
-        $term = $selectedTermId ? AcademicTerm::find($selectedTermId) : null;
-
-        return $term ?? AcademicTerm::latest('id')->first();
+        return AcademicTerm::current();
     }
 
     /**
@@ -63,8 +60,18 @@ class AvailabilityGrid
         $available = $availabilities->where('preference', 'available')->count();
         $total = count(self::TIME_SLOTS) * 6;
 
+        // Outro semestre em que o professor já preencheu a grade (para oferecer cópia).
+        $otherTerm = null;
+        if ($term && $availabilities->isEmpty()) {
+            $otherTerm = AcademicTerm::query()
+                ->whereKeyNot($term->id)
+                ->whereIn('id', ProfessorAvailability::where('professor_id', $professor->id)->select('academic_term_id'))
+                ->orderByDesc('code')->first();
+        }
+
         return [
             'term' => $term,
+            'copyFromTerm' => $otherTerm,
             'availabilities' => $availabilities,
             'savedAvailabilities' => $saved,
             'timeSlots' => self::TIME_SLOTS,
