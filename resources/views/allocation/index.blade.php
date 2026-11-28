@@ -17,7 +17,21 @@
                     O sistema bloqueia choques de professor, sala e turma e respeita a disponibilidade docente.
                 </p>
             </div>
-            <a href="{{ route('schedules.index', ['course' => $courseId]) }}" class="btn btn-outline-secondary btn-sm">Ver como o aluno vê</a>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                @if ($term?->isSchedulePublished())
+                    <span class="badge bg-success">Publicada {{ $term->schedule_published_at->format('d/m/Y H:i') }}{{ $term->publisher ? ' por ' . $term->publisher->name : '' }}</span>
+                    <form method="POST" action="{{ route('allocation.unpublish') }}" onsubmit="return confirm('Voltar a grade para rascunho? Alunos e professores deixam de vê-la.')">
+                        @csrf<button class="btn btn-outline-warning btn-sm">Voltar para rascunho</button>
+                    </form>
+                @elseif ($term)
+                    <span class="badge bg-warning text-dark">Rascunho — não visível para alunos e professores</span>
+                    <form method="POST" action="{{ route('allocation.publish') }}"
+                        onsubmit="return confirm('Publicar a grade {{ $term->code }}? Alunos e professores passam a ver os horários.{{ $conflicts->isNotEmpty() ? ' Ainda há ' . $conflicts->count() . ' choque(s).' : '' }}')">
+                        @csrf<button class="btn btn-success btn-sm">Publicar grade</button>
+                    </form>
+                @endif
+                <a href="{{ route('schedules.index', ['course' => $courseId]) }}" class="btn btn-outline-secondary btn-sm">Ver como o aluno vê</a>
+            </div>
         </div>
 
         @if ($copyReport)

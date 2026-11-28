@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Professor extends Model
 {
-    protected $fillable = ['registration', 'name', 'email', 'qualification', 'active', 'chapa', 'lattes'];
+    protected $fillable = ['registration', 'name', 'email', 'qualification', 'active', 'chapa', 'lattes', 'max_classes_per_day', 'max_days_per_week'];
 
     protected function casts(): array
     {

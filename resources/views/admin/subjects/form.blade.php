@@ -33,6 +33,14 @@
                             </div>
 
                             <div class="mb-3">
+                                <label class="form-label" for="abbreviation">Sigla</label>
+                                <input type="text" id="abbreviation" name="abbreviation" class="form-control" maxlength="12" style="max-width: 160px"
+                                    value="{{ old('abbreviation', $subject->abbreviation ?? '') }}"
+                                    placeholder="{{ filled($subject->name ?? null) ? \App\Models\Subject::suggestAbbreviation($subject->name) : 'BD2' }}">
+                                <div class="form-text">Aparece na grade compacta (ex.: BD2, SO). Em branco, o sistema sugere a partir do nome.</div>
+                            </div>
+
+                            <div class="mb-3">
                                 <label class="form-label">Ementa</label>
                                 <textarea name="syllabus" class="form-control" rows="5"
                                     placeholder="Descreva os objetivos, conteúdos e competências da disciplina...">{{ old('syllabus', $subject->syllabus ?? '') }}</textarea>

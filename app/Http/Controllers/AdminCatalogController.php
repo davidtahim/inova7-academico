@@ -28,6 +28,22 @@ class AdminCatalogController extends Controller
     }
 
     /** Gestão de usuários: somente Administrador de TI. */
+    /**
+     * Limites operacionais do professor (máx. aulas/dia e dias/semana): só a coordenação
+     * (e o admin) definem; para os demais perfis os campos são ignorados.
+     */
+    private function professorLimits(Request $request): array
+    {
+        if (! Gate::allows('manage-planning')) {
+            return [];
+        }
+
+        return $request->validate([
+            'max_classes_per_day' => ['nullable', 'integer', 'between:1,10'],
+            'max_days_per_week' => ['nullable', 'integer', 'between:1,6'],
+        ]);
+    }
+
     private function ensureUserManager(): void
     {
         abort_unless(Gate::allows('manage-users'), 403, 'Apenas administradores de TI podem gerenciar usuários.');
@@ -493,6 +509,7 @@ class AdminCatalogController extends Controller
         $validated = $request->validate([
             'code' => ['required', 'string', 'max:100'],
             'name' => ['required', 'string', 'max:255'],
+            'abbreviation' => ['nullable', 'string', 'max:12'],
             'syllabus' => ['nullable', 'string'],
             'total_hours' => ['nullable', 'integer', 'min:0'],
             'presential_hours' => ['nullable', 'integer', 'min:0'],
@@ -522,6 +539,7 @@ class AdminCatalogController extends Controller
         $validated = $request->validate([
             'code' => ['required', 'string', 'max:100'],
             'name' => ['required', 'string', 'max:255'],
+            'abbreviation' => ['nullable', 'string', 'max:12'],
             'syllabus' => ['nullable', 'string'],
             'total_hours' => ['nullable', 'integer', 'min:0'],
             'presential_hours' => ['nullable', 'integer', 'min:0'],
@@ -603,6 +621,7 @@ class AdminCatalogController extends Controller
             $validated['email'] = $generatedEmail;
         }
 
+        $validated += $this->professorLimits($request);
         $professor = Professor::create($validated);
         $this->syncProfessorUser($professor);
         $professor->courses()->sync($courseIds);
@@ -645,6 +664,7 @@ class AdminCatalogController extends Controller
             $validated['email'] = $generatedEmail;
         }
 
+        $validated += $this->professorLimits($request);
         $professor->update($validated);
         $this->syncProfessorUser($professor);
         $professor->courses()->sync($courseIds);

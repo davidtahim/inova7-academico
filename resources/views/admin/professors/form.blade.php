@@ -83,6 +83,25 @@
                                 <div class="form-text">Selecione os cursos aos quais este professor está vinculado.</div>
                             </div>
 
+                            @can('manage-planning')
+                                <fieldset class="border rounded p-3 mb-3">
+                                    <legend class="float-none w-auto px-2 fs-6 mb-0">Limites para a montagem de horários</legend>
+                                    <div class="row g-3">
+                                        <div class="col-sm-6">
+                                            <label class="form-label" for="max_classes_per_day">Máximo de aulas por dia</label>
+                                            <input type="number" min="1" max="10" id="max_classes_per_day" name="max_classes_per_day" class="form-control"
+                                                value="{{ old('max_classes_per_day', $professor->max_classes_per_day ?? '') }}" placeholder="Sem limite">
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <label class="form-label" for="max_days_per_week">Máximo de dias de aula na semana</label>
+                                            <input type="number" min="1" max="6" id="max_days_per_week" name="max_days_per_week" class="form-control"
+                                                value="{{ old('max_days_per_week', $professor->max_days_per_week ?? '') }}" placeholder="Sem limite">
+                                        </div>
+                                    </div>
+                                    <div class="form-text">Definidos pela coordenação. O motor de alocação evita ultrapassá-los.</div>
+                                </fieldset>
+                            @endcan
+
                             <div class="form-check form-switch mb-4">
                                 <input class="form-check-input" type="checkbox" name="active" value="1"
                                     {{ old('active', $professor->active ?? true) ? 'checked' : '' }}>

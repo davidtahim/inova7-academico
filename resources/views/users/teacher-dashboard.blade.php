@@ -266,11 +266,15 @@
                                             <td data-label="Curso · período">{{ $offering->course->name ?? '—' }}<br><small class="text-muted">{{ $offering->period }}º período</small></td>
                                             <td data-label="Turno">{{ $offering->shift }}</td>
                                             <td data-label="Horários" class="small">
+                                                @if (! $term?->isSchedulePublished())
+                                                    <span class="text-muted">Em elaboração</span>
+                                                @else
                                                 @forelse ($slots as $slot)
                                                     <div>{{ $weekdays[$slot->weekday] ?? $slot->weekday }} {{ substr($slot->starts_at, 0, 5) }}–{{ substr($slot->ends_at, 0, 5) }}@if ($slot->room) · {{ $slot->room }}@endif</div>
                                                 @empty
                                                     <span class="text-muted">A definir</span>
                                                 @endforelse
+                                                @endif
                                             </td>
                                             <td data-label="Aulas/sem" class="text-end">{{ $formatHours($assignment->weekly_hours ?: $offering->weekly_hours) }}</td>
                                             <td data-label="Alunos" class="text-end">{{ $offering->student_count ?? '—' }}</td>

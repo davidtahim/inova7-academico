@@ -166,6 +166,7 @@ class StudentEnrollmentTest extends TestCase
         $this->assertTrue(ClassOffering::where('class_code', 'CSE0280106NNB')->exists());
 
         $student = User::where('registration_number', '90000002')->firstOrFail();
+        $this->term->update(['schedule_published_at' => now()]);
         $this->actingAs($student)->get(route('schedules.index'))
             ->assertOk()
             ->assertSee('Meu horário')

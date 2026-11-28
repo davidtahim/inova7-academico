@@ -87,6 +87,11 @@ class TeacherDashboardTest extends TestCase
         $o3 = $this->offering('ANTIGA', $bd, ['academic_term_id' => $old->id]);
         TeachingAssignment::create(['class_offering_id' => $o3->id, 'professor_id' => $this->professor->id, 'status' => 'confirmed']);
 
+        // Antes de publicar, o professor vê as turmas, mas o horário fica "em elaboração".
+        $this->actingAs($this->teacher)->withSession(['selected_academic_term_id' => $this->term->id])
+            ->get(route('profile'))->assertSee('Em elaboração')->assertDontSee('Seg 18:30–19:20');
+        $this->term->update(['schedule_published_at' => now()]);
+
         $this->actingAs($this->teacher)
             ->withSession(['selected_academic_term_id' => $this->term->id])
             ->get(route('profile'))
