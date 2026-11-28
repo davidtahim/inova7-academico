@@ -52,9 +52,9 @@
                 <ol class="row g-3 list-unstyled mb-0">
                     @php
                         $steps = [
-                            ['key' => 'professional', 'title' => 'Dados funcionais', 'href' => route('profile') . '?editar=1#dados-funcionais', 'cta' => 'Completar'],
-                            ['key' => 'qualification', 'title' => 'Habilitação em disciplinas', 'href' => route('admin.professors.subjects', $professor), 'cta' => 'Escolher disciplinas'],
-                            ['key' => 'availability', 'title' => 'Disponibilidade de horários', 'href' => route('admin.professors.availability', $professor), 'cta' => 'Preencher grade'],
+                            ['key' => 'professional', 'title' => 'Dados funcionais', 'href' => route('teacher.dashboard') . '?editar=1#dados-funcionais', 'cta' => 'Completar'],
+                            ['key' => 'qualification', 'title' => 'Habilitação em disciplinas', 'href' => route('teacher.subjects'), 'cta' => 'Escolher disciplinas'],
+                            ['key' => 'availability', 'title' => 'Disponibilidade de horários', 'href' => route('teacher.availability'), 'cta' => 'Preencher grade'],
                         ];
                     @endphp
                     @foreach ($steps as $i => $step)
@@ -228,8 +228,8 @@
                             <p class="fw-semibold mb-1">Nenhuma turma alocada para {{ $term->code ?? 'este semestre' }} ainda.</p>
                             <p class="text-muted small mb-3">A coordenação usa sua habilitação e sua disponibilidade para sugerir turmas. Mantenha as duas atualizadas.</p>
                             <div class="d-flex flex-wrap justify-content-center gap-2">
-                                <a href="{{ route('admin.professors.subjects', $professor) }}" class="btn btn-sm btn-outline-primary">Minhas disciplinas</a>
-                                <a href="{{ route('admin.professors.availability', $professor) }}" class="btn btn-sm btn-outline-primary">Minha disponibilidade</a>
+                                <a href="{{ route('teacher.subjects') }}" class="btn btn-sm btn-outline-primary">Minhas disciplinas</a>
+                                <a href="{{ route('teacher.availability') }}" class="btn btn-sm btn-outline-primary">Minha disponibilidade</a>
                             </div>
                         </div>
                     @else

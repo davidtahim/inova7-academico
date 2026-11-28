@@ -13,6 +13,15 @@ class DashboardController extends Controller
 {
     public function __invoke(ConflictDetector $detector)
     {
+        // Início conforme o perfil: o professor tem o painel docente; o aluno, os horários.
+        $user = auth()->user();
+        if ($user->isTeacher()) {
+            return redirect()->route('teacher.dashboard');
+        }
+        if ($user->role === 'student') {
+            return redirect()->route('schedules.index');
+        }
+
         $selectedTermId = session('selected_academic_term_id');
         $term = AcademicTerm::find($selectedTermId)
             ?? AcademicTerm::where('status', 'planning')->latest('id')->first()

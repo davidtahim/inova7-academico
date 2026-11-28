@@ -24,6 +24,7 @@ class ScheduleScorer
         'over_days' => 20,         // dia acima do máximo semanal do professor
         'concentrated' => 3,       // 3+ aulas da disciplina no mesmo dia
         'not_preferred' => 1,      // aula em horário "disponível" (não "preferido")
+        'no_professor' => 50,      // disciplina presencial sem professor atribuído
     ];
 
     public const LABELS = [
@@ -36,6 +37,7 @@ class ScheduleScorer
         'over_days' => 'Dias acima do máximo semanal',
         'concentrated' => 'Disciplinas concentradas num só dia',
         'not_preferred' => 'Aulas fora do horário preferido',
+        'no_professor' => 'Disciplinas sem professor',
     ];
 
     public function __construct(private ConflictDetector $detector)
@@ -103,6 +105,9 @@ class ScheduleScorer
             }
 
             $expected = $offering->classesToSchedule();
+            if ($expected > 0 && ! $offering->isDistance() && $offering->assignments->isEmpty()) {
+                $counts['no_professor']++;
+            }
             if ($expected > 0 && $placed < $expected) {
                 $counts['missing'] += $expected - $placed;
             } elseif ($placed > $expected && ! $offering->isDistance()) {

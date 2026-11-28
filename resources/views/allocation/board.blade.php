@@ -58,6 +58,40 @@
             </div>
         </div>
 
+        <section class="card border-0 shadow-sm mb-2" aria-labelledby="solver-title">
+            <div class="card-body py-2">
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <strong id="solver-title" class="me-2">Resolver automaticamente</strong>
+                    <label class="small text-muted" for="s-time">Tempo</label>
+                    <select id="s-time" class="form-select form-select-sm w-auto">
+                        <option value="30000">30 s</option>
+                        <option value="60000" selected>1 min</option>
+                        <option value="120000">2 min</option>
+                        <option value="300000">5 min</option>
+                    </select>
+                    <label class="form-check-label small ms-2"><input type="checkbox" class="form-check-input" id="s-keep" checked> Preservar aulas já posicionadas</label>
+                    <button type="button" class="btn btn-sm btn-primary ms-auto" id="s-start">▶ Resolver</button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" id="s-stop" disabled>■ Parar</button>
+                    <button type="button" class="btn btn-sm btn-success" id="s-apply" disabled>Aplicar solução</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="s-discard" disabled>Descartar</button>
+                </div>
+                <div class="d-flex flex-wrap gap-3 align-items-center mt-2 small" id="s-progress-row" hidden>
+                    <div class="progress flex-grow-1" style="height: 8px; min-width: 160px;" role="progressbar" aria-label="Progresso do resolvedor">
+                        <div class="progress-bar" id="s-bar" style="width: 0%"></div>
+                    </div>
+                    <span class="font-monospace" id="s-clock">00:00 / 00:00</span>
+                    <span>Atual: <strong id="s-current">—</strong></span>
+                    <span>Melhor: <strong id="s-best">—</strong></span>
+                    <span class="text-muted" id="s-iter"></span>
+                </div>
+                <div class="small mt-1" id="s-summary" aria-live="polite"></div>
+                <div class="small text-muted mt-1">
+                    Considera o semestre inteiro (todos os cursos e turnos) e escolhe professor entre os habilitados,
+                    dia, blocos e sala. Professores confirmados manualmente ficam fixos. O servidor revalida tudo ao aplicar.
+                </div>
+            </div>
+        </section>
+
         <div id="b-toast" class="board-toast" aria-live="assertive"></div>
 
         <div class="row g-2">
@@ -302,6 +336,73 @@
                 if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'y') { ev.preventDefault(); redo(); }
                 if (ev.key === 'Escape' && state.selected) { state.selected = null; clearHighlight(); render(); }
             });
+            /* ---------- resolvedor (Web Worker) ---------- */
+            const workerUrl = @json(asset('js/schedule-solver.js') . '?v=' . @filemtime(public_path('js/schedule-solver.js')));
+            const problemUrl = @json(route('allocation.solver.problem'));
+            const applyUrl = @json(route('allocation.solver.apply'));
+            const solver = { worker: null, result: null, limit: 0 };
+            const fmt = ms => { const s = Math.floor(ms / 1000); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
+            const labels = @json(\App\Services\ScheduleScorer::LABELS + ['consecutive' => 'Aulas seguidas acima do máximo']);
+            const describe = counts => Object.entries(counts || {}).filter(([, n]) => n > 0).map(([k, n]) => n + ' ' + (labels[k] || k).toLowerCase()).join(' · ') || 'sem penalidades';
+            function solverButtons(running) {
+                $('s-start').disabled = running; $('s-stop').disabled = !running;
+                $('s-apply').disabled = running || !solver.result; $('s-discard').disabled = running || !solver.result;
+                $('s-time').disabled = running; $('s-keep').disabled = running;
+            }
+
+            $('s-start').addEventListener('click', async () => {
+                solver.result = null;
+                solverButtons(true);
+                setStatus('Resolvendo…', 'bg-primary');
+                $('s-summary').textContent = 'Carregando o problema do semestre…';
+                const problem = await (await fetch(problemUrl, { headers: { Accept: 'application/json' } })).json();
+                solver.limit = Number($('s-time').value);
+                $('s-progress-row').hidden = false;
+                $('s-summary').textContent = problem.offerings.length + ' disciplinas/turma, ' + problem.offerings.reduce((n, o) => n + o.expected, 0) + ' aulas a distribuir.';
+                solver.worker = new Worker(workerUrl);
+                solver.worker.onmessage = ev => {
+                    const m = ev.data;
+                    if (m.type === 'initial') { $('s-current').textContent = m.total.toLocaleString('pt-BR'); $('s-best').textContent = m.total.toLocaleString('pt-BR'); }
+                    if (m.type === 'progress') {
+                        $('s-bar').style.width = Math.min(100, m.elapsed / solver.limit * 100) + '%';
+                        $('s-clock').textContent = fmt(m.elapsed) + ' / ' + fmt(solver.limit);
+                        $('s-current').textContent = m.current.toLocaleString('pt-BR');
+                        $('s-best').textContent = m.best.toLocaleString('pt-BR');
+                        $('s-iter').textContent = m.iterations.toLocaleString('pt-BR') + ' tentativas';
+                    }
+                    if (m.type === 'done') {
+                        solver.result = m;
+                        solver.worker.terminate(); solver.worker = null;
+                        $('s-bar').style.width = '100%';
+                        $('s-best').textContent = m.best.toLocaleString('pt-BR');
+                        $('s-summary').innerHTML = '<strong>Melhor solução: ' + m.best.toLocaleString('pt-BR') + ' pontos</strong> (' + m.hard + ' restrições rígidas) — ' + escapeHtml(describe(m.counts)) + '. Revise e clique em <em>Aplicar solução</em>.';
+                        setStatus('Solução pronta', 'bg-info text-dark');
+                        solverButtons(false);
+                    }
+                };
+                solver.worker.postMessage({ type: 'start', problem, timeLimitMs: solver.limit, keepExisting: $('s-keep').checked });
+            });
+            $('s-stop').addEventListener('click', () => { if (solver.worker) solver.worker.postMessage({ type: 'stop' }); });
+            $('s-discard').addEventListener('click', () => { solver.result = null; $('s-summary').textContent = 'Solução descartada.'; $('s-progress-row').hidden = true; solverButtons(false); setStatus('Salvo', 'bg-success'); });
+            $('s-apply').addEventListener('click', async () => {
+                if (!solver.result) return;
+                solverButtons(true); $('s-stop').disabled = true;
+                setStatus('Aplicando…', 'bg-warning text-dark');
+                const response = await fetch(applyUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
+                    body: JSON.stringify({ solution: solver.result.solution }),
+                });
+                const r = await response.json();
+                solver.result = null;
+                solverButtons(false);
+                if (!response.ok) { toast([r.message || 'Falha ao aplicar a solução.'], 'danger'); setStatus('Erro', 'bg-danger'); return; }
+                $('s-summary').innerHTML = '<strong>Aplicada:</strong> ' + r.saved + ' disciplinas regravadas, ' + r.unchanged + ' sem mudança. Pontos ' +
+                    r.score_before.toLocaleString('pt-BR') + ' → <strong>' + r.score_after.toLocaleString('pt-BR') + '</strong> (' + r.hard_after + ' rígidas).' +
+                    (r.rejected.length ? '<details class="mt-1"><summary class="text-danger">' + r.rejected.length + ' recusada(s) pelo servidor</summary><ul class="mb-0">' + r.rejected.map(x => '<li>' + escapeHtml(x) + '</li>').join('') + '</ul></details>' : '');
+                await load();
+            });
+
             load();
         })();
     </script>

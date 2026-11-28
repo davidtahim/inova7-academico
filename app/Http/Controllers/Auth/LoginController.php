@@ -54,7 +54,8 @@ class LoginController extends Controller
             if ($user->must_change_password) {
                 return redirect()->route('profile.edit')->with('warning', 'Defina uma nova senha para continuar.');
             }
-            return redirect()->route('admin.planejamento.index');
+            // Coordenação cai no painel do semestre (planejamento em andamento).
+            return redirect()->route('dashboard');
         }
 
         if ($user->isTeacher()) {
@@ -63,7 +64,7 @@ class LoginController extends Controller
             }
             
             // Professor cai no painel docente: turmas do semestre, dados funcionais e pendências.
-            return redirect()->route('profile');
+            return redirect()->route('teacher.dashboard');
         }
 
         if ($user->isStaff()) {

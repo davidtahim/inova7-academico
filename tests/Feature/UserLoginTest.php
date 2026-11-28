@@ -291,7 +291,7 @@ class UserLoginTest extends TestCase
             ->get(route('admin.courses.index'))
             ->assertOk();
 
-        $this->assertSame('/admin/planejamento/cursos', route('admin.courses.index', [], false));
+        $this->assertSame('/cadastros/cursos', route('admin.courses.index', [], false));
     }
 
     public function test_admin_can_assign_a_professor_to_a_course(): void
@@ -342,7 +342,7 @@ class UserLoginTest extends TestCase
         ]);
 
         // Professor sem troca de senha pendente vai para o painel docente.
-        $response->assertRedirect(route('profile'));
+        $response->assertRedirect(route('teacher.dashboard'));
         $this->assertAuthenticatedAs($user);
     }
 
@@ -814,7 +814,7 @@ class UserLoginTest extends TestCase
 
         $matrix->subjects()->attach($subject->id, ['period' => 1, 'sequence' => 1]);
 
-        $response = $this->actingAs($user)->get('/cursos');
+        $response = $this->actingAs($user)->get('/consultas/cursos');
 
         $response->assertOk();
         $response->assertSee('Estrutura da disciplina');
@@ -1716,7 +1716,7 @@ class UserLoginTest extends TestCase
             'is_active' => true,
         ]);
 
-        $response = $this->actingAs($coordinator)->get('/planejamento?term=' . $term->id);
+        $response = $this->actingAs($coordinator)->get('/planejamento/turmas?term=' . $term->id);
 
         $response->assertOk();
         $response->assertSee('Professor Sugerido');
@@ -1805,7 +1805,7 @@ class UserLoginTest extends TestCase
             'is_active' => true,
         ]);
 
-        $response = $this->actingAs($coordinator)->post('/planejamento/alocar/' . $offering->id, [
+        $response = $this->actingAs($coordinator)->post('/planejamento/turmas/' . $offering->id . '/confirmar', [
             'professor_id' => $professor->id,
         ]);
 
@@ -1918,7 +1918,7 @@ class UserLoginTest extends TestCase
             'is_active' => true,
         ]);
 
-        $response = $this->actingAs($coordinator)->get('/planejamento?term=' . $term->id);
+        $response = $this->actingAs($coordinator)->get('/planejamento/turmas?term=' . $term->id);
 
         $response->assertOk();
         $response->assertSee('professor_id');
@@ -2049,7 +2049,7 @@ class UserLoginTest extends TestCase
             'is_active' => true,
         ]);
 
-        $response = $this->actingAs($coordinator)->post('/planejamento/alocar-lote', [
+        $response = $this->actingAs($coordinator)->post('/planejamento/turmas/confirmar-lote', [
             'academic_term_id' => $term->id,
             'course_id' => $course->id,
             'shift' => 'MANHÃ',
@@ -2072,8 +2072,8 @@ class UserLoginTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->actingAs($admin)->get('/admin/planejamento/cursos/novo')->assertOk();
-        $this->actingAs($admin)->post('/admin/planejamento/cursos', [
+        $this->actingAs($admin)->get('/cadastros/cursos/novo')->assertOk();
+        $this->actingAs($admin)->post('/cadastros/cursos', [
             'code' => 'ADS',
             'name' => 'Análise e Desenvolvimento de Sistemas',
             'degree' => 'Tecnólogo',
@@ -2082,8 +2082,8 @@ class UserLoginTest extends TestCase
 
         $this->assertDatabaseHas('courses', ['code' => 'ADS']);
 
-        $this->actingAs($admin)->get('/admin/planejamento/disciplinas/novo')->assertOk();
-        $this->actingAs($admin)->post('/admin/planejamento/disciplinas', [
+        $this->actingAs($admin)->get('/cadastros/disciplinas/novo')->assertOk();
+        $this->actingAs($admin)->post('/cadastros/disciplinas', [
             'code' => 'PROG-01',
             'name' => 'Programação I',
             'total_hours' => 80,
@@ -2092,8 +2092,8 @@ class UserLoginTest extends TestCase
 
         $this->assertDatabaseHas('subjects', ['code' => 'PROG-01']);
 
-        $this->actingAs($admin)->get('/admin/planejamento/professores/novo')->assertOk();
-        $this->actingAs($admin)->post('/admin/planejamento/professores', [
+        $this->actingAs($admin)->get('/cadastros/professores/novo')->assertOk();
+        $this->actingAs($admin)->post('/cadastros/professores', [
             'name' => 'Professor CRUD',
             'email' => 'crud.prof@inova7.local',
             'qualification' => 'Mestre',
@@ -2128,7 +2128,7 @@ class UserLoginTest extends TestCase
         ]);
 
         $this->actingAs($admin)
-            ->get('/admin/planejamento/disciplinas?q=Banco')
+            ->get('/cadastros/disciplinas?q=Banco')
             ->assertOk()
             ->assertSee('Banco de Dados')
             ->assertDontSee('Algoritmos');
@@ -2169,19 +2169,19 @@ class UserLoginTest extends TestCase
         ]);
 
         $this->actingAs($admin)
-            ->get('/admin/planejamento/cursos?q=ADS')
+            ->get('/cadastros/cursos?q=ADS')
             ->assertOk()
             ->assertSee('Análise e Desenvolvimento de Sistemas')
             ->assertDontSee('Engenharia');
 
         $this->actingAs($admin)
-            ->get('/admin/planejamento/matrizes?q=ADS-2026')
+            ->get('/cadastros/matrizes?q=ADS-2026')
             ->assertOk()
             ->assertSee('ADS-2026')
             ->assertDontSee('Matriz Engenharia');
 
         $this->actingAs($admin)
-            ->get('/admin/planejamento/professores?q=Silva')
+            ->get('/cadastros/professores?q=Silva')
             ->assertOk()
             ->assertSee('Maria Silva')
             ->assertDontSee('João Pereira');
@@ -2221,13 +2221,13 @@ class UserLoginTest extends TestCase
         ]);
 
         $this->actingAs($admin)
-            ->get('/admin/planejamento/semestres?q=2026')
+            ->get('/cadastros/semestres?q=2026')
             ->assertOk()
             ->assertSee('2026.7')
             ->assertDontSee('2025.2');
 
         $this->actingAs($admin)
-            ->get('/admin/planejamento/matrizes/permitidas?q=ADS')
+            ->get('/cadastros/matrizes/permitidas?q=ADS')
             ->assertOk()
             ->assertSee('Análise e Desenvolvimento de Sistemas')
             ->assertSee('ADS-2026');
@@ -2243,8 +2243,8 @@ class UserLoginTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->actingAs($admin)->get('/admin/planejamento/semestres/novo')->assertOk();
-        $this->actingAs($admin)->post('/admin/planejamento/semestres', [
+        $this->actingAs($admin)->get('/cadastros/semestres/novo')->assertOk();
+        $this->actingAs($admin)->post('/cadastros/semestres', [
             'code' => '2026.7',
             'starts_at' => '2026-09-01',
             'ends_at' => '2027-01-31',
@@ -2295,13 +2295,13 @@ class UserLoginTest extends TestCase
         ]);
 
         $this->actingAs($admin)
-            ->get('/disciplinas?q=Banco')
+            ->get('/consultas/disciplinas?q=Banco')
             ->assertOk()
             ->assertSee('Banco de Dados')
             ->assertDontSee('Algoritmos');
 
         $this->actingAs($admin)
-            ->get('/alunos?q=Maria')
+            ->get('/consultas/alunos?q=Maria')
             ->assertOk()
             ->assertSee('Maria Souza')
             ->assertDontSee('José Pereira');
@@ -2318,11 +2318,11 @@ class UserLoginTest extends TestCase
         ]);
 
         $this->actingAs($student)
-            ->get('/cursos')
+            ->get('/consultas/cursos')
             ->assertForbidden();
 
         $this->actingAs($student)
-            ->get('/auditoria')
+            ->get('/sistema/auditoria')
             ->assertForbidden();
     }
 
@@ -2378,7 +2378,7 @@ class UserLoginTest extends TestCase
         ]);
 
         $this->actingAs($admin)
-            ->get('/alunos/' . $student->id)
+            ->get('/consultas/alunos/' . $student->id)
             ->assertOk()
             ->assertSee('Histórico acadêmico')
             ->assertSee('Programação I')

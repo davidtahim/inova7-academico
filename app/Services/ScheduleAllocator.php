@@ -260,6 +260,10 @@ class ScheduleAllocator
             ->filter(fn (ClassOffering $o) => $o->slots->isEmpty());
 
         foreach ($targets as $offering) {
+            if ($offering->isDistance()) {
+                $report['skipped_distance']++;
+                continue;
+            }
             $match = $this->findEquivalent($offering, $sourceOfferings);
             if (! $match) {
                 $report['without_match']++;

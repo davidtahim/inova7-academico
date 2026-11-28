@@ -3,7 +3,8 @@
 @section('page-title', 'Habilitação docente - ' . $professor->name)
 
 @php
-    $backUrl = Gate::allows('access-catalog') ? route('admin.professors.index') : route('dashboard');
+    $ownArea = request()->routeIs('teacher.*');
+    $backUrl = $ownArea ? route('teacher.dashboard') : (Gate::allows('access-catalog') ? route('admin.professors.index') : route('dashboard'));
     $selectedLookup = array_flip($selectedIds);
 @endphp
 
@@ -20,7 +21,7 @@
             </div>
             <div class="d-flex gap-2">
                 <a href="{{ $backUrl }}" class="btn btn-outline-secondary">Voltar</a>
-                <a href="{{ route('admin.professors.availability', $professor) }}" class="btn btn-outline-primary">📅 Disponibilidade</a>
+                <a href="{{ $ownArea ? route('teacher.availability') : route('admin.professors.availability', $professor) }}" class="btn btn-outline-primary">📅 Disponibilidade</a>
             </div>
         </div>
 
