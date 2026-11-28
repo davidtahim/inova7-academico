@@ -33,7 +33,9 @@
                 <button type="button" class="btn btn-sm btn-outline-secondary" id="b-redo" disabled title="Refazer (Ctrl+Y)">↷ Refazer</button>
                 <a href="{{ route('allocation.diagnosis') }}" class="btn btn-sm btn-outline-secondary" id="b-diag"
                     title="Por que a grade não fecha? Causas e o que fazer">Diagnóstico <span class="badge rounded-pill" id="b-diag-count" hidden></span></a>
+                <a href="{{ route('allocation.scenarios') }}" class="btn btn-sm btn-outline-secondary" title="Salvar, restaurar, exportar e importar versões da grade">Versões</a>
                 <a href="{{ route('allocation.index') }}" class="btn btn-sm btn-outline-primary">Formulário de montagem</a>
+                <button type="button" class="btn btn-sm btn-outline-dark" data-bs-toggle="offcanvas" data-bs-target="#boardHelp" aria-controls="boardHelp" title="Como usar a grade global (tecla ?)">? Ajuda</button>
             </div>
         </div>
 
@@ -247,11 +249,16 @@
             }
 
             function highlight(classCode) {
-                document.querySelectorAll('td.cell').forEach(td => td.classList.add(td.dataset.class === classCode ? 'drop-ok' : 'drop-no'));
+                // Células da turma viram alvos de teclado (Tab + Enter) enquanto há aula selecionada.
+                document.querySelectorAll('td.cell').forEach(td => {
+                    const ok = td.dataset.class === classCode;
+                    td.classList.add(ok ? 'drop-ok' : 'drop-no');
+                    if (ok) { td.tabIndex = 0; td.setAttribute('aria-label', 'Soltar em ' + td.closest('tr').querySelector('th').textContent.trim()); }
+                });
                 $('b-pending').closest('.board-pending').classList.add('drop-ok');
             }
             function clearHighlight() {
-                document.querySelectorAll('td.cell').forEach(td => td.classList.remove('drop-ok', 'drop-no'));
+                document.querySelectorAll('td.cell').forEach(td => { td.classList.remove('drop-ok', 'drop-no'); td.removeAttribute('tabindex'); td.removeAttribute('aria-label'); });
                 $('b-pending').closest('.board-pending').classList.remove('drop-ok');
             }
 
@@ -301,6 +308,9 @@
                             td.addEventListener('dragover', ev => { if (state.selected && state.selected.classCode === c.code) ev.preventDefault(); });
                             td.addEventListener('drop', ev => { ev.preventDefault(); dropOn({ classCode: c.code, weekday: Number(weekday), letter }); });
                             td.addEventListener('click', () => { if (state.selected) dropOn({ classCode: c.code, weekday: Number(weekday), letter }); });
+                            td.addEventListener('keydown', ev => {
+                                if (ev.target === td && state.selected && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); dropOn({ classCode: c.code, weekday: Number(weekday), letter }); }
+                            });
                             tr.appendChild(td);
                         });
                         body.appendChild(tr);
@@ -437,5 +447,60 @@
             load();
             loadDiagnosis();
         })();
+    </script>
+    {{-- Ajuda integrada (RNF01): como usar, o que significam cores e pontos. --}}
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="boardHelp" aria-labelledby="boardHelpTitle" style="width: min(440px, 100vw)">
+        <div class="offcanvas-header border-bottom">
+            <h2 class="offcanvas-title h5" id="boardHelpTitle">Como usar a grade global</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+        </div>
+        <div class="offcanvas-body small">
+            <h3 class="h6">Mover aulas</h3>
+            <ul>
+                <li><strong>Arraste</strong> a aula para outro horário da mesma turma.</li>
+                <li>Ou <strong>clique na aula</strong> e depois no horário. Os horários possíveis ficam destacados.</li>
+                <li>Pelo teclado: <kbd>Tab</kbd> até a aula, <kbd>Enter</kbd> para selecionar, <kbd>Tab</kbd> até o horário e <kbd>Enter</kbd> para soltar. <kbd>Esc</kbd> cancela.</li>
+                <li>Solte em <strong>A alocar</strong> para tirar a aula da grade; as aulas que faltam aparecem lá.</li>
+                <li><kbd>Ctrl</kbd>+<kbd>Z</kbd> desfaz e <kbd>Ctrl</kbd>+<kbd>Y</kbd> refaz. Cada movimento é salvo na hora; choques são recusados.</li>
+            </ul>
+
+            <h3 class="h6 mt-3">Cores</h3>
+            <p>Cada professor tem sempre a mesma cor, então fica fácil ver onde ele está em todas as turmas. <span class="badge bg-light text-dark border">Cinza</span> é aula ainda sem professor.
+                O número vermelho ao lado do horário indica quantos problemas há naquela linha.</p>
+
+            <h3 class="h6 mt-3">Pontos (quanto menor, melhor)</h3>
+            <table class="table table-sm align-middle">
+                <tbody>
+                    @foreach (\App\Services\ScheduleScorer::WEIGHTS as $type => $weight)
+                        <tr>
+                            <td>{{ \App\Services\ScheduleScorer::LABELS[$type] }}</td>
+                            <td class="text-end text-nowrap">
+                                <span class="badge {{ $weight >= 1000 ? 'bg-danger' : 'bg-warning text-dark' }}">{{ $weight >= 1000 ? 'rígida' : $weight . ' pt' }}</span>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+            <p>As <strong>rígidas</strong> valem 1.000 cada e precisam chegar a zero; as demais medem a qualidade da grade.</p>
+
+            <h3 class="h6 mt-3">Resolver automaticamente</h3>
+            <ul>
+                <li>Considera o semestre inteiro e escolhe professor (entre os habilitados), dia, blocos e sala.</li>
+                <li>Professores <strong>confirmados</strong> em "Professores por turma" ficam fixos.</li>
+                <li>Nada muda até você clicar em <strong>Aplicar solução</strong>; antes disso, a grade atual é guardada em <a href="{{ route('allocation.scenarios') }}">Versões</a>.</li>
+                <li>Se não zerar as rígidas, abra o <a href="{{ route('allocation.diagnosis') }}">Diagnóstico</a>: ele explica o que impede a grade de fechar.</li>
+            </ul>
+
+            <h3 class="h6 mt-3">Publicar</h3>
+            <p class="mb-0">Alunos e professores só veem os horários depois que a coordenação publica, no <a href="{{ route('allocation.index') }}">Formulário de montagem</a>.</p>
+        </div>
+    </div>
+    <script>
+        // Tecla "?" abre a ajuda (fora de campos de texto).
+        document.addEventListener('keydown', ev => {
+            if (ev.key === '?' && !/input|select|textarea/i.test(ev.target.tagName)) {
+                bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('boardHelp')).toggle();
+            }
+        });
     </script>
 @endsection
