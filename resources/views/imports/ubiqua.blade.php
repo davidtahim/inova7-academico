@@ -45,8 +45,11 @@
                     </div>
 
                     <div class="mt-2 text-muted small">
-                        Arquivos esperados: CSV ou XLSX com colunas como CURSO, MATRIZ, DISCIPLINA, CÓDIGO, PERÍODO, TURMA,
-                        TURNO, MODALIDADE e PROFESSOR.
+                        Arquivos esperados: CSV ou XLSX com as colunas <strong>Código da Turma, Cód Disciplina, Nome Disciplina,
+                        Curso, Matriz, Turno, Hora Aula Semanal e Quantidade de Alunos</strong> (opcionais: Período, Modalidade,
+                        Professor). A Matriz pode vir pelo código (GRA-MAT-0228-F), pelo nome (Matriz 15) ou pelo número (15);
+                        Turno aceita Manhã/Matutino, Tarde/Vespertino, Noite/Noturno e Integral. Reimportar a mesma planilha
+                        atualiza as turmas pelo Código da Turma.
                     </div>
 
                     <div class="d-flex flex-wrap align-items-center gap-2 mt-4">

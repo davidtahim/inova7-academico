@@ -65,10 +65,7 @@ class PlanningController extends Controller
             'professor_id' => ['required', 'integer', 'exists:professors,id'],
         ]);
 
-        $user = $request->user();
-        if (! $user || ! in_array($user->role, ['coordinator', 'admin', 'staff'], true)) {
-            abort(403, 'Você não pode confirmar alocações.');
-        }
+        abort_unless($request->user()?->can('manage-planning'), 403, 'Você não pode confirmar alocações.');
 
         $professor = Professor::findOrFail($validated['professor_id']);
 
@@ -98,10 +95,7 @@ class PlanningController extends Controller
             'professor_id' => ['required', 'integer', 'exists:professors,id'],
         ]);
 
-        $user = $request->user();
-        if (! $user || ! in_array($user->role, ['coordinator', 'admin', 'staff'], true)) {
-            abort(403, 'Você não pode confirmar alocações em lote.');
-        }
+        abort_unless($request->user()?->can('manage-planning'), 403, 'Você não pode confirmar alocações em lote.');
 
         $professor = Professor::findOrFail($validated['professor_id']);
 

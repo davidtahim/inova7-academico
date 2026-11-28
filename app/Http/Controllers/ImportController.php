@@ -6,6 +6,7 @@ use App\Models\AcademicTerm;
 use App\Models\ClassOffering;
 use App\Models\Course;
 use App\Models\CurriculumMatrix;
+use App\Models\CurriculumMatrixDiscipline;
 use App\Models\Professor;
 use App\Models\ScheduleSlot;
 use App\Models\Subject;
@@ -475,6 +476,14 @@ class ImportController extends Controller
 
         $totalRows = count($rows);
         $imported = 0;
+        $stats = [
+            'created' => 0,
+            'updated' => 0,
+            'skipped_group' => 0,
+            'skipped_matrix' => 0,
+            'without_matrix_link' => [],
+            'unknown_shift' => [],
+        ];
 
         session([
             'ubiqua_import_total_rows' => $totalRows,
@@ -487,11 +496,19 @@ class ImportController extends Controller
             }
 
             if ($this->shouldSkipGroup($normalized)) {
+                $stats['skipped_group']++;
                 continue;
+            }
+
+            // "15" ou "Matriz 15" na planilha → código cadastrado (ex.: GRA-MAT-0228-F).
+            $knownCourse = $this->findExistingCourse($normalized);
+            if ($knownCourse && ($knownMatrix = $this->findExistingMatrix($knownCourse, (string) $normalized['matriz']))) {
+                $normalized['matriz'] = $knownMatrix->code;
             }
 
             $allowedMatrixCodes = $this->loadAllowedMatrixCodesForCourse($normalized);
             if (! empty($allowedMatrixCodes) && $this->shouldSkipMatrix($normalized, $allowedMatrixCodes)) {
+                $stats['skipped_matrix']++;
                 continue;
             }
 
@@ -505,14 +522,54 @@ class ImportController extends Controller
             $course = $this->ensureCourse($normalized['curso'], $normalized['codigo_curso'] ?? '');
             $matrix = $this->ensureMatrix($course, $normalized['matriz']);
             $subject = $this->ensureSubject($normalized['codigo'], $normalized['disciplina']);
+            $matrixLink = $this->findMatrixLink($matrix, $subject, $normalized);
 
+            if ($matrix && ! $matrixLink) {
+                $stats['without_matrix_link'][$subject->code] = true;
+            }
+
+            $shift = $this->resolveShiftOrNull($normalized['turno'] ?? '');
+            if ($shift === null) {
+                if (trim((string) ($normalized['turno'] ?? '')) !== '') {
+                    $stats['unknown_shift'][Str::upper(trim($normalized['turno']))] = true;
+                }
+                $shift = $matrixLink?->shift ?? 'MANHÃ';
+            }
+
+            $period = ! $normalized['periodo_informado'] && $matrixLink
+                ? (int) $matrixLink->period
+                : (int) ($normalized['periodo'] ?? 1);
+
+            // "Hora Aula Semanal" da planilha manda; sem ela, usa a carga do vínculo na matriz ou a H.A. Classis.
+            $weeklyHours = $normalized['hora_aula_semanal']
+                ?? ($matrixLink?->weekly_hours ? (float) $matrixLink->weekly_hours : null)
+                ?? (float) ($normalized['carga_horaria'] ?? 2);
+
+            $explicitClassCode = trim((string) ($normalized['turma'] ?? ''));
             $classCode = $this->resolveClassCode(
-                trim((string) ($normalized['turma'] ?? '')) ?: trim((string) ($normalized['codigo'] ?? '')),
+                $explicitClassCode ?: trim((string) ($normalized['codigo'] ?? '')),
                 $term,
                 $subject,
                 $normalized,
-                $imported + 1
+                $imported + 1,
+                $explicitClassCode !== ''
             );
+
+            $attributes = [
+                'curriculum_matrix_id' => $matrix?->id,
+                'curriculum_matrix_discipline_id' => $matrixLink?->id,
+                'period' => $period,
+                'shift' => $shift,
+                'modality' => $this->normalizeModality($normalized['modalidade'] ?? 'PRESENCIAL'),
+                'occurs' => true,
+                'weekly_hours' => $weeklyHours,
+                'totvs_hours' => (float) ($normalized['carga_horaria'] ?? $weeklyHours),
+                'status' => 'planned',
+            ];
+
+            if ($normalized['quantidade_alunos'] !== null) {
+                $attributes['student_count'] = $normalized['quantidade_alunos'];
+            }
 
             $offering = ClassOffering::updateOrCreate(
                 [
@@ -521,17 +578,10 @@ class ImportController extends Controller
                     'class_code' => $classCode,
                     'subject_id' => $subject->id,
                 ],
-                [
-                    'curriculum_matrix_id' => $matrix?->id,
-                    'period' => (int) ($normalized['periodo'] ?? 1),
-                    'shift' => $this->resolveShift($normalized['turno'] ?? 'MANHA'),
-                    'modality' => $this->normalizeModality($normalized['modalidade'] ?? 'PRESENCIAL'),
-                    'occurs' => true,
-                    'weekly_hours' => (float) ($normalized['carga_horaria'] ?? 2),
-                    'totvs_hours' => (float) ($normalized['carga_horaria'] ?? 2),
-                    'status' => 'planned',
-                ]
+                $attributes
             );
+
+            $offering->wasRecentlyCreated ? $stats['created']++ : $stats['updated']++;
 
             if (! empty($normalized['professor'])) {
                 $professor = $this->ensureProfessor($normalized['professor']);
@@ -541,16 +591,16 @@ class ImportController extends Controller
                         'professor_id' => $professor->id,
                     ],
                     [
-                        'weekly_hours' => (float) ($normalized['carga_horaria'] ?? 2),
+                        'weekly_hours' => $weeklyHours,
                         'status' => 'planned',
                     ]
                 );
             }
 
-            $allocationService->allocateForTerm($term->id);
             $imported++;
         }
 
+        // Sugestão automática de professores: uma única vez, ao final da importação.
         $allocationService->allocateForTerm($term->id);
 
         session([
@@ -559,7 +609,7 @@ class ImportController extends Controller
             'ubiqua_import_finished' => true,
         ]);
 
-        $message = "Importação concluída: {$imported} ofertas processadas. A importação foi limitada ao grupo Uni7; registros de outros grupos foram ignorados.";
+        $message = $this->buildUbiquaSummary($imported, $stats);
 
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
@@ -657,7 +707,7 @@ class ImportController extends Controller
             $matchedHeaders = 0;
             foreach ($values as $value) {
                 $normalized = $this->normalizeHeader((string) $value);
-                if (in_array($normalized, ['curso', 'periodo', 'disciplina', 'matriz', 'carga_horaria', 'modalidade', 'professor', 'nome', 'matricula', 'chapa', 'lattes'], true)) {
+                if (in_array($normalized, ['curso', 'periodo', 'disciplina', 'matriz', 'carga_horaria', 'hora_aula_semanal', 'quantidade_alunos', 'codigo_turma', 'modalidade', 'professor', 'nome', 'matricula', 'chapa', 'lattes'], true)) {
                     $matchedHeaders++;
                 }
             }
@@ -743,6 +793,27 @@ class ImportController extends Controller
             'NOME_DA_MATRIZ' => 'matriz',
             'CARGA_HORARIA' => 'carga_horaria',
             'CH' => 'carga_horaria',
+            'HORA_AULA_SEMANAL' => 'hora_aula_semanal',
+            'HORAS_AULA_SEMANAL' => 'hora_aula_semanal',
+            'HORA_AULA_SEMANAIS' => 'hora_aula_semanal',
+            'HORAS_AULA_SEMANAIS' => 'hora_aula_semanal',
+            'H_A_SEMANAL' => 'hora_aula_semanal',
+            'HA_SEMANAL' => 'hora_aula_semanal',
+            'AULAS_SEMANAIS' => 'hora_aula_semanal',
+            'AULAS_POR_SEMANA' => 'hora_aula_semanal',
+            'CH_SEMANAL' => 'hora_aula_semanal',
+            'CARGA_HORARIA_SEMANAL' => 'hora_aula_semanal',
+            'QUANTIDADE_DE_ALUNOS' => 'quantidade_alunos',
+            'QUANTIDADE_ALUNOS' => 'quantidade_alunos',
+            'QTD_ALUNOS' => 'quantidade_alunos',
+            'QTD_DE_ALUNOS' => 'quantidade_alunos',
+            'QTDE_ALUNOS' => 'quantidade_alunos',
+            'QTDE_DE_ALUNOS' => 'quantidade_alunos',
+            'N_DE_ALUNOS' => 'quantidade_alunos',
+            'NUMERO_DE_ALUNOS' => 'quantidade_alunos',
+            'ALUNOS' => 'quantidade_alunos',
+            'MATRICULADOS' => 'quantidade_alunos',
+            'VAGAS' => 'quantidade_alunos',
             'HABILITACAO' => 'habilitacao',
             'HABILITAÇÃO' => 'habilitacao',
             'PROFESSOR' => 'professor',
@@ -929,7 +1000,10 @@ class ImportController extends Controller
             return null;
         }
 
+        $periodoInformado = trim((string) ($row['periodo'] ?? $row['PERIODO'] ?? '')) !== '';
         $periodo = $this->toNumericValue($row['periodo'] ?? $row['PERIODO'] ?? '1');
+        $horaAulaSemanal = isset($row['hora_aula_semanal']) ? $this->toNumericValue($row['hora_aula_semanal']) : null;
+        $quantidadeAlunos = isset($row['quantidade_alunos']) ? (int) $this->toNumericValue($row['quantidade_alunos']) : null;
         $cargaHoraria = $this->toNumericValue($row['carga_horaria'] ?? $row['CARGA_HORARIA'] ?? $row['CH'] ?? $row['HA_CLASSIS_PAGAMENTO'] ?? $row['H_A_CLASSIS_PAGAMENTO'] ?? '2');
 
         return [
@@ -939,12 +1013,15 @@ class ImportController extends Controller
             'disciplina' => $disciplina ?: $codigo,
             'codigo' => $codigo,
             'periodo' => (int) $periodo,
+            'periodo_informado' => $periodoInformado,
             'turma' => $turma,
             'turno' => $turno,
             'modalidade' => $modalidade,
             'professor' => $professor,
             'grupo' => $grupo,
             'carga_horaria' => (float) $cargaHoraria,
+            'hora_aula_semanal' => $horaAulaSemanal !== null && $horaAulaSemanal > 0 ? (float) $horaAulaSemanal : null,
+            'quantidade_alunos' => $quantidadeAlunos !== null && $quantidadeAlunos > 0 ? $quantidadeAlunos : null,
         ];
     }
 
@@ -990,20 +1067,30 @@ class ImportController extends Controller
         return preg_replace('/[^A-Z0-9]+/', '', $normalized) ?? '';
     }
 
-    private function loadAllowedMatrixCodesForCourse(array $normalized): array
+    private function findExistingCourse(array $normalized): ?Course
     {
         $courseCode = $this->normalizeImportCode((string) ($normalized['codigo_curso'] ?? ''));
         $courseName = trim((string) ($normalized['curso'] ?? ''));
 
-        $course = null;
-
         if ($courseCode !== '') {
-            $course = Course::query()->whereRaw('UPPER(code) = ?', [$courseCode])->first();
+            $course = Course::all()->first(fn (Course $c) => $this->normalizeImportCode((string) $c->code) === $courseCode);
+            if ($course) {
+                return $course;
+            }
         }
 
-        if (! $course && $courseName !== '') {
-            $course = Course::query()->whereRaw('LOWER(name) = ?', [mb_strtolower($courseName)])->first();
+        if ($courseName !== '') {
+            $wanted = Str::lower(Str::ascii($courseName));
+
+            return Course::all()->first(fn (Course $c) => Str::lower(Str::ascii(trim((string) $c->name))) === $wanted);
         }
+
+        return null;
+    }
+
+    private function loadAllowedMatrixCodesForCourse(array $normalized): array
+    {
+        $course = $this->findExistingCourse($normalized);
 
         if (! $course) {
             return [];
@@ -1036,6 +1123,17 @@ class ImportController extends Controller
     private function ensureCourse(string $name, string $codeFromSheet = ''): Course
     {
         $explicitCode = strtoupper(trim($codeFromSheet));
+
+        // Sem código na planilha: reaproveita o curso já cadastrado com o mesmo nome
+        // (ignorando maiúsculas e acentos) antes de derivar um código a partir do nome.
+        if ($explicitCode === '' && trim($name) !== '') {
+            $wanted = Str::lower(Str::ascii(trim($name)));
+            $existing = Course::all()->first(fn (Course $course) => Str::lower(Str::ascii(trim((string) $course->name))) === $wanted);
+            if ($existing) {
+                return $existing;
+            }
+        }
+
         $code = $explicitCode !== '' ? $explicitCode : $this->deriveCourseCodeFromName($name);
 
         $course = Course::firstOrCreate(['code' => $code], [
@@ -1073,10 +1171,100 @@ class ImportController extends Controller
             return null;
         }
 
+        $existing = $this->findExistingMatrix($course, $matrixCode);
+        if ($existing) {
+            return $existing;
+        }
+
         return CurriculumMatrix::firstOrCreate(
             ['course_id' => $course->id, 'code' => trim($matrixCode)],
             ['name' => trim($matrixCode), 'version' => 'importado', 'status' => 'Atual']
         );
+    }
+
+    /**
+     * Localiza a matriz já cadastrada do curso a partir do valor da planilha, aceitando
+     * o código completo ("GRA-MAT-0228-F", com ou sem separadores), o nome ("Matriz 15")
+     * ou apenas o número ("15").
+     */
+    private function findExistingMatrix(Course $course, string $value): ?CurriculumMatrix
+    {
+        $wanted = $this->normalizeImportCode($value);
+        if ($wanted === '') {
+            return null;
+        }
+
+        $matrices = CurriculumMatrix::where('course_id', $course->id)->get();
+
+        $byCode = $matrices->first(fn (CurriculumMatrix $m) => $this->normalizeImportCode((string) $m->code) === $wanted);
+        if ($byCode) {
+            return $byCode;
+        }
+
+        $byName = $matrices->first(fn (CurriculumMatrix $m) => $this->normalizeImportCode((string) $m->name) === $wanted);
+        if ($byName) {
+            return $byName;
+        }
+
+        $number = preg_match('/^(?:MATRIZ)?0*(\d+)$/', $wanted, $match) === 1 ? $match[1] : null;
+        if ($number === null) {
+            return null;
+        }
+
+        $byNumber = $matrices->filter(function (CurriculumMatrix $m) use ($number) {
+            return preg_match('/^MATRIZ0*(\d+)$/', $this->normalizeImportCode((string) $m->name), $nameMatch) === 1
+                && $nameMatch[1] === $number;
+        });
+
+        return $byNumber->count() === 1 ? $byNumber->first() : null;
+    }
+
+    /**
+     * Vínculo matriz ↔ disciplina que originou a oferta (tipo de sala, aula compartilhada,
+     * máximo de aulas consecutivas). Com período informado, prefere o vínculo daquele período.
+     */
+    private function findMatrixLink(?CurriculumMatrix $matrix, Subject $subject, array $normalized): ?CurriculumMatrixDiscipline
+    {
+        if (! $matrix) {
+            return null;
+        }
+
+        $links = CurriculumMatrixDiscipline::where('curriculum_matrix_id', $matrix->id)
+            ->where('subject_id', $subject->id)
+            ->orderBy('period')
+            ->get();
+
+        if ($links->isEmpty()) {
+            return null;
+        }
+
+        if (! empty($normalized['periodo_informado'])) {
+            return $links->firstWhere('period', (int) $normalized['periodo']) ?? $links->first();
+        }
+
+        return $links->first();
+    }
+
+    private function buildUbiquaSummary(int $imported, array $stats): string
+    {
+        $parts = ["Importação concluída: {$imported} ofertas processadas ({$stats['created']} novas, {$stats['updated']} atualizadas)."];
+
+        if ($stats['skipped_group'] > 0) {
+            $parts[] = "{$stats['skipped_group']} linha(s) de outros grupos ignoradas (importação limitada ao grupo Uni7).";
+        }
+        if ($stats['skipped_matrix'] > 0) {
+            $parts[] = "{$stats['skipped_matrix']} linha(s) de matrizes não permitidas ignoradas.";
+        }
+        if ($stats['without_matrix_link'] !== []) {
+            $codes = array_keys($stats['without_matrix_link']);
+            $sample = implode(', ', array_slice($codes, 0, 5)) . (count($codes) > 5 ? '…' : '');
+            $parts[] = count($codes) . " disciplina(s) sem vínculo na matriz curricular ({$sample}): tipo de sala e regras de grade não serão aplicados até o vínculo ser cadastrado.";
+        }
+        if ($stats['unknown_shift'] !== []) {
+            $parts[] = 'Turno(s) não reconhecido(s): ' . implode(', ', array_keys($stats['unknown_shift'])) . ' — foi usado o turno da matriz (ou MANHÃ).';
+        }
+
+        return implode(' ', $parts);
     }
 
     private function ensureSubject(string $code, string $name): Subject
@@ -1101,9 +1289,15 @@ class ImportController extends Controller
         );
     }
 
-    private function resolveClassCode(string $fallbackCode, AcademicTerm $term, Subject $subject, array $normalized, int $rowIndex): string
+    private function resolveClassCode(string $fallbackCode, AcademicTerm $term, Subject $subject, array $normalized, int $rowIndex, bool $explicit = false): string
     {
         $candidate = trim($fallbackCode);
+
+        // Código de turma real (coluna "Código da Turma"): identifica a oferta. Reimportar a
+        // mesma planilha atualiza a turma em vez de criar uma cópia com sufixo.
+        if ($explicit && $candidate !== '' && ! $this->looksLikeCourseName($candidate)) {
+            return $candidate;
+        }
 
         if ($candidate === '' || $this->looksLikeCourseName($candidate)) {
             $candidate = sprintf(
@@ -1142,18 +1336,32 @@ class ImportController extends Controller
         return preg_match('/^[A-Z]+$/', $value) === 1 && strlen($value) >= 8;
     }
 
-    private function resolveShift(string $value): string
+    private function resolveShiftOrNull(string $value): ?string
     {
-        $value = Str::upper(trim($value));
+        $key = Str::upper(Str::ascii(trim($value)));
         $map = [
             'MANHA' => 'MANHÃ',
-            'MANHÃ' => 'MANHÃ',
+            'MATUTINO' => 'MANHÃ',
+            'M' => 'MANHÃ',
             'TARDE' => 'TARDE',
+            'VESPERTINO' => 'TARDE',
+            'T' => 'TARDE',
             'NOITE' => 'NOITE',
             'NOTURNO' => 'NOITE',
+            'N' => 'NOITE',
+            'INTEGRAL' => 'INTEGRAL',
+            'MANHA_E_TARDE' => 'INTEGRAL',
+            'MANHA/TARDE' => 'INTEGRAL',
+            'MANHA E TARDE' => 'INTEGRAL',
+            'DIURNO' => 'INTEGRAL',
         ];
 
-        return $map[$value] ?? 'MANHÃ';
+        return $map[$key] ?? null;
+    }
+
+    private function resolveShift(string $value): string
+    {
+        return $this->resolveShiftOrNull($value) ?? 'MANHÃ';
     }
 
     private function normalizeModality(string $value): string

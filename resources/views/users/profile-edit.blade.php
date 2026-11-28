@@ -5,7 +5,7 @@
 @section('content')
     <div class="container py-4">
         <div class="row justify-content-center">
-            <div class="col-xl-9">
+            <div class="{{ $user->role === 'teacher' ? 'col-12' : 'col-xl-9' }}">
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-primary text-white py-3">
                         <h5 class="mb-0 fw-bold">{{ $user->role === 'teacher' ? 'Meu perfil' : 'Editar perfil' }}</h5>
@@ -107,62 +107,31 @@
                                 </div>
                             </form>
 
-                            <div class="border rounded p-3 mt-4" id="disponibilidade">
-                                <div class="d-flex align-items-center justify-content-between mb-3">
-                                    <h6 class="fw-bold mb-0">Disponibilidade</h6>
-                                    <span class="badge text-bg-success rounded-pill">{{ $availability->count() }}
-                                        registros</span>
-                                </div>
-
-                                <div class="alert alert-info small mb-3">
-                                    A disponibilidade é preenchida pela oferta Ubíqua. Os dados abaixo refletem o semestre
-                                    ativo selecionado.
-                                </div>
-
-                                @if ($availability->isEmpty())
-                                    <div class="alert alert-secondary mb-0">
-                                        Nenhuma disponibilidade registrada para o semestre atual.
+                            <section class="mt-4 pt-4 border-top" id="disponibilidade" aria-labelledby="disponibilidade-title">
+                                <div class="d-flex flex-wrap gap-2 align-items-start justify-content-between mb-3">
+                                    <div>
+                                        <h6 class="fw-bold mb-1" id="disponibilidade-title">Disponibilidade de horários — {{ $term?->code ?? 'semestre não selecionado' }}</h6>
+                                        <small class="text-muted">
+                                            Preencha a grade do formulário CCG-FOR-02. Cada clique salva automaticamente;
+                                            a coordenação usa esta grade para alocar suas turmas.
+                                        </small>
                                     </div>
+                                    @if ($hasAvailabilityGrid)
+                                        <a href="{{ route('teacher.availability.pdf') }}" class="btn btn-sm btn-outline-success">Gerar CCG-FOR-02 (PDF)</a>
+                                    @endif
+                                </div>
+
+                                @if (! $hasAvailabilityGrid)
+                                    <div class="alert alert-warning mb-0">
+                                        Seu usuário ainda não está vinculado a um cadastro docente, por isso a grade de
+                                        disponibilidade não pode ser exibida. Procure a coordenação.
+                                    </div>
+                                @elseif (! $term)
+                                    <div class="alert alert-secondary mb-0">Nenhum semestre letivo cadastrado.</div>
                                 @else
-                                    @php
-                                        $groupedAvailability = $availability
-                                            ->sortBy('weekday')
-                                            ->sortBy('starts_at')
-                                            ->groupBy('weekday');
-                                    @endphp
-
-                                    <div class="d-grid gap-3">
-                                        @foreach ([1, 2, 3, 4, 5, 6] as $dayNumber)
-                                            @php $daySlots = $groupedAvailability->get((string) $dayNumber, collect()); @endphp
-                                            @if ($daySlots->isEmpty())
-                                                @continue
-                                            @endif
-
-                                            <div class="border rounded p-3 bg-light-subtle">
-                                                <div class="fw-semibold mb-2">
-                                                    {{ ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'][$dayNumber - 1] ?? '—' }}
-                                                </div>
-
-                                                <div class="d-grid gap-2">
-                                                    @foreach ($daySlots as $slot)
-                                                        <div class="border rounded p-2 bg-white">
-                                                            <div class="small text-secondary">
-                                                                {{ $slot->starts_at }} às {{ $slot->ends_at }}
-                                                            </div>
-                                                            <div class="small mt-1">
-                                                                <span
-                                                                    class="badge {{ $slot->preference === 'preferred' ? 'text-bg-primary' : ($slot->preference === 'unavailable' ? 'text-bg-danger' : 'text-bg-success') }} rounded-pill">
-                                                                    {{ $slot->preference === 'preferred' ? 'Preferencial' : ($slot->preference === 'unavailable' ? 'Indisponível' : 'Disponível') }}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    @endforeach
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                    </div>
+                                    @include('partials.availability-grid')
                                 @endif
-                            </div>
+                            </section>
                         @else
                             <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
                                 @csrf
@@ -220,17 +189,9 @@
 
                                     <div class="col-md-6">
                                         <label for="role" class="form-label fw-semibold">Perfil</label>
-                                        <select class="form-select @error('role') is-invalid @enderror" id="role"
-                                            name="role" required>
-                                            @foreach ($roles as $key => $label)
-                                                <option value="{{ $key }}"
-                                                    {{ old('role', $user->role) === $key ? 'selected' : '' }}>
-                                                    {{ $label }}</option>
-                                            @endforeach
-                                        </select>
-                                        @error('role')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
+                                        <input type="text" class="form-control" id="role"
+                                            value="{{ $user->role_label }}" disabled readonly>
+                                        <div class="form-text">O perfil de acesso é definido pelo Administrador de TI.</div>
                                     </div>
 
                                     <div class="col-md-6">

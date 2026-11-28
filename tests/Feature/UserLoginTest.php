@@ -69,7 +69,8 @@ class UserLoginTest extends TestCase
             'password' => 'senha1234',
         ]);
 
-        $response->assertRedirect(route('dashboard'));
+        // Administrador de TI é direcionado para a gestão de usuários.
+        $response->assertRedirect(route('admin.users.index'));
         $this->assertAuthenticated();
     }
 
@@ -340,7 +341,8 @@ class UserLoginTest extends TestCase
             'password' => 'senha1234',
         ]);
 
-        $response->assertRedirect(route('profile.edit'));
+        // Professor sem troca de senha pendente vai para o painel docente.
+        $response->assertRedirect(route('profile'));
         $this->assertAuthenticatedAs($user);
     }
 
@@ -538,21 +540,28 @@ class UserLoginTest extends TestCase
 
     public function test_teacher_availability_form_uses_standard_morning_and_evening_slots(): void
     {
+        AcademicTerm::create(['code' => '2027.1', 'status' => 'planning']);
+        $professor = Professor::create(['name' => 'Professora Ana', 'email' => 'ana.prof.slot@inova7.local', 'active' => true]);
         $user = User::create([
             'name' => 'Professora Ana',
             'email' => 'ana.prof.slot@inova7.local',
             'password' => 'senha1234',
             'role' => 'teacher',
             'is_active' => true,
+            'professor_id' => $professor->id,
         ]);
 
         $response = $this->actingAs($user)->get('/perfil/editar');
 
+        // Grade oficial de 50 min (a mesma da tela da coordenação), sem horários inventados.
         $response->assertOk();
         $response->assertSee('07:30 às 08:20');
-        $response->assertSee('10:50 às 11:40');
+        $response->assertSee('10:10 às 11:00');
+        $response->assertSee('13:10 às 14:00');
         $response->assertSee('18:30 às 19:20');
-        $response->assertSee('21:00 às 21:50');
+        $response->assertSee('21:10 às 22:00');
+        $response->assertDontSee('10:50 às 11:40');
+        $response->assertDontSee('21:00 às 21:50');
     }
 
     public function test_teacher_sees_only_subjects_allocated_by_coordinator(): void
@@ -814,7 +823,7 @@ class UserLoginTest extends TestCase
         $response->assertSee('Fundamentos de lógica, algoritmos e programação estruturada.');
     }
 
-    public function test_teacher_profile_hides_manual_subject_and_availability_editor(): void
+    public function test_teacher_profile_shows_editable_availability_grid(): void
     {
         $user = User::create([
             'name' => 'Professora Ana',
@@ -883,13 +892,16 @@ class UserLoginTest extends TestCase
 
         $response = $this->actingAs($user)->get('/perfil/editar');
 
+        // O professor preenche a própria grade (CCG-FOR-02), como na tela da coordenação.
         $response->assertOk();
-        $response->assertSee('A disponibilidade é preenchida pela oferta Ubíqua');
+        $response->assertSee('Clique nos horários');
+        $response->assertSee('availability-cell', false);
+        $response->assertDontSee('A disponibilidade é preenchida pela oferta Ubíqua');
         $response->assertDontSee('name="subjects[]"');
         $response->assertDontSee('+ Adicionar horário');
     }
 
-    public function test_only_it_staff_can_access_ubiquitous_import(): void
+    public function test_coordinator_and_it_staff_can_access_ubiquitous_import(): void
     {
         $coordinator = User::create([
             'name' => 'Coordenador',
@@ -908,7 +920,7 @@ class UserLoginTest extends TestCase
         ]);
 
         $response = $this->actingAs($coordinator)->get('/importacoes/oferta-ubiqua');
-        $response->assertForbidden();
+        $response->assertOk();
 
         $allowed = $this->actingAs($itStaff)->get('/importacoes/oferta-ubiqua');
         $allowed->assertOk();

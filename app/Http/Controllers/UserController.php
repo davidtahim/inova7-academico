@@ -7,25 +7,27 @@ use App\Models\Professor;
 use App\Models\ProfessorAvailability;
 use App\Models\Subject;
 use App\Models\User;
+use App\Services\AvailabilityGrid;
+use App\Services\TeacherDashboard;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 class UserController extends Controller
 {
-    public function create()
-    {
-        return view('users.create');
-    }
-
-    public function profile()
+    public function profile(TeacherDashboard $dashboard)
     {
         $user = Auth::user();
         if (! $user instanceof User) {
             abort(403);
+        }
+
+        if ($user->isTeacher()) {
+            return $this->teacherDashboard($user, $dashboard);
         }
 
         return view('users.profile', [
@@ -34,49 +36,109 @@ class UserController extends Controller
         ]);
     }
 
-    public function editProfile()
+    private function teacherDashboard(User $user, TeacherDashboard $dashboard)
+    {
+        $term = $this->selectedTerm();
+        $professor = $user->resolveProfessor();
+
+        return view('users.teacher-dashboard', array_merge([
+            'user' => $user,
+            'professor' => $professor,
+            'term' => $term,
+            'qualificationOptions' => TeacherDashboard::QUALIFICATIONS,
+            'statusLabels' => TeacherDashboard::ASSIGNMENT_STATUS,
+            'weekdays' => TeacherDashboard::WEEKDAYS,
+        ], $professor ? $dashboard->build($professor, $term) : [
+            'assignments' => collect(),
+            'qualifiedIds' => [],
+            'stats' => ['classes' => 0, 'weekly_hours' => 0, 'students' => 0, 'confirmed' => 0],
+            'missingFields' => [],
+            'checklist' => [],
+        ]));
+    }
+
+    /**
+     * Dados funcionais informados pelo próprio professor (mesmos campos da lista de
+     * professores da coordenação). O status (ativo/inativo) continua com a coordenação.
+     */
+    public function updateProfessionalData(Request $request)
+    {
+        $user = Auth::user();
+        abort_unless($user instanceof User && $user->isTeacher(), 403);
+
+        $professor = $user->resolveProfessor();
+        abort_unless($professor !== null, 404, 'Seu usuário ainda não está vinculado a um cadastro de professor. Procure a coordenação.');
+
+        $validated = $request->validateWithBag('professional', [
+            'name' => ['required', 'string', 'max:255'],
+            'registration' => ['required', 'string', 'max:30', Rule::unique('professors', 'registration')->ignore($professor->id)],
+            'chapa' => ['required', 'string', 'max:30'],
+            'qualification' => ['required', Rule::in(TeacherDashboard::QUALIFICATIONS)],
+            'lattes' => ['nullable', 'url', 'max:255'],
+        ], [
+            'registration.unique' => 'Esta matrícula já pertence a outro professor.',
+            'qualification.in' => 'Selecione uma formação da lista.',
+        ], [
+            'name' => 'nome',
+            'registration' => 'matrícula',
+            'chapa' => 'chapa',
+            'qualification' => 'formação',
+            'lattes' => 'currículo Lattes',
+        ]);
+
+        $professor->fill([
+            'name' => trim($validated['name']),
+            'registration' => trim($validated['registration']),
+            'chapa' => trim($validated['chapa']),
+            'qualification' => $validated['qualification'],
+            'lattes' => $validated['lattes'] ?? null,
+        ])->save();
+
+        $user->name = $professor->name;
+        $registrationTaken = User::where('registration_number', $professor->registration)->whereKeyNot($user->id)->exists();
+        if (! $registrationTaken) {
+            $user->registration_number = $professor->registration;
+        }
+        $user->save();
+
+        return redirect()->route('profile')->with('success', 'Dados funcionais atualizados.');
+    }
+
+    private function selectedTerm(): ?AcademicTerm
+    {
+        $selectedTermId = session('selected_academic_term_id');
+        $term = $selectedTermId ? AcademicTerm::find($selectedTermId) : null;
+
+        return $term ?? AcademicTerm::latest('id')->first();
+    }
+
+    public function editProfile(AvailabilityGrid $grid)
     {
         $user = Auth::user();
         if (! $user instanceof User) {
             abort(403);
         }
 
-        $selectedTermId = session('selected_academic_term_id');
-        $term = $selectedTermId ? AcademicTerm::find($selectedTermId) : null;
-        $term ??= AcademicTerm::latest('id')->first();
+        $term = AvailabilityGrid::selectedTerm();
 
-        $professor = Professor::where('email', $user->email)->orWhere('name', $user->name)->first();
+        $professor = $user->resolveProfessor()
+            ?? ($user->isTeacher() ? Professor::where('email', $user->email)->orWhere('name', $user->name)->first() : null);
         $assignedSubjects = $this->assignedSubjectsForProfessor($professor, $term);
-        $allSubjects = $assignedSubjects;
         $selectedSubjectIds = $professor ? $professor->subjects()->pluck('subjects.id')->all() : [];
 
-        $availability = $professor && $term
-            ? ProfessorAvailability::where('professor_id', $professor->id)
-            ->where('academic_term_id', $term->id)
-            ->orderBy('weekday')
-            ->orderBy('starts_at')
-            ->get()
-            : collect();
+        $availabilityGrid = $professor ? $grid->build($professor, $term) : [];
 
-        if ($availability->isEmpty()) {
-            $availability = collect([
-                (object) ['weekday' => 1, 'starts_at' => '07:30', 'ends_at' => '08:20', 'preference' => 'preferred'],
-                (object) ['weekday' => 1, 'starts_at' => '10:50', 'ends_at' => '11:40', 'preference' => 'preferred'],
-                (object) ['weekday' => 2, 'starts_at' => '18:30', 'ends_at' => '19:20', 'preference' => 'preferred'],
-                (object) ['weekday' => 2, 'starts_at' => '21:00', 'ends_at' => '21:50', 'preference' => 'preferred'],
-            ]);
-        }
-
-        return view('users.profile-edit', [
+        return view('users.profile-edit', array_merge($availabilityGrid, [
             'user' => $user,
             'roles' => User::roleOptions(),
             'professor' => $professor,
             'term' => $term,
             'subjects' => $assignedSubjects,
-            'allSubjects' => $allSubjects,
+            'allSubjects' => $assignedSubjects,
             'selectedSubjectIds' => $selectedSubjectIds,
-            'availability' => $availability,
-        ]);
+            'hasAvailabilityGrid' => $professor !== null,
+            'isEditable' => $professor !== null && Gate::allows('updateAvailability', $professor),
+        ]));
     }
 
     public function updateProfile(Request $request)
@@ -92,7 +154,6 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'registration_number' => ['nullable', 'string', 'max:20', 'unique:users,registration_number,' . $user->id],
-            'role' => 'required|in:admin,coordinator,teacher,student,staff',
             'password' => [
                 $teacherMustSetPassword || $request->filled('password') ? 'required' : 'nullable',
                 'confirmed',
@@ -113,7 +174,7 @@ class UserController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'registration_number' => $validated['registration_number'] ?? null,
-            'role' => $validated['role'],
+            // O perfil (role) só é alterado pelo Administrador de TI na gestão de usuários.
         ]);
 
         if (! empty($validated['password'])) {
@@ -124,7 +185,7 @@ class UserController extends Controller
         $user->save();
 
         if ($user->role === 'teacher') {
-            $professor = Professor::firstOrCreate(
+            $professor = $user->resolveProfessor() ?? Professor::firstOrCreate(
                 ['email' => $user->email],
                 [
                     'name' => $user->name,
@@ -138,6 +199,10 @@ class UserController extends Controller
             $professor->email = $user->email;
             $professor->registration = $user->registration_number ?? $professor->registration;
             $professor->save();
+
+            if ((int) $user->professor_id !== (int) $professor->id) {
+                $user->forceFill(['professor_id' => $professor->id])->save();
+            }
 
             $selectedSubjectIds = collect($validated['subjects'] ?? [])
                 ->filter(fn($subjectId) => is_numeric($subjectId))
@@ -225,40 +290,5 @@ class UserController extends Controller
             ->pluck('class_offerings.subject_id');
 
         return Subject::whereIn('id', $subjectIds)->orderBy('name')->get();
-    }
-
-    public function store(Request $request)
-    {
-        $rules = [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'role' => 'required|in:admin,coordinator,teacher,student,staff',
-            'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers()],
-        ];
-
-        if (Schema::hasColumn('users', 'registration_number')) {
-            $rules['registration_number'] = 'nullable|string|max:20|unique:users';
-        }
-
-        $validated = $request->validate($rules);
-
-        $payload = [
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'role' => $validated['role'],
-            'password' => $validated['password'],
-        ];
-
-        if (Schema::hasColumn('users', 'is_active')) {
-            $payload['is_active'] = $request->has('is_active');
-        }
-
-        if (Schema::hasColumn('users', 'registration_number') && ! empty($validated['registration_number'])) {
-            $payload['registration_number'] = $validated['registration_number'];
-        }
-
-        User::create($payload);
-
-        return redirect()->route('dashboard')->with('success', 'Novo usuário cadastrado com sucesso!');
     }
 }

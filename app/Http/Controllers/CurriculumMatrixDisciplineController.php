@@ -6,23 +6,20 @@ use App\Models\CurriculumMatrix;
 use App\Models\CurriculumMatrixDiscipline;
 use App\Models\Subject;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 class CurriculumMatrixDisciplineController extends Controller
 {
-    private function ensureAdmin(): void
+    /** Vínculo matriz ↔ disciplina: Administrador de TI e Coordenador. */
+    private function ensureCanManage(): void
     {
-        if (!Auth::check() || Auth::user()->role !== 'admin') {
-            abort(403, 'Apenas administradores podem gerenciar vínculos de disciplinas.');
-        }
+        abort_unless(Gate::allows('manage-catalog'), 403, 'Apenas administradores e coordenadores podem gerenciar vínculos de disciplinas.');
     }
 
-    private function ensureCatalogAccess(): void
+    private function ensureBelongsToMatrix(CurriculumMatrix $matrix, CurriculumMatrixDiscipline $discipline): void
     {
-        if (!Auth::check() || !in_array(Auth::user()->role, ['coordinator', 'staff', 'admin'], true)) {
-            abort(403, 'Acesso negado. Você não tem permissão para gerenciar o catálogo.');
-        }
+        abort_unless((int) $discipline->curriculum_matrix_id === (int) $matrix->getKey(), 404);
     }
 
     /**
@@ -30,7 +27,7 @@ class CurriculumMatrixDisciplineController extends Controller
      */
     public function show(CurriculumMatrix $matrix)
     {
-        $this->ensureAdmin();
+        $this->ensureCanManage();
 
         $matrix->load(['course', 'disciplinesForOffering.subject']);
 
@@ -79,7 +76,7 @@ class CurriculumMatrixDisciplineController extends Controller
      */
     public function store(Request $request, CurriculumMatrix $matrix)
     {
-        $this->ensureAdmin();
+        $this->ensureCanManage();
 
         $validated = $request->validate([
             'subject_id' => [
@@ -138,12 +135,9 @@ class CurriculumMatrixDisciplineController extends Controller
      */
     public function update(Request $request, CurriculumMatrix $matrix, CurriculumMatrixDiscipline $discipline)
     {
-        $this->ensureAdmin();
+        $this->ensureCanManage();
 
-        // Garantir que a disciplina pertence à matriz
-        if ($discipline->curriculum_matrix_id !== $matrix->id) {
-            abort(404);
-        }
+        $this->ensureBelongsToMatrix($matrix, $discipline);
 
         $validated = $request->validate([
             'period' => ['required', 'integer', 'min:1', 'max:8'],
@@ -166,7 +160,7 @@ class CurriculumMatrixDisciplineController extends Controller
         ]);
 
         // Se mudou o período, validar unicidade novamente
-        if ($validated['period'] !== $discipline->period) {
+        if ((int) $validated['period'] !== $discipline->period) {
             if (!CurriculumMatrixDiscipline::validateUniquePeriodDiscipline(
                 $matrix->id,
                 $discipline->subject_id,
@@ -198,56 +192,14 @@ class CurriculumMatrixDisciplineController extends Controller
      */
     public function destroy(Request $request, CurriculumMatrix $matrix, CurriculumMatrixDiscipline $discipline)
     {
-        $this->ensureAdmin();
+        $this->ensureCanManage();
 
-        // Garantir que a disciplina pertence à matriz
-        if ($discipline->curriculum_matrix_id !== $matrix->id) {
-            abort(404);
-        }
+        $this->ensureBelongsToMatrix($matrix, $discipline);
 
         $subjectName = $discipline->subject->name ?? 'Disciplina';
         $discipline->delete();
 
         return redirect()->route('admin.matrices.disciplines.show', $matrix)
             ->with('success', "Vínculo de \"$subjectName\" removido com sucesso!");
-    }
-
-    /**
-     * Editando inline - retornar formulário parcial para editar via modal/inline.
-     */
-    public function edit(CurriculumMatrix $matrix, CurriculumMatrixDiscipline $discipline)
-    {
-        $this->ensureAdmin();
-
-        if ($discipline->curriculum_matrix_id !== $matrix->id) {
-            abort(404);
-        }
-
-        $discipline->load('subject');
-
-        return view('admin.matrices.disciplines.form', [
-            'matrix' => $matrix,
-            'discipline' => $discipline,
-            'shifts' => [
-                'MANHÃ' => 'Manhã (07:30 - 12:40) — 6 aulas',
-                'TARDE' => 'Tarde (13:10 - 17:30) — 5 aulas',
-                'NOITE' => 'Noite (18:30 - 22:00) — 4 aulas',
-                'INTEGRAL' => 'Integral (07:30 - 17:30) — Manhã e Tarde',
-            ],
-            'offeringTypes' => [
-                'OBRIGATORIA' => 'Obrigatória',
-                'OPTATIVA' => 'Optativa',
-                'ELETIVA' => 'Eletiva',
-                'INTEGRADORA' => 'Integradora',
-            ],
-            'roomTypes' => [
-                'SALA_COMUM' => 'Sala Comum',
-                'LABORATORIO_INFORMATICA' => 'Laboratório de Informática',
-                'LABORATORIO_ENGENHARIA' => 'Laboratório de Engenharia',
-                'SALA_PRATICA' => 'Sala de Prática',
-                'ESTUDIO_PRODUCAO' => 'Estúdio de Produção',
-                'LABORATORIO_CIENCIAS' => 'Laboratório de Ciências',
-            ],
-        ]);
     }
 }

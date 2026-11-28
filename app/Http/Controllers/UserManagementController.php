@@ -124,7 +124,7 @@ class UserManagementController extends Controller
                 'must_change_password' => true,
             ];
 
-            if (Schema::hasColumn('users', 'registration_number') && $validated['registration_number']) {
+            if (Schema::hasColumn('users', 'registration_number') && ! empty($validated['registration_number'])) {
                 $userData['registration_number'] = $validated['registration_number'];
             }
 
@@ -132,7 +132,7 @@ class UserManagementController extends Controller
                 $userData['is_active'] = $validated['is_active'] ?? true;
             }
 
-            Log::info('UserManagementController::store - Dados do usuário preparados', $userData);
+            Log::info('UserManagementController::store - Dados do usuário preparados', \Illuminate\Support\Arr::except($userData, ['password']));
 
             $user = User::create($userData);
 
@@ -227,7 +227,7 @@ class UserManagementController extends Controller
             $user->email = $validated['email'];
             $user->role = $validated['role'];
 
-            if (Schema::hasColumn('users', 'registration_number') && $validated['registration_number']) {
+            if (Schema::hasColumn('users', 'registration_number') && ! empty($validated['registration_number'])) {
                 $user->registration_number = $validated['registration_number'];
             }
 

@@ -2,97 +2,38 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AcademicTerm;
 use App\Models\Professor;
 use App\Models\ProfessorAvailability;
-use App\Models\Subject;
-use App\Models\User;
+use App\Services\AvailabilityGrid;
+use App\Services\TeachingQualificationCatalog;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 class ProfessorAvailabilityController extends Controller
 {
-    public function show(Professor $professor)
+    private const ROOM_TYPE_LABELS = [
+        'SALA_COMUM' => 'Sala comum',
+        'LABORATORIO_INFORMATICA' => 'Lab. Informática',
+        'LABORATORIO_ENGENHARIA' => 'Lab. Engenharia',
+        'SALA_PRATICA' => 'Sala de prática',
+        'ESTUDIO_PRODUCAO' => 'Estúdio',
+        'LABORATORIO_CIENCIAS' => 'Lab. Ciências',
+    ];
+
+    public function show(Professor $professor, AvailabilityGrid $grid)
     {
-        $this->checkAccess($professor);
-
-        $selectedTermId = session('selected_academic_term_id');
-        $term = $selectedTermId ? AcademicTerm::find($selectedTermId) : null;
-        $term ??= AcademicTerm::latest('id')->first();
-
-        $availabilities = $term && $professor
-            ? ProfessorAvailability::where('professor_id', $professor->id)
-            ->where('academic_term_id', $term->id)
-            ->orderBy('weekday')
-            ->orderBy('starts_at')
-            ->get()
-            : collect();
-
-        $timeSlots = $this->generateTimeSlots();
-
-        // Mapear disponibilidades salvas: [weekday][horario] = preference
-        $savedAvailabilities = [];
-        foreach ($availabilities as $item) {
-            // Formatar horário: converter TIME (07:30:00) para formato curto (07:30)
-            $startTime = $item->starts_at instanceof \DateTime 
-                ? $item->starts_at->format('H:i')
-                : substr($item->starts_at, 0, 5); // Se string, pegar primeiros 5 caracteres
-            
-            $endTime = $item->ends_at instanceof \DateTime 
-                ? $item->ends_at->format('H:i')
-                : substr($item->ends_at, 0, 5);
-            
-            $horario = $startTime . ' - ' . $endTime;
-            
-            if (!isset($savedAvailabilities[$item->weekday])) {
-                $savedAvailabilities[$item->weekday] = [];
-            }
-            $savedAvailabilities[$item->weekday][$horario] = $item->preference;
-            
-            \Log::info('Disponibilidade carregada', [
-                'weekday' => $item->weekday,
-                'horario' => $horario,
-                'preference' => $item->preference,
-                'starts_at_raw' => $item->starts_at,
-                'ends_at_raw' => $item->ends_at,
-            ]);
-        }
-
-        $preferredCount = $availabilities->where('preference', 'preferred')->count();
-        $availableCount = $availabilities->where('preference', 'available')->count();
-        $totalSlots = count($timeSlots) * 6; // 15 horários × 6 dias = 90
-        $unavailableCount = $totalSlots - $preferredCount - $availableCount;
-
-        $isEditable = $this->canEditAvailability($professor);
-
-        return view('admin.professors-availability', [
-            'professor' => $professor,
-            'term' => $term,
-            'availabilities' => $availabilities,
-            'savedAvailabilities' => $savedAvailabilities,
-            'timeSlots' => $timeSlots,
-            'preferredCount' => $preferredCount,
-            'availableCount' => $availableCount,
-            'unavailableCount' => $unavailableCount,
-            'totalSlots' => $totalSlots,
-            'isEditable' => $isEditable,
-        ]);
+        return view('admin.professors-availability', array_merge(
+            $grid->build($professor, AvailabilityGrid::selectedTerm()),
+            [
+                'professor' => $professor,
+                'isEditable' => Gate::allows('updateAvailability', $professor),
+            ]
+        ));
     }
 
     public function updateAvailability(Request $request, Professor $professor)
     {
-        $this->checkAccess($professor);
-        
-        if (!$this->canEditAvailability($professor)) {
-            if ($request->wantsJson()) {
-                return response()->json(['success' => false, 'message' => 'Você não tem permissão para editar essa disponibilidade.'], 403);
-            }
-            return redirect()->back()->with('error', 'Você não tem permissão para editar essa disponibilidade.');
-        }
-
-        $selectedTermId = session('selected_academic_term_id');
-        $term = $selectedTermId ? AcademicTerm::find($selectedTermId) : null;
-        $term ??= AcademicTerm::latest('id')->first();
+        $term = AvailabilityGrid::selectedTerm();
 
         if (!$term) {
             if ($request->wantsJson()) {
@@ -148,27 +89,27 @@ class ProfessorAvailabilityController extends Controller
             ->with('success', 'Disponibilidade atualizada com sucesso!');
     }
 
-    public function showSubjects(Professor $professor)
+    public function showSubjects(Professor $professor, TeachingQualificationCatalog $catalog)
     {
-        $this->checkAccess($professor);
-
         $selectedSubjects = $professor->subjects()->orderBy('name')->get();
-        $allSubjects = Subject::orderBy('name')->get();
+        $data = $catalog->build();
 
         return view('admin.professors-subjects', [
             'professor' => $professor,
             'selectedSubjects' => $selectedSubjects,
-            'allSubjects' => $allSubjects,
+            'selectedIds' => $selectedSubjects->pluck('id')->map(fn ($id) => (int) $id)->all(),
+            'matrices' => $data['matrices'],
+            'otherSubjects' => $data['others'],
             'selectedCount' => $selectedSubjects->count(),
-            'totalSubjects' => $allSubjects->count(),
-            'unselectedCount' => $allSubjects->count() - $selectedSubjects->count(),
+            'totalSubjects' => $data['total_subjects'],
+            'unselectedCount' => max(0, $data['total_subjects'] - $selectedSubjects->count()),
+            'isEditable' => Gate::allows('updateSubjects', $professor),
+            'roomTypes' => self::ROOM_TYPE_LABELS,
         ]);
     }
 
     public function updateSubjects(Request $request, Professor $professor)
     {
-        $this->checkAccess($professor);
-
         $validated = $request->validate([
             'subject_ids' => ['nullable', 'array'],
             'subject_ids.*' => ['integer', 'exists:subjects,id'],
@@ -179,54 +120,5 @@ class ProfessorAvailabilityController extends Controller
 
         return redirect()->route('admin.professors.subjects', $professor)
             ->with('success', 'Disciplinas atualizadas com sucesso!');
-    }
-
-    private function generateTimeSlots()
-    {
-        return [
-            ['time' => '07:30 às 08:20', 'start' => '07:30', 'end' => '08:20'],
-            ['time' => '08:20 às 09:10', 'start' => '08:20', 'end' => '09:10'],
-            ['time' => '09:10 às 10:00', 'start' => '09:10', 'end' => '10:00'],
-            ['time' => '10:10 às 11:00', 'start' => '10:10', 'end' => '11:00'],
-            ['time' => '11:00 às 11:50', 'start' => '11:00', 'end' => '11:50'],
-            ['time' => '11:50 às 12:40', 'start' => '11:50', 'end' => '12:40'],
-            ['time' => '13:10 às 14:00', 'start' => '13:10', 'end' => '14:00'],
-            ['time' => '14:00 às 14:50', 'start' => '14:00', 'end' => '14:50'],
-            ['time' => '14:50 às 15:40', 'start' => '14:50', 'end' => '15:40'],
-            ['time' => '15:50 às 16:40', 'start' => '15:50', 'end' => '16:40'],
-            ['time' => '16:40 às 17:30', 'start' => '16:40', 'end' => '17:30'],
-            ['time' => '18:30 às 19:20', 'start' => '18:30', 'end' => '19:20'],
-            ['time' => '19:20 às 20:10', 'start' => '19:20', 'end' => '20:10'],
-            ['time' => '20:20 às 21:10', 'start' => '20:20', 'end' => '21:10'],
-            ['time' => '21:10 às 22:00', 'start' => '21:10', 'end' => '22:00'],
-        ];
-    }
-
-    private function checkAccess(Professor $professor)
-    {
-        if (!Auth::check()) {
-            abort(401, 'Você precisa estar autenticado.');
-        }
-
-        $user = Auth::user();
-        $isAdmin = in_array($user->role, ['coordinator', 'staff', 'admin'], true);
-        $isOwnProfessor = $user->role === 'teacher' && $user->professor_id === $professor->id;
-
-        if (!$isAdmin && !$isOwnProfessor) {
-            abort(403, 'Acesso negado. Você não tem permissão para visualizar essa disponibilidade.');
-        }
-    }
-
-    private function canEditAvailability(Professor $professor)
-    {
-        if (!Auth::check()) {
-            return false;
-        }
-
-        $user = Auth::user();
-        $isAdmin = in_array($user->role, ['coordinator', 'staff', 'admin'], true);
-        $isOwnProfessor = $user->role === 'teacher' && $user->professor_id === $professor->id;
-
-        return $isAdmin || $isOwnProfessor;
     }
 }

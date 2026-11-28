@@ -3,64 +3,75 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
+/**
+ * O cadastro público de usuários foi removido: apenas o Administrador de TI
+ * cria usuários (admin.users.*). Estes testes garantem que ninguém consiga
+ * se autocadastrar — e muito menos com perfil de administrador.
+ */
 class UserRegistrationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_user_can_be_created(): void
+    public function test_public_registration_form_is_not_available(): void
     {
-        $response = $this->post('/usuarios', [
-            'name' => 'Maria Souza',
-            'email' => 'maria@inova7.local',
-            'registration_number' => '2024001',
-            'role' => 'student',
-            'password' => 'senha1234',
-            'password_confirmation' => 'senha1234',
-            'is_active' => '1',
-        ]);
-
-        $response->assertRedirect(route('dashboard'));
-        $this->assertDatabaseHas('users', [
-            'email' => 'maria@inova7.local',
-            'role' => 'student',
-        ]);
-
-        $user = User::where('email', 'maria@inova7.local')->first();
-        $this->assertNotNull($user);
-        $this->assertTrue(Hash::check('senha1234', $user->password));
+        $this->get('/usuarios/novo')->assertNotFound();
     }
 
-    public function test_user_can_be_created_when_registration_number_column_is_missing(): void
+    public function test_guest_cannot_create_an_admin_user(): void
     {
-        if (Schema::hasColumn('users', 'registration_number')) {
-            DB::statement('DROP INDEX IF EXISTS users_registration_number_unique');
-
-            Schema::table('users', function (Blueprint $table) {
-                $table->dropColumn('registration_number');
-            });
-        }
-
-        $response = $this->post('/usuarios', [
-            'name' => 'Carlos Pereira',
-            'email' => 'carlos@inova7.local',
-            'registration_number' => '2024002',
-            'role' => 'coordinator',
+        $this->post('/usuarios', [
+            'name' => 'Invasor',
+            'email' => 'invasor@example.com',
+            'role' => 'admin',
             'password' => 'senha1234',
             'password_confirmation' => 'senha1234',
             'is_active' => '1',
         ]);
 
-        $response->assertRedirect(route('dashboard'));
-        $this->assertDatabaseHas('users', [
-            'email' => 'carlos@inova7.local',
-            'role' => 'coordinator',
+        $this->assertDatabaseMissing('users', ['email' => 'invasor@example.com']);
+    }
+
+    public function test_admin_ti_can_still_create_users(): void
+    {
+        $admin = User::create([
+            'name' => 'Admin TI',
+            'email' => 'admin@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'admin',
+            'is_active' => true,
         ]);
+
+        $this->actingAs($admin)->post(route('admin.users.store'), [
+            'name' => 'Maria Souza',
+            'email' => 'maria@inova7.local',
+            'role' => 'student',
+            'password' => 'Senha1234',
+            'password_confirmation' => 'Senha1234',
+            'is_active' => '1',
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('users', ['email' => 'maria@inova7.local', 'role' => 'student']);
+    }
+
+    public function test_user_cannot_change_own_role_through_profile(): void
+    {
+        $student = User::create([
+            'name' => 'Aluno',
+            'email' => 'aluno@inova7.local',
+            'password' => 'senha1234',
+            'role' => 'student',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($student)->put('/perfil', [
+            'name' => 'Aluno',
+            'email' => 'aluno@inova7.local',
+            'role' => 'admin',
+        ]);
+
+        $this->assertSame('student', $student->refresh()->role);
     }
 }

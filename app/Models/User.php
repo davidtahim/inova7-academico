@@ -20,6 +20,8 @@ class User extends Authenticatable
         'is_active',
         'must_change_password',
         'professor_id',
+        'curriculum_matrix_id',
+        'shift',
     ];
 
     protected $hidden = [
@@ -32,6 +34,7 @@ class User extends Authenticatable
         'password' => 'hashed', // Hash automático ao salvar (Laravel 11)
         'is_active' => 'boolean',
         'must_change_password' => 'boolean',
+        'professor_id' => 'integer',
     ];
 
     public static function roleOptions(): array
@@ -89,6 +92,17 @@ class User extends Authenticatable
         return $this->hasRole($roles);
     }
 
+    /*
+     * Matriz de permissões (fonte única — os Gates em AppServiceProvider delegam para cá).
+     *
+     *                      admin  coord  staff  teacher  student
+     * manage-users           ✔
+     * access-catalog         ✔      ✔      ✔
+     * manage-catalog         ✔      ✔
+     * manage-planning        ✔      ✔
+     * access-imports         ✔      ✔      ✔
+     * access-audit           ✔      ✔      ✔
+     */
     public function canManageUsers(): bool
     {
         return $this->isAdminTi();
@@ -96,22 +110,34 @@ class User extends Authenticatable
 
     public function canAccessCatalog(): bool
     {
-        return in_array($this->role, ['admin', 'coordinator', 'staff'], true);
+        return $this->hasRole(['admin', 'coordinator', 'staff']);
     }
 
+    public function canManageCatalog(): bool
+    {
+        return $this->hasRole(['admin', 'coordinator']);
+    }
+
+    public function canManagePlanning(): bool
+    {
+        return $this->hasRole(['admin', 'coordinator']);
+    }
+
+    /** @deprecated use canManagePlanning() */
     public function canAccessPlanning(): bool
     {
-        return in_array($this->role, ['admin', 'coordinator'], true);
-    }
-
-    public function canAccessAudit(): bool
-    {
-        return $this->isAdminTi();
+        return $this->canManagePlanning();
     }
 
     public function canAccessImports(): bool
     {
-        return in_array($this->role, ['admin', 'coordinator'], true);
+        // Importações (oferta Ubíqua, TOTVS, professores): TI, coordenação e secretaria.
+        return $this->hasRole(['admin', 'coordinator', 'staff']);
+    }
+
+    public function canAccessAudit(): bool
+    {
+        return $this->hasRole(['admin', 'coordinator', 'staff']);
     }
 
     // Relacionamentos
@@ -123,5 +149,48 @@ class User extends Authenticatable
     public function professor()
     {
         return $this->belongsTo(Professor::class);
+    }
+
+    public function curriculumMatrix()
+    {
+        return $this->belongsTo(CurriculumMatrix::class);
+    }
+
+    public function subjectStatuses()
+    {
+        return $this->hasMany(StudentSubjectStatus::class);
+    }
+
+    public function enrollments()
+    {
+        return $this->hasMany(ClassEnrollment::class);
+    }
+
+    /**
+     * Registro docente do usuário professor. Usa o vínculo professor_id e, para contas
+     * antigas sem vínculo, procura pelo e-mail (sem pegar o registro de outro usuário)
+     * e grava o vínculo encontrado.
+     */
+    public function resolveProfessor(): ?Professor
+    {
+        if (! $this->isTeacher()) {
+            return null;
+        }
+
+        if ($this->professor_id && $this->professor) {
+            return $this->professor;
+        }
+
+        $professor = Professor::query()
+            ->where('email', $this->email)
+            ->whereDoesntHave('user', fn ($query) => $query->whereKeyNot($this->getKey()))
+            ->first();
+
+        if ($professor) {
+            $this->forceFill(['professor_id' => $professor->id])->save();
+            $this->setRelation('professor', $professor);
+        }
+
+        return $professor;
     }
 }

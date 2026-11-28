@@ -6,123 +6,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'Inova7 Acadêmico')</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ @filemtime(public_path('css/app.css')) }}">
+    <script>
+        // Aplica o menu recolhido antes da pintura, sem "piscar".
+        try { if (localStorage.getItem('inova7.sidebar') === 'collapsed') document.documentElement.classList.add('sidebar-collapsed'); } catch (e) {}
+    </script>
 </head>
 
 <body>
     @auth
         <div class="app-shell">
-            <aside class="sidebar" id="sidebar">
-                <a class="brand" href="{{ route('dashboard') }}"><span
-                        class="brand-mark">7</span><span><strong>INOVA7</strong><small>Gestão Acadêmica</small></span></a>
-                <nav class="nav flex-column gap-1 mt-4">
-                    <details class="nav-section-group" open>
-                        <summary class="nav-section">
-                            <span>Geral</span>
-                            <span class="nav-caret">▾</span>
-                        </summary>
-                        <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
-                            href="{{ route('dashboard') }}">▦ Painel</a>
-
-                        @if (in_array(Auth::user()->role, ['student', 'teacher', 'coordinator', 'staff', 'admin'], true))
-                            <a class="nav-link {{ request()->routeIs('planning.*') ? 'active' : '' }}"
-                                href="{{ route('planning.index') }}">▤ Planejamento</a>
-                        @endif
-
-                        <a class="nav-link {{ request()->routeIs('profile') || request()->routeIs('profile.edit') ? 'active' : '' }}"
-                            href="{{ route('profile') }}">◉ Meu perfil</a>
-                    </details>
-
-                    @if (Auth::user()->role === 'admin')
-                        <details class="nav-section-group nav-section-group-admin" open>
-                            <summary class="nav-section nav-section-admin">
-                                <span>Administração</span>
-                                <span class="nav-caret">▾</span>
-                            </summary>
-                            <a class="nav-link nav-link-admin {{ request()->routeIs('admin.*') ? 'active' : '' }}"
-                                href="{{ route('admin.planejamento.index') }}">⚙ Administração do catálogo</a>
-
-                            <details
-                                class="nav-subsection-group {{ request()->routeIs('imports.ubiqua.*') || request()->routeIs('imports.totvs.*') || request()->routeIs('imports.professors.*') ? 'open' : '' }}"
-                                open>
-                                <summary
-                                    class="nav-link nav-link-admin nav-link-subsection {{ request()->routeIs('imports.ubiqua.*') || request()->routeIs('imports.totvs.*') || request()->routeIs('imports.professors.*') ? 'active' : '' }}">
-                                    <span>⇧ Importações</span>
-                                    <span class="nav-caret">▾</span>
-                                </summary>
-                                <a class="nav-link nav-link-admin nav-link-child {{ request()->routeIs('imports.ubiqua.*') ? 'active' : '' }}"
-                                    href="{{ route('imports.ubiqua.index') }}">• Oferta Ubíqua</a>
-                                <a class="nav-link nav-link-admin nav-link-child {{ request()->routeIs('imports.totvs.*') ? 'active' : '' }}"
-                                    href="{{ route('imports.totvs.index') }}">• Base TOTVS</a>
-                                <a class="nav-link nav-link-admin nav-link-child {{ request()->routeIs('imports.professors.*') ? 'active' : '' }}"
-                                    href="{{ route('imports.professors.index') }}">• Professores</a>
-                            </details>
-
-                            <a class="nav-link nav-link-admin {{ request()->routeIs('audit.*') ? 'active' : '' }}"
-                                href="{{ route('audit.index') }}">✓ Auditoria</a>
-                        </details>
-                    @endif
-
-                    @if (in_array(Auth::user()->role, ['coordinator', 'staff', 'admin'], true))
-                        <details class="nav-section-group" open>
-                            <summary class="nav-section">
-                                <span>Catálogo</span>
-                                <span class="nav-caret">▾</span>
-                            </summary>
-                            <a class="nav-link {{ request()->routeIs('catalog.courses') ? 'active' : '' }}"
-                                href="{{ route('catalog.courses') }}">◫ Cursos e matrizes</a>
-                            <a class="nav-link {{ request()->routeIs('catalog.professors') ? 'active' : '' }}"
-                                href="{{ route('catalog.professors') }}">♙ Professores</a>
-                            <a class="nav-link {{ request()->routeIs('catalog.subjects') ? 'active' : '' }}"
-                                href="{{ route('catalog.subjects') }}">◌ Disciplinas</a>
-                            <a class="nav-link {{ request()->routeIs('catalog.students') ? 'active' : '' }}"
-                                href="{{ route('catalog.students') }}">◍ Alunos</a>
-                        </details>
-                    @endif
-
-                    @if (Auth::user()->role === 'teacher')
-                        <details class="nav-section-group" open>
-                            <summary class="nav-section">
-                                <span>Professor</span>
-                                <span class="nav-caret">▾</span>
-                            </summary>
-                            @if (Auth::user()->professor_id && Auth::user()->professor)
-                                <a class="nav-link {{ request()->routeIs('admin.professors.subjects') ? 'active' : '' }}"
-                                    href="{{ route('admin.professors.subjects', Auth::user()->professor) }}">◌ Minhas disciplinas</a>
-                                <a class="nav-link {{ request()->routeIs('admin.professors.availability') ? 'active' : '' }}"
-                                    href="{{ route('admin.professors.availability', Auth::user()->professor) }}">◔ Minha disponibilidade</a>
-                            @else
-                                <a class="nav-link {{ request()->routeIs('profile.edit') ? 'active' : '' }}"
-                                    href="{{ route('profile.edit') }}#disciplinas">◌ Minhas disciplinas</a>
-                                <a class="nav-link {{ request()->routeIs('profile.edit') ? 'active' : '' }}"
-                                    href="{{ route('profile.edit') }}#disponibilidade">◔ Minha disponibilidade</a>
-                            @endif
-                        </details>
-                    @endif
-
-                </nav>
-                <div class="sidebar-footer">
-                    <a href="{{ route('profile') }}"
-                        class="d-flex align-items-center gap-2 text-decoration-none text-white">
-                        @if (Auth::user()->photo_path)
-                            <img src="{{ Storage::disk('public')->url(Auth::user()->photo_path) }}" alt="Foto do usuário"
-                                class="avatar" style="object-fit:cover;">
-                        @else
-                            <span
-                                class="avatar">{{ strtoupper(Str::of(Auth::user()->name)->split('/\s+/')->map(fn($part) => Str::substr($part, 0, 1))->take(2)->implode('')) }}</span>
-                        @endif
-                        <span class="d-flex flex-column">
-                            <strong class="text-white">{{ Auth::user()->name }}</strong>
-                            <small class="text-white-50">{{ Auth::user()->role_label }}</small>
-                        </span>
-                    </a>
-                </div>
-            </aside>
+            @include('layouts.partials.sidebar')
             <main class="content">
                 <header class="topbar">
-                    <button class="btn d-lg-none" type="button"
-                        onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
-                    <div><small class="text-uppercase text-secondary">Inova7 Acadêmico</small>
+                    <button class="topbar-menu-btn" type="button" data-sidebar-toggle aria-controls="sidebar"
+                        aria-expanded="false" aria-label="Abrir menu">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" /></svg>
+                    </button>
+                    <div class="topbar-title"><small class="text-uppercase text-secondary">Inova7 Acadêmico</small>
                         <h1>@yield('page-title', 'Painel')</h1>
                     </div>
                     <div class="topbar-actions">
@@ -170,6 +71,53 @@
         </div>
     @endauth
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    @auth
+        <script>
+            (function () {
+                const root = document.documentElement;
+                const sidebar = document.getElementById('sidebar');
+                const toggle = document.querySelector('[data-sidebar-toggle]');
+                const collapse = document.querySelector('[data-sidebar-collapse]');
+                if (!sidebar) return;
+                const mobile = window.matchMedia('(max-width: 991px)');
+
+                function setOpen(open) {
+                    root.classList.toggle('sidebar-open', open);
+                    toggle?.setAttribute('aria-expanded', String(open));
+                    if (open) {
+                        (sidebar.querySelector('.nav-item.is-active') || sidebar.querySelector('.nav-item'))?.focus();
+                    } else if (sidebar.contains(document.activeElement)) {
+                        toggle?.focus();
+                    }
+                }
+
+                function setCollapsed(collapsed) {
+                    root.classList.toggle('sidebar-collapsed', collapsed);
+                    collapse?.setAttribute('aria-pressed', String(collapsed));
+                    collapse?.setAttribute('aria-label', collapsed ? 'Expandir menu' : 'Recolher menu');
+                    collapse?.setAttribute('title', collapsed ? 'Expandir menu' : 'Recolher menu');
+                    try { localStorage.setItem('inova7.sidebar', collapsed ? 'collapsed' : 'expanded'); } catch (e) {}
+                }
+
+                setCollapsed(root.classList.contains('sidebar-collapsed'));
+                toggle?.addEventListener('click', () => setOpen(!root.classList.contains('sidebar-open')));
+                collapse?.addEventListener('click', () => setCollapsed(!root.classList.contains('sidebar-collapsed')));
+                document.querySelectorAll('[data-sidebar-close]').forEach(el => el.addEventListener('click', () => setOpen(false)));
+                sidebar.querySelectorAll('.nav-item').forEach(link => link.addEventListener('click', () => { if (mobile.matches) setOpen(false); }));
+                document.addEventListener('keydown', event => {
+                    if (event.key === 'Escape' && root.classList.contains('sidebar-open')) setOpen(false);
+                });
+                mobile.addEventListener?.('change', () => setOpen(false));
+
+                // Mantém o item ativo visível quando a lista de links tem rolagem.
+                const nav = sidebar.querySelector('.sidebar-nav');
+                const current = sidebar.querySelector('.nav-item.is-active');
+                if (nav && current && current.offsetTop + current.offsetHeight > nav.clientHeight) {
+                    nav.scrollTop = current.offsetTop - nav.clientHeight / 2;
+                }
+            })();
+        </script>
+    @endauth
 </body>
 
 </html>

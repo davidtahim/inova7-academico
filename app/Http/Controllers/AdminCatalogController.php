@@ -10,22 +10,27 @@ use App\Models\Subject;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 
 class AdminCatalogController extends Controller
 {
+    /** Cadastros do catálogo: Administrador de TI e Coordenador. */
     private function ensureAdmin(): void
     {
-        if (! Auth::check() || Auth::user()->role !== 'admin') {
-            abort(403, 'Apenas administradores podem gerenciar o catálogo completo.');
-        }
+        abort_unless(Gate::allows('manage-catalog'), 403, 'Apenas administradores e coordenadores podem gerenciar o catálogo.');
     }
 
+    /** Consulta do catálogo: Administrador de TI, Coordenador e Funcionário. */
     private function ensureCatalogAccess(): void
     {
-        if (! Auth::check() || ! in_array(Auth::user()->role, ['coordinator', 'staff', 'admin'], true)) {
-            abort(403, 'Acesso negado. Você não tem permissão para gerenciar o catálogo.');
-        }
+        abort_unless(Gate::allows('access-catalog'), 403, 'Acesso negado. Você não tem permissão para acessar o catálogo.');
+    }
+
+    /** Gestão de usuários: somente Administrador de TI. */
+    private function ensureUserManager(): void
+    {
+        abort_unless(Gate::allows('manage-users'), 403, 'Apenas administradores de TI podem gerenciar usuários.');
     }
 
     private function resolveProfessorEmail(string $name, ?string $chapa, ?string $email): ?string
@@ -658,7 +663,7 @@ class AdminCatalogController extends Controller
 
     public function usersIndex(Request $request)
     {
-        $this->ensureAdmin();
+        $this->ensureUserManager();
 
         $query = trim((string) $request->query('q', ''));
         $roleFilter = trim((string) $request->query('role', ''));
@@ -687,7 +692,7 @@ class AdminCatalogController extends Controller
 
     public function userEdit(User $user)
     {
-        $this->ensureAdmin();
+        $this->ensureUserManager();
 
         return view('admin.users-form', [
             'user' => $user,
@@ -697,7 +702,7 @@ class AdminCatalogController extends Controller
 
     public function userUpdate(Request $request, User $user)
     {
-        $this->ensureAdmin();
+        $this->ensureUserManager();
 
         $rules = [
             'name' => ['required', 'string', 'max:255'],
@@ -760,7 +765,7 @@ class AdminCatalogController extends Controller
 
     public function userDestroy(User $user)
     {
-        $this->ensureAdmin();
+        $this->ensureUserManager();
 
         if ($user->id === Auth::id()) {
             return redirect()->route('admin.users.index')->with('error', 'Você não pode deletar sua própria conta!');

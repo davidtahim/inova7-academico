@@ -19,4 +19,9 @@ class Course extends Model
     {
         return $this->belongsToMany(Professor::class, 'course_professor');
     }
+
+    public function offerings()
+    {
+        return $this->hasMany(ClassOffering::class);
+    }
 }

@@ -20,6 +20,12 @@ class ConflictDetector
             foreach ($slots->slice($index + 1) as $right) {
                 if ($left->weekday !== $right->weekday || !$this->overlaps($left, $right)) continue;
 
+                // Aula conjunta: mesmo professor dando a mesma disciplina para turmas diferentes
+                // no mesmo horário (permitida pelo ScheduleAllocator) — não é choque.
+                if ($this->isJointClass($left, $right)) continue;
+                // Grupos de Estudo Dirigido podem ser atendidos juntos (mesmo professor/sala).
+                if ($left->offering->directed_study && $right->offering->directed_study) continue;
+
                 if ($left->professor_id && $left->professor_id === $right->professor_id) {
                     $conflicts->push($this->record('professor', $left, $right, 'Professor em duas ofertas no mesmo horário.'));
                 }
@@ -33,6 +39,17 @@ class ConflictDetector
         }
 
         return $conflicts->unique(fn ($item) => implode('|', [$item['type'], $item['left_id'], $item['right_id']]))->values();
+    }
+
+    private function isJointClass(ScheduleSlot $left, ScheduleSlot $right): bool
+    {
+        $normalize = fn (string $name) => preg_replace('/[^a-z0-9]/', '', \Illuminate\Support\Str::lower(\Illuminate\Support\Str::ascii($name)));
+
+        return $left->professor_id
+            && $left->professor_id === $right->professor_id
+            && $left->offering->class_code !== $right->offering->class_code
+            && ($left->offering->subject_id === $right->offering->subject_id
+                || $normalize($left->offering->subject->name) === $normalize($right->offering->subject->name));
     }
 
     private function overlaps(ScheduleSlot $left, ScheduleSlot $right): bool
