@@ -39,7 +39,7 @@ class ScheduleDiagnostics
     }
 
     /**
-     * @return array{summary: array, issues: array<int, array>}
+     * @return array{summary: array, issues: array<int, array>, contention: array<string, array>}
      */
     public function diagnose(AcademicTerm $term): array
     {
@@ -79,6 +79,7 @@ class ScheduleDiagnostics
                 'blocked_classes' => collect($this->issues)->where('level', 'blocker')->sum('classes'),
             ],
             'issues' => array_values($this->issues),
+            'contention' => $this->contention($variable),
         ];
     }
 
@@ -294,6 +295,52 @@ class ScheduleDiagnostics
             . $names->take(12)->implode(', ') . ($names->count() > 12 ? ' e mais ' . ($names->count() - 12) : '') . '.',
             [], array_map(fn ($id) => ['label' => 'Grade de ' . $this->professorName($id), 'route' => ['admin.professors.availability', [$id]]], $without->take(4)->all()),
             $without->count());
+    }
+
+    /**
+     * Mapa de disputa por horário: em cada dia × bloco de cada turno, quantos professores
+     * que dão aula naquele turno estão livres, contra quantas turmas o turno tem.
+     * Se há menos professores livres do que turmas, aquele horário é disputado.
+     *
+     * @return array<string, array{letters: array<string, string>, turmas: int, professors: int, no_grid: int, cells: array<string, array>}>
+     */
+    private function contention($variable): array
+    {
+        $map = [];
+        foreach ($variable->groupBy('shift') as $shift => $items) {
+            $turmas = $items->pluck('class')->unique()->count();
+            $ids = $items->flatMap(fn ($o) => $o['fixedProfessor'] ? [$o['fixedProfessor']] : $o['candidates'])->unique()->values();
+            $withGrid = $ids->filter(fn ($id) => $this->professors[$id]['hasGrid'] ?? false);
+            $noGrid = $ids->count() - $withGrid->count();
+
+            $cells = [];
+            foreach ($this->shiftCells($shift) as $cell) {
+                $free = $withGrid->filter(fn ($id) => $this->isAvailable($id, $cell));
+                $preferred = $free->filter(fn ($id) => ($this->professors[$id]['availability'][$cell] ?? null) === 'preferred')->count();
+                // Sem grade conta como livre (o resolvedor também supõe), mas aparece separado.
+                $supply = $free->count() + $noGrid;
+                $cells[$cell] = [
+                    'free' => $free->count(),
+                    'preferred' => $preferred,
+                    'supply' => $supply,
+                    'level' => $supply === 0 ? 'none' : ($supply < $turmas ? 'short' : ($supply < 1.5 * $turmas ? 'tight' : 'ok')),
+                    'names' => $free->map(fn ($id) => $this->professorName($id))->sort()->values()->all(),
+                ];
+            }
+
+            $starts = $this->problem['shifts'][$shift] ?? [];
+            $map[$shift] = [
+                'label' => $this->shiftLabel($shift),
+                'letters' => $starts,
+                'turmas' => $turmas,
+                'professors' => $ids->count(),
+                'no_grid' => $noGrid,
+                'cells' => $cells,
+            ];
+        }
+        uksort($map, fn ($a, $b) => array_search($a, ['MANHÃ', 'TARDE', 'NOITE', 'INTEGRAL']) <=> array_search($b, ['MANHÃ', 'TARDE', 'NOITE', 'INTEGRAL']));
+
+        return $map;
     }
 
     // ------------------------------------------------------------------ apoio
