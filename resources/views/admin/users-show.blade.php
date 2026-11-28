@@ -150,6 +150,14 @@
                         <h5 class="mb-0">⚡ Ações</h5>
                     </div>
                     <div class="card-body d-grid gap-2">
+                        @can('impersonate', $user)
+                            <!-- Entrar como o professor: preencher disponibilidade e disciplinas por ele -->
+                            <form method="POST" action="{{ route('impersonate.start', $user) }}" class="d-grid">
+                                @csrf
+                                <button type="submit" class="btn btn-dark">👤 Entrar como este professor</button>
+                            </form>
+                            <div class="form-text mt-0 mb-1">Preencha a disponibilidade e as disciplinas por ele, sem a senha. Para sair, use "Voltar para minha conta" no topo.</div>
+                        @endcan
                         <!-- Editar -->
                         <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-primary">
                             ✏️ Editar Usuário

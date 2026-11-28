@@ -693,7 +693,7 @@ class AdminCatalogController extends Controller
 
         $query = trim((string) $request->query('q', ''));
 
-        $professors = Professor::query()
+        $professors = Professor::query()->with('user')
             ->when($query !== '', function ($queryBuilder) use ($query) {
                 $queryBuilder->where(function ($innerQuery) use ($query) {
                     $innerQuery->where('name', 'like', "%{$query}%")
