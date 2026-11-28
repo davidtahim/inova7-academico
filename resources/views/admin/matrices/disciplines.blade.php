@@ -90,7 +90,7 @@
                                 <div class="period-section mb-4 pb-4 {{ !$loop->last ? 'border-bottom' : '' }}">
                                     <h5 class="mb-3">
                                         <span class="badge bg-primary">{{ $period }}º Período</span>
-                                        <small class="text-muted ms-2">({{ $disciplines->sum('weekly_hours') }}h semanais)</small>
+                                        <small class="text-muted ms-2">({{ $disciplines->sum('weekly_hours') }} aulas semanais)</small>
                                     </h5>
 
                                     <div class="table-responsive">
@@ -112,7 +112,9 @@
                                                             <small class="text-muted">{{ $discipline->subject->name }}</small>
                                                         </td>
                                                         <td>
-                                                            <span class="badge bg-info">{{ $discipline->weekly_hours }}h</span>
+                                                            <span class="badge bg-info" title="Aulas por semana na grade">{{ $discipline->weekly_hours }} aula(s)/sem</span>
+                                                            @if ($discipline->total_hours)<span class="badge bg-light text-dark border">{{ $discipline->total_hours }}h</span>@endif
+                                                            @if ($discipline->modality)<span class="badge bg-light text-dark border">{{ $discipline->modality }}</span>@endif
                                                         </td>
                                                         <td>
                                                             <span class="badge" style="background-color: #FFA500;" id="shift-{{ $discipline->shift }}">
@@ -280,7 +282,7 @@
 
                             <div class="col-md-6">
                                 <label class="form-label">Carga Horária Semanal *</label>
-                                <input type="number" name="weekly_hours" class="form-control" min="1" max="30" required>
+                                <input type="number" name="weekly_hours" class="form-control" min="0" max="30" required>
                                 @error('weekly_hours')
                                     <div class="form-text text-danger">{{ $message }}</div>
                                 @enderror
@@ -379,7 +381,7 @@
 
                                 <div class="col-md-6">
                                     <label class="form-label">Carga Horária Semanal *</label>
-                                    <input type="number" name="weekly_hours" class="form-control" value="{{ $discipline->weekly_hours }}" min="1" max="30" required>
+                                    <input type="number" name="weekly_hours" class="form-control" value="{{ $discipline->weekly_hours }}" min="0" max="30" required>
                                 </div>
 
                                 <div class="col-md-6">

@@ -4,6 +4,12 @@
 
 @section('content')
     <div class="container-fluid py-4 px-0">
+        @if ($isDraft)
+            <div class="alert alert-warning">
+                <strong>Rascunho:</strong> esta grade ainda não foi publicada. Só a coordenação a vê;
+                alunos e professores veem "ainda não publicados".
+            </div>
+        @endif
         <div class="d-flex flex-wrap gap-3 align-items-end justify-content-between mb-3">
             <div>
                 <h2 class="h4 mb-1">Horários das turmas — {{ $term->code ?? 'sem semestre' }}</h2>

@@ -16,6 +16,8 @@ class CurriculumMatrixDiscipline extends Model
         'period',
         'shift',
         'weekly_hours',
+        'total_hours',
+        'modality',
         'offering_type',
         'allows_shared_class',
         'required_room_type',

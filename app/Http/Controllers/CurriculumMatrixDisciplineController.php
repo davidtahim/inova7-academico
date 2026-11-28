@@ -86,7 +86,7 @@ class CurriculumMatrixDisciplineController extends Controller
             ],
             'period' => ['required', 'integer', 'min:1', 'max:8'],
             'shift' => ['required', Rule::in(['MANHÃ', 'TARDE', 'NOITE', 'INTEGRAL'])],
-            'weekly_hours' => ['required', 'integer', 'min:1', 'max:30'],
+            'weekly_hours' => ['required', 'integer', 'min:0', 'max:30'],
             'offering_type' => ['required', Rule::in(['OBRIGATORIA', 'OPTATIVA', 'ELETIVA', 'INTEGRADORA'])],
             'allows_shared_class' => ['nullable', 'boolean'],
             'required_room_type' => [
@@ -142,7 +142,7 @@ class CurriculumMatrixDisciplineController extends Controller
         $validated = $request->validate([
             'period' => ['required', 'integer', 'min:1', 'max:8'],
             'shift' => ['required', Rule::in(['MANHÃ', 'TARDE', 'NOITE', 'INTEGRAL'])],
-            'weekly_hours' => ['required', 'integer', 'min:1', 'max:30'],
+            'weekly_hours' => ['required', 'integer', 'min:0', 'max:30'],
             'offering_type' => ['required', Rule::in(['OBRIGATORIA', 'OPTATIVA', 'ELETIVA', 'INTEGRADORA'])],
             'allows_shared_class' => ['nullable', 'boolean'],
             'required_room_type' => [

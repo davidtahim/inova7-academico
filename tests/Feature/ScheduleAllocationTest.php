@@ -212,6 +212,10 @@ class ScheduleAllocationTest extends TestCase
         $this->assertTrue($offering->directed_study);
         $this->assertSame(5, (int) $offering->student_count);
 
+        $this->actingAs($student)->get(route('schedules.index'))->assertOk()->assertSee('ainda não foram publicados')->assertDontSee('Lógica de Programação');
+        $this->actingAs($coordinator)->post(route('allocation.publish'))->assertRedirect();
+        $this->assertTrue($this->term->fresh()->isSchedulePublished());
+
         $this->actingAs($student)
             ->get(route('schedules.index'))
             ->assertOk()

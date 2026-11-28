@@ -6,7 +6,36 @@ use Illuminate\Database\Eloquent\Model;
 
 class Subject extends Model
 {
-    protected $fillable = ['code', 'name', 'syllabus', 'total_hours', 'presential_hours', 'online_hours', 'practice_hours', 'extension_hours'];
+    protected $fillable = ['code', 'name', 'abbreviation', 'syllabus', 'total_hours', 'presential_hours', 'online_hours', 'practice_hours', 'extension_hours'];
+
+    /** Sigla para a grade compacta: a cadastrada ou uma gerada a partir do nome. */
+    public function getShortLabelAttribute(): string
+    {
+        return $this->abbreviation ?: self::suggestAbbreviation($this->name);
+    }
+
+    /** "BANCO DE DADOS II" → "BD2"; "SISTEMAS OPERACIONAIS" → "SO"; "CÁLCULO" → "CAL". */
+    public static function suggestAbbreviation(?string $name): string
+    {
+        $name = (string) $name;
+        $words = preg_split('/[^\p{L}\p{N}]+/u', \Illuminate\Support\Str::upper(\Illuminate\Support\Str::ascii($name)), -1, PREG_SPLIT_NO_EMPTY);
+        $roman = ['I' => '1', 'II' => '2', 'III' => '3', 'IV' => '4', 'V' => '5'];
+        $stop = ['DE', 'DA', 'DO', 'DAS', 'DOS', 'E', 'A', 'O', 'EM', 'PARA', 'AO', 'COM'];
+        $label = '';
+        $suffix = '';
+        foreach ($words as $word) {
+            if (isset($roman[$word])) {
+                $suffix = $roman[$word];
+            } elseif (! in_array($word, $stop, true)) {
+                $label .= $word[0];
+            }
+        }
+        if (strlen($label) === 1) {
+            $label = substr($words[0] ?? $label, 0, 3);
+        }
+
+        return substr($label, 0, 5) . $suffix;
+    }
 
     public function professors()
     {

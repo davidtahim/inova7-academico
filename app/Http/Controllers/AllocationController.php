@@ -100,6 +100,27 @@ class AllocationController extends Controller
         ]);
     }
 
+    /** RF07: torna a grade do semestre visível para alunos e professores. */
+    public function publish(Request $request, ConflictDetector $detector)
+    {
+        $term = AvailabilityGrid::selectedTerm();
+        abort_unless($term, 404);
+
+        $term->update(['schedule_published_at' => now(), 'schedule_published_by' => $request->user()->id]);
+        $conflicts = $detector->forTerm($term->id)->count();
+
+        return back()->with('success', "Grade {$term->code} publicada." . ($conflicts ? " Atenção: {$conflicts} choque(s) ainda pendente(s)." : ''));
+    }
+
+    public function unpublish()
+    {
+        $term = AvailabilityGrid::selectedTerm();
+        abort_unless($term, 404);
+        $term->update(['schedule_published_at' => null, 'schedule_published_by' => null]);
+
+        return back()->with('success', "Grade {$term->code} voltou para rascunho: alunos e professores deixam de vê-la.");
+    }
+
     public function copy(Request $request, ScheduleAllocator $allocator)
     {
         $target = AvailabilityGrid::selectedTerm();

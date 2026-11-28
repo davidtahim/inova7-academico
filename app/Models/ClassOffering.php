@@ -2,7 +2,7 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 class ClassOffering extends Model {
-    protected $fillable = ['academic_term_id','course_id','curriculum_matrix_id','curriculum_matrix_discipline_id','subject_id','class_code','period','shift','modality','student_count','directed_study','occurs','weekly_hours','totvs_hours','status'];
+    protected $fillable = ['academic_term_id','course_id','curriculum_matrix_id','curriculum_matrix_discipline_id','subject_id','class_code','period','shift','modality','student_count','directed_study','occurs','weekly_hours','classes_per_week','totvs_hours','status'];
     protected function casts(): array { return ['occurs'=>'boolean','directed_study'=>'boolean','weekly_hours'=>'decimal:2','totvs_hours'=>'decimal:2']; }
     public function term(){ return $this->belongsTo(AcademicTerm::class, 'academic_term_id'); }
     public function course(){ return $this->belongsTo(Course::class); }
@@ -10,6 +10,24 @@ class ClassOffering extends Model {
     public function slots(){ return $this->hasMany(ScheduleSlot::class); }
     public function assignments(){ return $this->hasMany(TeachingAssignment::class); }
     public function enrollments(){ return $this->hasMany(ClassEnrollment::class); }
+
+    /** Modalidades sem aula na grade física (a distância / nacionais). */
+    public const DISTANCE_MODALITIES = ['DOL', 'NAVEGA', 'NOTÁVEL MESTRE'];
+
+    public function isDistance(): bool
+    {
+        return in_array(mb_strtoupper((string) $this->modality), self::DISTANCE_MODALITIES, true);
+    }
+
+    /** Aulas a distribuir na grade: a da oferta, senão a da matriz. Zero para EaD. */
+    public function classesToSchedule(): int
+    {
+        if ($this->isDistance()) {
+            return 0;
+        }
+
+        return (int) ($this->classes_per_week ?? $this->matrixDiscipline?->weekly_hours ?? 0);
+    }
     
     /**
      * Obter o vínculo de matriz-disciplina que originou esta oferta.

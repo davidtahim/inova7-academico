@@ -19,6 +19,10 @@ class ScheduleController extends Controller
     {
         $term = AvailabilityGrid::selectedTerm();
         $user = $request->user();
+        $canPreview = $user->can('manage-planning');
+        if ($term && ! $term->isSchedulePublished() && ! $canPreview) {
+            return view('schedules.unpublished', ['term' => $term]);
+        }
         $myOfferings = $term && $user->isStudent() ? $planner->enrolledOfferings($user, $term) : collect();
         $courses = Course::where('active', true)
             ->when($term, fn ($q) => $q->whereHas('offerings', fn ($o) => $o->where('academic_term_id', $term->id)))
@@ -56,6 +60,7 @@ class ScheduleController extends Controller
             'entries' => $this->entries($selected),
             'letters' => TimeBlocks::forShift($shift),
             'weekdays' => TimeBlocks::SHORT_WEEKDAYS,
+            'isDraft' => $term && ! $term->isSchedulePublished(),
             'myOfferings' => $myOfferings->sortBy(fn ($o) => $o->subject->name)->values(),
             'myGrids' => $myOfferings->groupBy('shift')->map(fn ($group, $shift) => [
                 'letters' => TimeBlocks::forShift($shift),

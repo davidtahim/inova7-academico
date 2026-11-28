@@ -102,6 +102,19 @@ class ScheduleAllocator
             if (! $room && Str::upper((string) $offering->modality) === 'PRESENCIAL') {
                 $warnings[] = 'Turma presencial sem sala definida.';
             }
+
+            // RN01: aulas distribuídas na semana × carga da disciplina.
+            $distributed = count($letters) * count($weekdays);
+            $expected = $offering->classesToSchedule();
+            if ($offering->isDistance()) {
+                $warnings[] = "Disciplina a distância ({$offering->modality}): não precisa de horário na grade.";
+            } elseif ($expected > 0 && $distributed !== $expected) {
+                $warnings[] = "Distribuídas {$distributed} aula(s) na semana; a carga da disciplina é {$expected}.";
+            }
+
+            if ($professor) {
+                array_push($warnings, ...$this->checkProfessorLimits($professor, $offering, $weekdays, count($letters)));
+            }
         }
 
         if ($professor) {
@@ -280,6 +293,47 @@ class ScheduleAllocator
                 }
             })
             ->get();
+    }
+
+    /**
+     * RF02: máximo de aulas por dia e de dias de aula na semana (somando o semestre todo).
+     *
+     * @return array<int, string>
+     */
+    private function checkProfessorLimits(Professor $professor, ClassOffering $offering, array $weekdays, int $classesPerDay): array
+    {
+        if (! $professor->max_classes_per_day && ! $professor->max_days_per_week) {
+            return [];
+        }
+
+        $perDay = [];
+        ScheduleSlot::with('offering')
+            ->where('professor_id', $professor->id)
+            ->where('class_offering_id', '!=', $offering->id)
+            ->whereHas('offering', fn ($q) => $q->where('academic_term_id', $offering->academic_term_id))
+            ->get()
+            ->each(function (ScheduleSlot $slot) use (&$perDay) {
+                $perDay[(int) $slot->weekday] = ($perDay[(int) $slot->weekday] ?? 0)
+                    + strlen(TimeBlocks::lettersFor($slot->starts_at, $slot->ends_at, $slot->offering->shift));
+            });
+        foreach ($weekdays as $weekday) {
+            $perDay[$weekday] = ($perDay[$weekday] ?? 0) + $classesPerDay;
+        }
+
+        $warnings = [];
+        if ($professor->max_classes_per_day) {
+            foreach ($perDay as $weekday => $count) {
+                if ($count > $professor->max_classes_per_day) {
+                    $warnings[] = "{$professor->name} ficaria com {$count} aulas na " . Str::lower(TimeBlocks::WEEKDAYS[$weekday])
+                        . " (máximo {$professor->max_classes_per_day}).";
+                }
+            }
+        }
+        if ($professor->max_days_per_week && count($perDay) > $professor->max_days_per_week) {
+            $warnings[] = "{$professor->name} ficaria com aulas em " . count($perDay) . " dias (máximo {$professor->max_days_per_week}).";
+        }
+
+        return $warnings;
     }
 
     /** @return array{0: array<int, string>, 1: array<int, string>} */

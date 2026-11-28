@@ -10,7 +10,8 @@ use Illuminate\Database\Seeder;
  * Carga completa a partir das planilhas de oferta:
  *   1. 2027.1 (oferta a montar) — Planilha20271Seeder
  *   2. 2026.1 (oferta já montada, com professor/dia/horário/sala) — Planilha20261Seeder
- *   3. Grade 2027.1 sugerida a partir da 2026.1 pelo motor de alocação (sem choques)
+ *   3. Carga horária/modalidade (Oferta Ubíqua 2026.2) e siglas das disciplinas
+ *   4. Grade 2027.1 sugerida a partir da 2026.1 pelo motor de alocação (sem choques)
  *
  *   php artisan migrate:fresh --seeder=CargaPlanilhasSeeder
  */
@@ -18,7 +19,7 @@ class CargaPlanilhasSeeder extends Seeder
 {
     public function run(ScheduleAllocator $allocator): void
     {
-        $this->call([Planilha20271Seeder::class, RoomsSeeder::class, Planilha20261Seeder::class]);
+        $this->call([Planilha20271Seeder::class, RoomsSeeder::class, Planilha20261Seeder::class, CargaHorariaSeeder::class, SubjectAbbreviationSeeder::class]);
 
         $report = $allocator->copyFromTerm(
             AcademicTerm::where('code', '2026.1')->firstOrFail(),
