@@ -5,6 +5,7 @@
 @php
     $feedback = session('allocation');
     $copyReport = session('copy_report');
+    $modal = [];
 @endphp
 
 @section('content')
@@ -135,118 +136,104 @@
                         @include('partials.weekly-grid', ['compact' => true])
                     </details>
 
-                    <div class="alloc-head d-none d-xl-grid">
-                        <span>Disciplina</span><span>Professor</span><span>Alunos · ED · H.A.</span><span>Dias</span><span>Horário</span><span>Sala</span><span></span>
-                    </div>
+                    <ul class="list-unstyled mb-0 alloc-list">
+                        @foreach ($offerings as $offering)
+                            @php
+                                $current = $inputs[$offering->id];
+                                $mine = ($feedback['id'] ?? null) === $offering->id;
+                                $failed = $mine && ! ($feedback['saved'] ?? false);
+                                $link = $offering->matrixDiscipline;
+                                $practical = \App\Services\LabRules::offeringRequiresLab($offering);
+                                $isDistance = $offering->isDistance();
+                                $expected = $offering->classesToSchedule();
+                                $placements = $failed ? (array) old('placements', []) : $current['placements'];
+                                $placed = array_sum(array_map('count', $placements));
+                                $profId = (int) ($failed ? old('professor_id', $current['professor_id']) : $current['professor_id']);
+                                $professor = $professors->firstWhere('id', $profId) ?? $offering->assignments->first()?->professor;
+                                $room = $failed ? old('room', $current['room']) : $current['room'];
+                                $qualifiedIds = collect($qualified)->filter(fn ($ids) => in_array($offering->subject_id, $ids, true))->keys()->all();
+                                $eligible = \App\Services\LabRules::eligibleRooms($offering, $rooms);
 
-                    @foreach ($offerings as $offering)
-                        @php
-                            $current = $inputs[$offering->id];
-                            $mine = ($feedback['id'] ?? null) === $offering->id;
-                            $value = fn ($key, $default) => $mine && ! ($feedback['saved'] ?? false) ? old($key, $default) : $default;
-                            $profId = (int) $value('professor_id', $current['professor_id']);
-                            $days = array_map('intval', (array) $value('weekdays', $current['weekdays']));
-                            $chosenLetters = (array) $value('letters', $current['letters']);
-                            $room = $value('room', $current['room']);
-                            $link = $offering->matrixDiscipline;
-                            $qualifiedIds = collect($qualified)->filter(fn ($ids) => in_array($offering->subject_id, $ids, true))->keys()->all();
-                            $isDistance = strtoupper((string) $offering->modality) === 'DOL';
-                        @endphp
-                        <form method="POST" action="{{ route('allocation.update', $offering) }}" class="alloc-row {{ $mine ? (($feedback['saved'] ?? false) ? 'is-saved' : 'is-error') : '' }}"
-                            id="oferta-{{ $offering->id }}" data-regular="{{ (float) ($link?->weekly_hours ?: 2) }}" data-ed-max="{{ $directedStudyMax }}">
-                            @csrf
-                            @method('PUT')
-                            <div class="alloc-subject">
-                                <strong>{{ $offering->subject->name }}</strong>
-                                <small class="text-muted d-block">{{ $offering->subject->code }}</small>
-                                @if ($link?->required_room_type === 'LABORATORIO_INFORMATICA')<span class="badge bg-warning-subtle text-warning-emphasis">Laboratório</span>@endif
-                                @if ($link?->allows_shared_class)<span class="badge bg-success-subtle text-success-emphasis">Compartilhada</span>@endif
-                                @if ($isDistance)<span class="badge bg-info-subtle text-info-emphasis">DOL / EaD</span>@endif
-                            </div>
-                            <div>
-                                <label class="visually-hidden" for="p-{{ $offering->id }}">Professor</label>
-                                <select id="p-{{ $offering->id }}" name="professor_id" class="form-select form-select-sm">
-                                    <option value="">— A definir —</option>
-                                    <optgroup label="Habilitados">
-                                        @foreach ($professors->whereIn('id', $qualifiedIds) as $professor)
-                                            <option value="{{ $professor->id }}" @selected($profId === $professor->id)>{{ $professor->name }}</option>
-                                        @endforeach
-                                    </optgroup>
-                                    <optgroup label="Outros professores">
-                                        @foreach ($professors->whereNotIn('id', $qualifiedIds) as $professor)
-                                            <option value="{{ $professor->id }}" @selected($profId === $professor->id)>{{ $professor->name }}</option>
-                                        @endforeach
-                                    </optgroup>
-                                </select>
-                            </div>
-                            <div class="alloc-load">
-                                <input type="number" min="0" max="500" name="student_count" class="form-control form-control-sm" data-students
-                                    value="{{ $value('student_count', $offering->student_count) }}" placeholder="Alunos" aria-label="Quantidade de alunos">
-                                <label class="form-check-label small text-nowrap" title="Estudo Dirigido">
-                                    <input type="checkbox" class="form-check-input" name="directed_study" value="1" data-ed
-                                        @checked((bool) $value('directed_study', $offering->directed_study))> ED
-                                </label>
-                                <input type="number" min="0" max="20" step="0.5" name="weekly_hours" class="form-control form-control-sm" data-hours
-                                    value="{{ $value('weekly_hours', (float) $offering->weekly_hours) }}" aria-label="Hora-aula docente" title="Hora-aula docente">
-                            </div>
-                            <div class="alloc-toggles" role="group" aria-label="Dias">
-                                @foreach ($weekdays as $day => $label)
-                                    <input type="checkbox" class="btn-check" name="weekdays[]" value="{{ $day }}" id="d-{{ $offering->id }}-{{ $day }}" @checked(in_array($day, $days, true))>
-                                    <label class="btn btn-outline-secondary btn-sm" for="d-{{ $offering->id }}-{{ $day }}">{{ $label }}</label>
-                                @endforeach
-                            </div>
-                            <div class="alloc-toggles" role="group" aria-label="Blocos de horário">
-                                @foreach ($letters as $letter => $slot)
-                                    <input type="checkbox" class="btn-check" name="letters[]" value="{{ $letter }}" id="l-{{ $offering->id }}-{{ $letter }}" @checked(in_array($letter, $chosenLetters, true))>
-                                    <label class="btn btn-outline-primary btn-sm" for="l-{{ $offering->id }}-{{ $letter }}" title="{{ $slot['start'] }}–{{ $slot['end'] }}">{{ $letter }}</label>
-                                @endforeach
-                            </div>
-                            <div>
-                                <label class="visually-hidden" for="r-{{ $offering->id }}">Sala</label>
-                                @php
-                                    // Art. 8º III: prática → só laboratórios aptos (capacidade e softwares); teórica → sem laboratórios.
-                                    $practical = \App\Services\LabRules::offeringRequiresLab($offering);
-                                    $eligible = \App\Services\LabRules::eligibleRooms($offering, $rooms);
-                                    $currentRoom = $room ? $rooms->firstWhere('code', $room) : null;
-                                @endphp
-                                <select id="r-{{ $offering->id }}" name="room" class="form-select form-select-sm"
-                                    title="{{ $practical ? 'Disciplina prática: só laboratórios de informática aptos' : 'Disciplina teórica: salas comuns' }}">
-                                    <option value="">{{ $practical ? '— Laboratório —' : '— Sala —' }}</option>
-                                    @foreach ($eligible as $roomOption)
-                                        <option value="{{ $roomOption->code }}" @selected($room === $roomOption->code)>
-                                            {{ $roomOption->code }}{{ $roomOption->isComputerLab() ? ' · ' . ($roomOption->computers ? $roomOption->computers . ' PCs' : 'lab') : '' }}
-                                        </option>
-                                    @endforeach
-                                    @if ($currentRoom && ! $eligible->contains('id', $currentRoom->id))
-                                        <option value="{{ $currentRoom->code }}" selected>{{ $currentRoom->code }} (não permitida: troque)</option>
-                                    @endif
-                                </select>
-                                @if ($practical)
-                                    <span class="badge bg-warning-subtle text-warning-emphasis mt-1">Prática: laboratório</span>
-                                    @if ($eligible->isEmpty())
-                                        <div class="small text-danger mt-1">Nenhum laboratório apto (computadores ou softwares).</div>
-                                    @endif
+                                // Ocupação da turma pelas outras disciplinas (para a mini grade do modal).
+                                $turmaBusy = [];
+                                foreach ($offerings as $other) {
+                                    if ($other->id === $offering->id) continue;
+                                    foreach ($inputs[$other->id]['placements'] as $d => $ls) {
+                                        foreach ($ls as $l) {
+                                            $turmaBusy[$d . '|' . $l] = $other->subject->short_label ?? $other->subject->name;
+                                        }
+                                    }
+                                }
+
+                                $summary = collect($placements)->map(fn ($ls, $d) => $weekdays[$d] . ' ' . implode('', $ls))->implode(' · ');
+                                $status = $isDistance ? ['EaD', 'info'] : ($expected > 0 && $placed === $expected ? ['Completa', 'success'] : ($placed === 0 ? ['Sem horário', 'secondary'] : ['Faltam ' . max(0, $expected - $placed) . ' aula(s)', 'warning']));
+                                if (! $isDistance && $placed > $expected && $expected > 0) $status = ['Aulas a mais', 'danger'];
+
+                                $modal[$offering->id] = [
+                                    'id' => $offering->id,
+                                    'action' => route('allocation.update', $offering),
+                                    'name' => $offering->subject->name,
+                                    'code' => $offering->subject->code,
+                                    'class' => $offering->class_code,
+                                    'period' => $offering->period,
+                                    'shift' => $offering->shift,
+                                    'expected' => $expected,
+                                    'practical' => $practical,
+                                    'distance' => $isDistance,
+                                    'labelType' => $link?->required_room_type ? (\App\Models\Room::TYPES[$link->required_room_type] ?? $link->required_room_type) : null,
+                                    'professor' => $profId ?: null,
+                                    'placements' => (object) $placements,
+                                    'room' => $room,
+                                    'students' => $failed ? old('student_count', $offering->student_count) : $offering->student_count,
+                                    'directed' => (bool) ($failed ? old('directed_study') : $offering->directed_study),
+                                    'hours' => (float) ($failed ? old('weekly_hours', $offering->weekly_hours) : $offering->weekly_hours),
+                                    'regular' => (float) ($link?->weekly_hours ?: 2),
+                                    'qualified' => $qualifiedIds,
+                                    'rooms' => $eligible->map(fn ($r) => ['code' => $r->code, 'label' => $r->code . ($r->isLab() && $r->computers ? ' · ' . $r->computers . ($r->isComputerLab() ? ' PCs' : ' vagas') : '')])->values(),
+                                    'turmaBusy' => (object) $turmaBusy,
+                                    'errors' => $failed ? ($feedback['errors'] ?? []) : [],
+                                    'warnings' => $mine ? ($feedback['warnings'] ?? []) : [],
+                                    'open' => $failed,
+                                ];
+                            @endphp
+                            <li>
+                                <button type="button" class="alloc-item {{ $mine ? (($feedback['saved'] ?? false) ? 'is-saved' : 'is-error') : '' }}"
+                                    id="oferta-{{ $offering->id }}" data-edit="{{ $offering->id }}" aria-haspopup="dialog">
+                                    <span class="alloc-item-main">
+                                        <span class="fw-semibold d-block text-truncate">{{ $offering->subject->name }}</span>
+                                        <span class="small text-muted">
+                                            {{ $offering->subject->code }}
+                                            @if ($practical) · <span class="text-warning-emphasis">{{ $link?->required_room_type ? \Illuminate\Support\Str::lower(\App\Models\Room::TYPES[$link->required_room_type] ?? 'laboratório') : 'laboratório' }}</span>@endif
+                                            @if ($offering->directed_study) · Estudo Dirigido @endif
+                                        </span>
+                                    </span>
+                                    <span class="alloc-item-col">
+                                        <span class="alloc-label">Professor</span>
+                                        @if ($professor)
+                                            {{ $professor->name }}
+                                        @else
+                                            <span class="text-warning-emphasis">A definir</span>
+                                        @endif
+                                    </span>
+                                    <span class="alloc-item-col">
+                                        <span class="alloc-label">Horário</span>
+                                        {{ $summary ?: '—' }}
+                                    </span>
+                                    <span class="alloc-item-col alloc-item-room">
+                                        <span class="alloc-label">Sala</span>
+                                        {{ $room ?: '—' }}
+                                    </span>
+                                    <span class="alloc-item-status"><span class="badge text-bg-{{ $status[1] }} {{ $status[1] === 'warning' ? 'text-dark' : '' }}">{{ $status[0] }}</span></span>
+                                    <span class="alloc-item-edit" aria-hidden="true">Editar ›</span>
+                                </button>
+                                @if ($mine && ($feedback['saved'] ?? false))
+                                    <div class="small text-success px-3 pb-2">✓ Alocação salva.
+                                        @foreach ($feedback['warnings'] ?? [] as $warning)<span class="text-warning-emphasis d-block">⚠ {{ $warning }}</span>@endforeach
+                                    </div>
                                 @endif
-                            </div>
-                            <div class="text-end">
-                                <button type="submit" class="btn btn-primary btn-sm">Salvar</button>
-                            </div>
-
-                            @if ($mine)
-                                <div class="alloc-feedback">
-                                    @if ($feedback['saved'] ?? false)
-                                        <div class="text-success small fw-semibold">✓ Alocação salva.</div>
-                                    @endif
-                                    @foreach ($feedback['errors'] ?? [] as $error)
-                                        <div class="text-danger small">✗ {{ $error }}</div>
-                                    @endforeach
-                                    @foreach ($feedback['warnings'] ?? [] as $warning)
-                                        <div class="text-warning-emphasis small">⚠ {{ $warning }}</div>
-                                    @endforeach
-                                </div>
-                            @endif
-                        </form>
-                    @endforeach
+                            </li>
+                        @endforeach
+                    </ul>
                 </div>
             </section>
         @empty
@@ -254,43 +241,268 @@
         @endforelse
     </div>
 
+    {{-- Edição de uma disciplina da turma (um único modal, preenchido pelo JavaScript). --}}
+    <div class="modal fade" id="allocModal" tabindex="-1" aria-labelledby="allocTitle" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable modal-fullscreen-sm-down">
+            <form class="modal-content" method="POST" id="allocForm">
+                @csrf
+                @method('PUT')
+                <input type="hidden" name="per_day" value="1">
+                <div class="modal-header align-items-start">
+                    <div>
+                        <h2 class="modal-title h5 mb-1" id="allocTitle"></h2>
+                        <div class="small text-muted" id="allocMeta"></div>
+                        <div class="d-flex flex-wrap gap-1 mt-1" id="allocBadges"></div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger small d-none" id="allocErrors" role="alert"></div>
+                    <div class="alert alert-warning small d-none" id="allocWarnings"></div>
+
+                    {{-- 1. Professor --}}
+                    <section class="mb-4" aria-labelledby="sec-prof">
+                        <h3 class="alloc-sec" id="sec-prof"><span>1</span> Professor</h3>
+                        <select name="professor_id" id="allocProfessor" class="form-select"></select>
+                        <div class="form-text" id="allocProfHint"></div>
+                    </section>
+
+                    {{-- 2. Horário --}}
+                    <section class="mb-4" aria-labelledby="sec-time">
+                        <div class="d-flex flex-wrap align-items-baseline gap-2">
+                            <h3 class="alloc-sec me-auto" id="sec-time"><span>2</span> Horário</h3>
+                            <span class="badge rounded-pill" id="allocCounter" aria-live="polite"></span>
+                            <button type="button" class="btn btn-sm btn-link p-0" id="allocClear">Limpar horário</button>
+                        </div>
+                        <p class="small text-muted mb-2">Clique nos blocos de cada dia. Aulas seguidas formam um bloco (ex.: AB).</p>
+                        <div class="table-responsive">
+                            <table class="table table-bordered text-center align-middle mb-1 alloc-grid">
+                                <thead><tr><th scope="col"></th>@foreach ($weekdays as $d => $label)<th scope="col">{{ $label }}</th>@endforeach</tr></thead>
+                                <tbody id="allocGrid"></tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex flex-wrap gap-3 small text-muted" aria-hidden="true">
+                            <span><span class="alloc-key is-on"></span> escolhido</span>
+                            <span><span class="alloc-key is-turma"></span> turma ocupada</span>
+                            <span><span class="alloc-key is-prof"></span> professor em outra turma</span>
+                            <span><span class="alloc-key is-off"></span> professor indisponível</span>
+                            <span>★ horário preferido do professor</span>
+                        </div>
+                    </section>
+
+                    {{-- 3. Sala --}}
+                    <section class="mb-4" aria-labelledby="sec-room">
+                        <h3 class="alloc-sec" id="sec-room"><span>3</span> Sala</h3>
+                        <select name="room" id="allocRoom" class="form-select"></select>
+                        <div class="form-text" id="allocRoomHint"></div>
+                    </section>
+
+                    {{-- 4. Carga docente --}}
+                    <details class="alloc-details" id="allocLoad">
+                        <summary class="alloc-sec"><span>4</span> Alunos e carga docente</summary>
+                        <div class="row g-3 mt-1">
+                            <div class="col-sm-4">
+                                <label class="form-label small" for="allocStudents">Alunos</label>
+                                <input type="number" min="0" max="500" name="student_count" id="allocStudents" class="form-control">
+                            </div>
+                            <div class="col-sm-4 d-flex align-items-end">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="directed_study" value="1" id="allocDirected">
+                                    <label class="form-check-label small" for="allocDirected">Estudo Dirigido</label>
+                                </div>
+                            </div>
+                            <div class="col-sm-4">
+                                <label class="form-label small" for="allocHours">Hora-aula docente</label>
+                                <input type="number" min="0" max="20" step="0.5" name="weekly_hours" id="allocHours" class="form-control">
+                            </div>
+                            <div class="col-12 form-text mt-0">Com até {{ $directedStudyMax }} alunos a turma vira Estudo Dirigido (hora-aula 1; 0 sem alunos).</div>
+                        </div>
+                    </details>
+                    <div id="allocPlacementInputs"></div>
+                </div>
+                <div class="modal-footer">
+                    <span class="small text-muted me-auto">O sistema confere choques e disponibilidade ao salvar.</span>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <style>
-        .alloc-head, .alloc-row {
-            display: grid;
-            grid-template-columns: minmax(180px, 1.5fr) minmax(170px, 1.2fr) 190px 250px 160px 120px 70px;
-            gap: .5rem;
-            align-items: center;
+        .alloc-list > li + li { border-top: 1px solid #edf0f3; }
+        .alloc-item { display: grid; grid-template-columns: minmax(200px, 2fr) minmax(140px, 1.3fr) minmax(110px, 1fr) 90px 130px 60px; gap: .75rem; align-items: center;
+            width: 100%; text-align: left; background: none; border: 0; padding: .7rem .75rem; border-radius: .5rem; color: inherit; scroll-margin-top: 90px; }
+        .alloc-item:hover { background: #f4f8fc; }
+        .alloc-item:focus-visible { outline: 3px solid #0c3d67; outline-offset: -2px; }
+        .alloc-item.is-saved { background: #f0fbf4; }
+        .alloc-item.is-error { background: #fff5f5; }
+        .alloc-item-main { min-width: 0; }
+        .alloc-item-col { font-size: .85rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+        .alloc-label { display: none; font-size: .7rem; text-transform: uppercase; letter-spacing: .04em; color: #6c757d; }
+        .alloc-item-edit { color: #1264a3; font-size: .8rem; font-weight: 600; text-align: right; }
+        @media (max-width: 991.98px) {
+            .alloc-item { grid-template-columns: 1fr 1fr; }
+            .alloc-item-main { grid-column: 1 / -1; }
+            .alloc-label { display: block; }
+            .alloc-item-edit { display: none; }
         }
-        .alloc-head { font-size: .7rem; text-transform: uppercase; letter-spacing: .04em; color: #6c757d; padding: 0 .5rem .25rem; }
-        .alloc-row { padding: .6rem .5rem; border-top: 1px solid #edf0f3; scroll-margin-top: 90px; }
-        .alloc-row.is-saved { background: #f0fbf4; }
-        .alloc-row.is-error { background: #fff5f5; }
-        .alloc-subject strong { font-size: .85rem; }
-        .alloc-load { display: flex; gap: .35rem; align-items: center; }
-        .alloc-load input[type=number] { width: 64px; }
-        .alloc-toggles { display: flex; flex-wrap: wrap; gap: 2px; }
-        .alloc-toggles .btn { padding: .15rem .4rem; font-size: .75rem; }
-        .alloc-feedback { grid-column: 1 / -1; }
-        @media (max-width: 1199.98px) {
-            .alloc-row { grid-template-columns: 1fr 1fr; }
-            .alloc-subject, .alloc-feedback { grid-column: 1 / -1; }
+        .alloc-sec { font-size: .95rem; font-weight: 600; margin-bottom: .5rem; display: flex; align-items: center; gap: .5rem; }
+        .alloc-sec > span { display: inline-grid; place-items: center; width: 1.4rem; height: 1.4rem; border-radius: 50%; background: #0c3d67; color: #fff; font-size: .75rem; }
+        .alloc-details > summary { cursor: pointer; list-style: none; }
+        .alloc-details > summary::-webkit-details-marker { display: none; }
+        .alloc-grid { table-layout: fixed; }
+        .alloc-grid th:first-child { width: 4.6rem; }
+        @media (max-width: 575.98px) {
+            .alloc-grid th:first-child { width: 3.4rem; }
+            .alloc-grid th, .alloc-cell { font-size: .68rem; }
+            .alloc-grid th { padding: .3rem .1rem; }
         }
-        @media (max-width: 575.98px) { .alloc-row { grid-template-columns: 1fr; } }
+        .alloc-grid th { font-size: .75rem; color: #52606d; font-weight: 600; }
+        .alloc-grid td { padding: 0; }
+        .alloc-cell { width: 100%; height: 2.4rem; border: 0; background: #fff; font-size: .8rem; position: relative; }
+        .alloc-cell:hover:not(:disabled) { background: #eaf2fb; }
+        .alloc-cell:focus-visible { outline: 3px solid #0c3d67; outline-offset: -3px; }
+        .alloc-cell.is-on { background: #1264a3; color: #fff; font-weight: 700; }
+        .alloc-cell.is-turma { background: repeating-linear-gradient(45deg, #f1f3f5, #f1f3f5 6px, #e9ecef 6px, #e9ecef 12px); color: #6c757d; cursor: not-allowed; }
+        .alloc-cell.is-prof:not(.is-on) { box-shadow: inset 0 0 0 2px #dc3545; color: #b02a37; }
+        .alloc-cell.is-off:not(.is-on) { background: #f8f9fa; color: #adb5bd; text-decoration: line-through; }
+        .alloc-cell.is-on.is-prof, .alloc-cell.is-on.is-off { background: #b02a37; }
+        .alloc-key { display: inline-block; width: .9rem; height: .9rem; border-radius: 3px; vertical-align: -2px; border: 1px solid #ced4da; }
+        .alloc-key.is-on { background: #1264a3; border-color: #1264a3; }
+        .alloc-key.is-turma { background: repeating-linear-gradient(45deg, #f1f3f5, #f1f3f5 3px, #dee2e6 3px, #dee2e6 6px); }
+        .alloc-key.is-prof { box-shadow: inset 0 0 0 2px #dc3545; }
+        .alloc-key.is-off { background: #f8f9fa; }
     </style>
 
+    @php
+        $jsProfessors = $professors->map(fn ($p) => ['id' => $p->id, 'name' => $p->name])->values();
+        $jsShifts = [];
+        foreach (['MANHÃ', 'TARDE', 'NOITE', 'INTEGRAL'] as $shiftName) {
+            $jsShifts[$shiftName] = \App\Services\TimeBlocks::forShift($shiftName);
+        }
+    @endphp
     <script>
-        // Regra da planilha: até N alunos a turma vira Estudo Dirigido (hora-aula 1; 0 sem alunos).
-        document.querySelectorAll('.alloc-row').forEach(row => {
-            const students = row.querySelector('[data-students]');
-            const ed = row.querySelector('[data-ed]');
-            const hours = row.querySelector('[data-hours]');
-            students?.addEventListener('change', () => {
-                if (students.value === '') return;
-                const n = parseInt(students.value, 10);
-                const directed = n <= parseInt(row.dataset.edMax, 10);
-                ed.checked = directed;
-                hours.value = directed ? (n === 0 ? 0 : 1) : row.dataset.regular;
+        (function () {
+            const data = @json($modal);
+            const professors = @json($jsProfessors);
+            const busy = @json($professorBusy);
+            const availability = @json($professorAvailability);
+            const shifts = @json($jsShifts);
+            const weekdays = @json($weekdays);
+            const edMax = {{ (int) $directedStudyMax }};
+            const $ = id => document.getElementById(id);
+            const modalEl = $('allocModal'), form = $('allocForm');
+            let current = null, chosen = {};
+
+            const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+            function open(id) {
+                current = data[id];
+                const o = current;
+                form.action = o.action;
+                $('allocTitle').textContent = o.name;
+                $('allocMeta').textContent = `${o.code} · Turma ${o.class} · ${o.period}º período · ${o.shift.toLowerCase()} · ${o.distance ? 'a distância' : o.expected + ' aula(s) por semana'}`;
+                $('allocBadges').innerHTML = (o.practical ? `<span class="badge bg-warning-subtle text-warning-emphasis">${esc(o.labelType || 'Laboratório de Informática')}</span>` : '')
+                    + (o.directed ? '<span class="badge bg-info-subtle text-info-emphasis">Estudo Dirigido</span>' : '')
+                    + (o.distance ? '<span class="badge bg-info-subtle text-info-emphasis">EaD — não precisa de horário</span>' : '');
+
+                const box = (el, items, icon) => { el.classList.toggle('d-none', !items.length); el.innerHTML = items.map(i => `<div>${icon} ${esc(i)}</div>`).join(''); };
+                box($('allocErrors'), o.errors, '✗');
+                box($('allocWarnings'), o.warnings, '⚠');
+
+                // Professor: habilitados primeiro.
+                const q = new Set(o.qualified);
+                const opt = p => `<option value="${p.id}" ${p.id === o.professor ? 'selected' : ''}>${esc(p.name)}</option>`;
+                $('allocProfessor').innerHTML = '<option value="">— A definir —</option>'
+                    + `<optgroup label="Habilitados na disciplina">${professors.filter(p => q.has(p.id)).map(opt).join('')}</optgroup>`
+                    + `<optgroup label="Outros professores">${professors.filter(p => !q.has(p.id)).map(opt).join('')}</optgroup>`;
+
+                // Sala: já filtrada pelas regras de laboratório.
+                const rooms = o.rooms.map(r => `<option value="${esc(r.code)}" ${r.code === o.room ? 'selected' : ''}>${esc(r.label)}</option>`).join('');
+                const stale = o.room && !o.rooms.some(r => r.code === o.room) ? `<option value="${esc(o.room)}" selected>${esc(o.room)} (não permitida: troque)</option>` : '';
+                $('allocRoom').innerHTML = `<option value="">${o.practical ? '— Laboratório —' : '— Sala —'}</option>` + rooms + stale;
+                $('allocRoomHint').textContent = o.practical
+                    ? (o.rooms.length ? 'Só laboratórios aptos: tipo exigido, vagas para a turma e softwares.' : 'Nenhum laboratório apto (tipo, vagas ou softwares): confira o cadastro de laboratórios.')
+                    : 'Disciplina sem carga prática: laboratórios ficam de fora (Art. 8º III).';
+
+                $('allocStudents').value = o.students ?? '';
+                $('allocDirected').checked = o.directed;
+                $('allocHours').value = o.hours;
+                $('allocLoad').open = o.directed || o.errors.length > 0 && o.students !== null;
+
+                chosen = {};
+                Object.entries(o.placements || {}).forEach(([d, ls]) => ls.forEach(l => { chosen[d + '|' + l] = true; }));
+                renderGrid();
+                bootstrap.Modal.getOrCreateInstance(modalEl).show();
+            }
+
+            function renderGrid() {
+                const o = current, letters = shifts[o.shift] || {};
+                const prof = Number($('allocProfessor').value) || null;
+                const profBusy = (prof && busy[prof]) || {}, grid = prof ? availability[prof] : null;
+                let html = '';
+                Object.entries(letters).forEach(([letter, slot]) => {
+                    html += `<tr><th scope="row" class="text-nowrap small">${letter} <span class="fw-normal text-muted">${slot.start}</span></th>`;
+                    Object.keys(weekdays).forEach(d => {
+                        const key = d + '|' + letter, at = d + '|' + slot.start;
+                        const turma = o.turmaBusy[key];
+                        const other = (profBusy[at] || []).filter(b => b.offering !== o.id);
+                        const pref = grid ? (grid[at] || 'unavailable') : null;
+                        const cls = ['alloc-cell'];
+                        let label = `${weekdays[d]} ${letter} (${slot.start})`, mark = '';
+                        if (chosen[key]) { cls.push('is-on'); mark = letter; }
+                        if (turma) { cls.push('is-turma'); label += `: turma já tem ${turma}`; mark = turma; }
+                        if (other.length) { cls.push('is-prof'); label += `: professor em ${other.map(b => b.label).join(', ')}`; }
+                        if (pref === 'unavailable') { cls.push('is-off'); label += ': professor indisponível'; }
+                        if (pref === 'preferred' && !chosen[key] && !turma) mark = '★';
+                        html += `<td><button type="button" class="${cls.join(' ')}" data-key="${key}" ${turma ? 'disabled' : ''} aria-pressed="${!!chosen[key]}" title="${esc(label)}" aria-label="${esc(label)}">${esc(mark)}</button></td>`;
+                    });
+                    html += '</tr>';
+                });
+                $('allocGrid').innerHTML = html;
+                counter();
+                const conflicts = Object.keys(chosen).filter(k => (profBusy[k.split('|')[0] + '|' + (letters[k.split('|')[1]] || {}).start] || []).some(b => b.offering !== o.id)).length;
+                $('allocProfHint').textContent = !prof ? 'Sem professor, a turma fica "a definir".'
+                    : (!grid ? 'Este professor ainda não preencheu a disponibilidade.' : 'Indisponíveis aparecem riscados; ★ = horário preferido.')
+                    + (conflicts ? ` Atenção: ${conflicts} horário(s) escolhido(s) chocam com outra turma dele.` : '');
+            }
+
+            function counter() {
+                const n = Object.keys(chosen).length, exp = current.expected, el = $('allocCounter');
+                el.textContent = current.distance ? `${n} aula(s) — EaD` : `${n} de ${exp} aulas`;
+                el.className = 'badge rounded-pill ' + (current.distance ? 'text-bg-info' : n === exp ? 'text-bg-success' : n > exp ? 'text-bg-danger' : 'text-bg-warning');
+            }
+
+            $('allocGrid').addEventListener('click', ev => {
+                const cell = ev.target.closest('.alloc-cell');
+                if (!cell || cell.disabled) return;
+                chosen[cell.dataset.key] ? delete chosen[cell.dataset.key] : (chosen[cell.dataset.key] = true);
+                renderGrid();
+                $('allocGrid').querySelector(`[data-key="${cell.dataset.key}"]`)?.focus();
             });
-        });
+            $('allocClear').addEventListener('click', () => { chosen = {}; renderGrid(); });
+            $('allocProfessor').addEventListener('change', renderGrid);
+
+            // Regra da planilha: até N alunos vira Estudo Dirigido (hora-aula 1; 0 sem alunos).
+            $('allocStudents').addEventListener('change', () => {
+                if ($('allocStudents').value === '') return;
+                const n = parseInt($('allocStudents').value, 10), directed = n <= edMax;
+                $('allocDirected').checked = directed;
+                $('allocHours').value = directed ? (n === 0 ? 0 : 1) : current.regular;
+            });
+
+            form.addEventListener('submit', () => {
+                $('allocPlacementInputs').innerHTML = Object.keys(chosen).map(k => {
+                    const [d, l] = k.split('|');
+                    return `<input type="hidden" name="placements[${d}][]" value="${l}">`;
+                }).join('');
+            });
+
+            document.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => open(b.dataset.edit)));
+            // Erro ao salvar: reabre o modal da disciplina com as mensagens e o que foi preenchido.
+            const failed = Object.values(data).find(o => o.open);
+            if (failed) window.addEventListener('load', () => open(failed.id));
+        })();
     </script>
 @endsection

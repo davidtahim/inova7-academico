@@ -45,6 +45,25 @@ class AllocationController extends Controller
 
         $qualified = Professor::with('subjects:id')->get()->mapWithKeys(fn ($p) => [$p->id => $p->subjects->pluck('id')->all()]);
 
+        // Para a mini grade do modal: onde cada professor já dá aula no semestre ("dia|HH:MM")
+        // e a grade de disponibilidade dele (preferred | available | unavailable).
+        $busy = [];
+        if ($term) {
+            $allSlots = \App\Models\ScheduleSlot::with('offering.subject')->whereNotNull('professor_id')
+                ->whereHas('offering', fn ($q) => $q->where('academic_term_id', $term->id))->get();
+            foreach ($allSlots as $slot) {
+                $o = $slot->offering;
+                foreach (str_split(TimeBlocks::lettersFor($slot->starts_at, $slot->ends_at, $o->shift) ?: '') as $letter) {
+                    $start = TimeBlocks::forShift($o->shift)[$letter]['start'] ?? null;
+                    if ($start) {
+                        $busy[$slot->professor_id][$slot->weekday . '|' . $start][] = ['offering' => $o->id, 'label' => ($o->subject?->short_label ?? '') . ' · ' . $o->class_code];
+                    }
+                }
+            }
+        }
+        $availability = $term ? \App\Models\ProfessorAvailability::where('academic_term_id', $term->id)->get()
+            ->groupBy('professor_id')->map(fn ($rows) => $rows->mapWithKeys(fn ($a) => [$a->weekday . '|' . substr((string) $a->starts_at, 0, 5) => $a->preference]))->all() : [];
+
         return view('allocation.index', [
             'term' => $term,
             'courses' => $courses,
@@ -59,6 +78,8 @@ class AllocationController extends Controller
             'conflicts' => $term ? $detector->forTerm($term->id) : collect(),
             'sourceTerms' => $term ? AcademicTerm::whereKeyNot($term->id)->whereHas('offerings.slots')->orderByDesc('code')->get() : collect(),
             'directedStudyMax' => ScheduleAllocator::DIRECTED_STUDY_MAX_STUDENTS,
+            'professorBusy' => $busy,
+            'professorAvailability' => $availability,
         ]);
     }
 
@@ -74,12 +95,18 @@ class AllocationController extends Controller
             'letters' => ['nullable', 'array'],
             'letters.*' => ['string', Rule::in(['A', 'B', 'C', 'D', 'E', 'F'])],
             'room' => ['nullable', 'string', 'exists:rooms,code'],
+            // Modal: horário por dia (Seg AB, Qua CD…). Sem ele, vale o formato antigo dias + blocos.
+            'placements' => ['nullable', 'array'],
+            'placements.*' => ['array'],
+            'placements.*.*' => ['string', Rule::in(['A', 'B', 'C', 'D', 'E', 'F'])],
         ]);
 
-        $input = [
+        $schedule = $request->boolean('per_day')
+            ? ['placements' => collect($validated['placements'] ?? [])->filter(fn ($l, $d) => (int) $d >= 1 && (int) $d <= 6)->map(fn ($l) => array_values(array_unique($l)))->all()]
+            : ['weekdays' => $validated['weekdays'] ?? [], 'letters' => $validated['letters'] ?? []];
+
+        $input = $schedule + [
             'professor_id' => $validated['professor_id'] ?? null,
-            'weekdays' => $validated['weekdays'] ?? [],
-            'letters' => $validated['letters'] ?? [],
             'room' => $validated['room'] ?? null,
             'student_count' => $validated['student_count'] ?? null,
             'directed_study' => $request->boolean('directed_study'),
