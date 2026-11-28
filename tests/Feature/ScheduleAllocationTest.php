@@ -95,7 +95,19 @@ class ScheduleAllocationTest extends TestCase
         $this->assertSame(2, ScheduleSlot::count());
         $this->assertSame(['18:30', '20:10'], [substr(ScheduleSlot::first()->starts_at, 0, 5), substr(ScheduleSlot::first()->ends_at, 0, 5)]);
         $this->assertSame($this->ana->id, $offering->assignments()->first()->professor_id);
-        $this->assertSame(['professor_id' => $this->ana->id, 'weekdays' => [1, 3], 'letters' => ['A', 'B'], 'room' => 'Sala 40'], $this->allocator->currentInput($offering->fresh(['slots', 'assignments'])));
+        $this->assertSame(['professor_id' => $this->ana->id, 'placements' => [1 => ['A', 'B'], 3 => ['A', 'B']], 'weekdays' => [1, 3], 'letters' => ['A', 'B'], 'room' => 'Sala 40'], $this->allocator->currentInput($offering->fresh(['slots', 'assignments'])));
+    }
+
+    public function test_per_day_placements_allow_different_blocks_each_day(): void
+    {
+        $offering = $this->offering('CSE0280101NNA', 'Banco de Dados', [], ['weekly_hours' => 3]);
+
+        $result = $this->allocator->apply($offering, ['professor_id' => $this->ana->id, 'placements' => [1 => ['A', 'B'], 3 => ['C']], 'room' => 'Sala 40']);
+
+        $this->assertTrue($result['saved'], implode(' ', $result['errors']));
+        $this->assertStringNotContainsString('Distribuídas', implode(' ', $result['warnings']), '3 aulas = carga 3');
+        $this->assertSame([1 => ['A', 'B'], 3 => ['C']], $this->allocator->currentInput($offering->fresh(['slots', 'assignments']))['placements']);
+        $this->assertTrue($this->allocator->validate($offering, ['placements' => [7 => ['A']]])['errors'] !== []);
     }
 
     public function test_blocks_professor_room_and_class_clashes(): void
@@ -187,7 +199,7 @@ class ScheduleAllocationTest extends TestCase
         $report = $this->allocator->copyFromTerm($previous, $this->term);
 
         $this->assertSame(1, $report['copied']);
-        $this->assertSame(['professor_id' => $this->ana->id, 'weekdays' => [2], 'letters' => ['C', 'D'], 'room' => 'Sala 40'], $this->allocator->currentInput($new->fresh(['slots', 'assignments'])));
+        $this->assertSame(['professor_id' => $this->ana->id, 'placements' => [2 => ['C', 'D']], 'weekdays' => [2], 'letters' => ['C', 'D'], 'room' => 'Sala 40'], $this->allocator->currentInput($new->fresh(['slots', 'assignments'])));
         $this->assertSame('planned', $new->assignments()->first()->status);
     }
 

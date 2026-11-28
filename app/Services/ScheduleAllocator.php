@@ -33,23 +33,35 @@ class ScheduleAllocator
         $errors = [];
         $warnings = [];
 
-        $weekdays = array_values(array_unique(array_map('intval', $input['weekdays'] ?? [])));
-        $letters = TimeBlocks::parseLetters(implode('', $input['letters'] ?? []), $offering->shift);
+        $schedule = $this->schedule($offering, $input);
+        $weekdays = array_keys($schedule);
+        $letters = TimeBlocks::parseLetters(implode('', array_merge([], ...array_values($schedule ?: [[]]))), $offering->shift);
         $professor = ! empty($input['professor_id']) ? Professor::find($input['professor_id']) : null;
         $roomCode = trim((string) ($input['room'] ?? ''));
         $room = $roomCode !== '' ? Room::where('code', $roomCode)->first() : null;
 
-        if (($input['letters'] ?? []) !== [] && $letters === []) {
+        if (! array_key_exists('placements', $input)) {
+            $rawLetters = $input['letters'] ?? [];
+            $rawDays = $input['weekdays'] ?? [];
+            if ($rawLetters !== [] && TimeBlocks::parseLetters(implode('', $rawLetters), $offering->shift) === []) {
+                $errors[] = "Horário inválido para o turno {$offering->shift}.";
+            }
+            if (($rawDays === []) xor ($rawLetters === [])) {
+                $errors[] = 'Informe o dia e o horário (blocos) juntos.';
+            }
+        } elseif ($this->invalidPlacements($offering, $input['placements'])) {
             $errors[] = "Horário inválido para o turno {$offering->shift}.";
-        }
-        if ($weekdays === [] xor $letters === []) {
-            $errors[] = 'Informe o dia e o horário (blocos) juntos.';
         }
         if ($roomCode !== '' && ! $room) {
             $errors[] = "Sala \"{$roomCode}\" não cadastrada.";
         }
 
-        $intervals = TimeBlocks::intervals($letters, $offering->shift);
+        $dayIntervals = [];
+        foreach ($schedule as $weekday => $dayLetters) {
+            foreach (TimeBlocks::intervals($dayLetters, $offering->shift) as $interval) {
+                $dayIntervals[] = ['weekday' => $weekday] + $interval;
+            }
+        }
         $link = $offering->matrixDiscipline;
         $isDirected = array_key_exists('directed_study', $input) ? (bool) $input['directed_study'] : (bool) $offering->directed_study;
 
@@ -58,8 +70,8 @@ class ScheduleAllocator
                 . ", mas {$room->code} é " . Str::lower($room->type_label) . '.';
         }
 
-        if ($weekdays !== [] && $intervals !== []) {
-            foreach ($this->overlappingSlots($offering, $weekdays, $intervals) as $slot) {
+        if ($dayIntervals !== []) {
+            foreach ($this->overlappingSlots($offering, $dayIntervals) as $slot) {
                 $other = $slot->offering;
                 $when = TimeBlocks::SHORT_WEEKDAYS[$slot->weekday] . ' ' . substr($slot->starts_at, 0, 5);
                 $joint = $professor && (int) $slot->professor_id === (int) $professor->id && $this->sameSubject($offering, $other);
@@ -87,13 +99,13 @@ class ScheduleAllocator
             }
 
             if ($professor) {
-                [$availabilityErrors, $availabilityWarnings] = $this->checkAvailability($professor, $offering, $weekdays, $letters);
+                [$availabilityErrors, $availabilityWarnings] = $this->checkAvailability($professor, $offering, $schedule);
                 array_push($errors, ...$availabilityErrors);
                 array_push($warnings, ...$availabilityWarnings);
             }
 
             $maxConsecutive = (int) ($link?->max_consecutive_classes ?: 2);
-            foreach ($intervals as $interval) {
+            foreach ($dayIntervals as $interval) {
                 if (strlen($interval['letters']) > $maxConsecutive) {
                     $warnings[] = 'Bloco ' . $interval['letters'] . " passa de {$maxConsecutive} aulas seguidas.";
                 }
@@ -104,7 +116,7 @@ class ScheduleAllocator
             }
 
             // RN01: aulas distribuídas na semana × carga da disciplina.
-            $distributed = count($letters) * count($weekdays);
+            $distributed = array_sum(array_map('count', $schedule));
             $expected = $offering->classesToSchedule();
             if ($offering->isDistance()) {
                 $warnings[] = "Disciplina a distância ({$offering->modality}): não precisa de horário na grade.";
@@ -113,7 +125,7 @@ class ScheduleAllocator
             }
 
             if ($professor) {
-                array_push($warnings, ...$this->checkProfessorLimits($professor, $offering, $weekdays, count($letters)));
+                array_push($warnings, ...$this->checkProfessorLimits($professor, $offering, array_map('count', $schedule)));
             }
         }
 
@@ -143,7 +155,7 @@ class ScheduleAllocator
 
         DB::transaction(function () use ($offering, $input, $assignmentStatus) {
             $professorId = ! empty($input['professor_id']) ? (int) $input['professor_id'] : null;
-            $letters = TimeBlocks::parseLetters(implode('', $input['letters'] ?? []), $offering->shift);
+            $schedule = $this->schedule($offering, $input);
             $room = trim((string) ($input['room'] ?? '')) ?: null;
 
             $offering->fill(array_filter([
@@ -164,8 +176,8 @@ class ScheduleAllocator
             }
 
             ScheduleSlot::where('class_offering_id', $offering->id)->delete();
-            foreach (array_unique(array_map('intval', $input['weekdays'] ?? [])) as $weekday) {
-                foreach (TimeBlocks::intervals($letters, $offering->shift) as $interval) {
+            foreach ($schedule as $weekday => $dayLetters) {
+                foreach (TimeBlocks::intervals($dayLetters, $offering->shift) as $interval) {
                     ScheduleSlot::create([
                         'class_offering_id' => $offering->id,
                         'professor_id' => $professorId,
@@ -206,8 +218,19 @@ class ScheduleAllocator
     {
         $slots = $offering->slots;
 
+        $placements = [];
+        foreach ($slots as $slot) {
+            foreach (str_split(TimeBlocks::lettersFor($slot->starts_at, $slot->ends_at, $offering->shift) ?: '') as $letter) {
+                if ($letter !== '') {
+                    $placements[(int) $slot->weekday][] = $letter;
+                }
+            }
+        }
+        ksort($placements);
+
         return [
             'professor_id' => $offering->assignments->first()?->professor_id,
+            'placements' => $placements,
             'weekdays' => $slots->pluck('weekday')->map(fn ($d) => (int) $d)->unique()->sort()->values()->all(),
             'letters' => str_split($slots->map(fn ($s) => TimeBlocks::lettersFor($s->starts_at, $s->ends_at, $offering->shift))->unique()->implode('') ?: '') ?: [],
             'room' => $slots->first()?->room,
@@ -280,19 +303,68 @@ class ScheduleAllocator
     }
 
     /** @return Collection<int, ScheduleSlot> horários de outras ofertas do semestre que se sobrepõem */
-    private function overlappingSlots(ClassOffering $offering, array $weekdays, array $intervals): Collection
+    private function overlappingSlots(ClassOffering $offering, array $dayIntervals): Collection
     {
         return ScheduleSlot::query()
             ->with(['offering.subject'])
             ->where('class_offering_id', '!=', $offering->id)
-            ->whereIn('weekday', $weekdays)
             ->whereHas('offering', fn ($q) => $q->where('academic_term_id', $offering->academic_term_id)->where('occurs', true))
-            ->where(function ($query) use ($intervals) {
-                foreach ($intervals as $interval) {
-                    $query->orWhere(fn ($q) => $q->where('starts_at', '<', $interval['end'])->where('ends_at', '>', $interval['start']));
+            ->where(function ($query) use ($dayIntervals) {
+                foreach ($dayIntervals as $interval) {
+                    $query->orWhere(fn ($q) => $q->where('weekday', $interval['weekday'])
+                        ->where('starts_at', '<', $interval['end'])->where('ends_at', '>', $interval['start']));
                 }
             })
             ->get();
+    }
+
+    /**
+     * Horário da oferta como [dia => [letras]]. Aceita 'placements' (por dia, vindos da grade
+     * global) ou 'weekdays' + 'letters' (mesmos blocos em todos os dias, formulário da montagem).
+     *
+     * @return array<int, array<int, string>>
+     */
+    public function schedule(ClassOffering $offering, array $input): array
+    {
+        $valid = array_keys(TimeBlocks::forShift($offering->shift));
+        $schedule = [];
+
+        if (array_key_exists('placements', $input)) {
+            foreach ((array) $input['placements'] as $weekday => $letters) {
+                $weekday = (int) $weekday;
+                $letters = array_values(array_filter($valid, fn ($l) => in_array($l, (array) $letters, true)));
+                if ($weekday >= 1 && $weekday <= 6 && $letters !== []) {
+                    $schedule[$weekday] = $letters;
+                }
+            }
+        } else {
+            $letters = TimeBlocks::parseLetters(implode('', $input['letters'] ?? []), $offering->shift);
+            foreach (array_unique(array_map('intval', $input['weekdays'] ?? [])) as $weekday) {
+                if ($weekday >= 1 && $weekday <= 6 && $letters !== []) {
+                    $schedule[$weekday] = $letters;
+                }
+            }
+        }
+        ksort($schedule);
+
+        return $schedule;
+    }
+
+    private function invalidPlacements(ClassOffering $offering, $placements): bool
+    {
+        $valid = array_keys(TimeBlocks::forShift($offering->shift));
+        foreach ((array) $placements as $weekday => $letters) {
+            if ((int) $weekday < 1 || (int) $weekday > 6) {
+                return true;
+            }
+            foreach ((array) $letters as $letter) {
+                if (! in_array($letter, $valid, true)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -300,7 +372,7 @@ class ScheduleAllocator
      *
      * @return array<int, string>
      */
-    private function checkProfessorLimits(Professor $professor, ClassOffering $offering, array $weekdays, int $classesPerDay): array
+    private function checkProfessorLimits(Professor $professor, ClassOffering $offering, array $newPerDay): array
     {
         if (! $professor->max_classes_per_day && ! $professor->max_days_per_week) {
             return [];
@@ -316,8 +388,8 @@ class ScheduleAllocator
                 $perDay[(int) $slot->weekday] = ($perDay[(int) $slot->weekday] ?? 0)
                     + strlen(TimeBlocks::lettersFor($slot->starts_at, $slot->ends_at, $slot->offering->shift));
             });
-        foreach ($weekdays as $weekday) {
-            $perDay[$weekday] = ($perDay[$weekday] ?? 0) + $classesPerDay;
+        foreach ($newPerDay as $weekday => $count) {
+            $perDay[$weekday] = ($perDay[$weekday] ?? 0) + $count;
         }
 
         $warnings = [];
@@ -337,7 +409,7 @@ class ScheduleAllocator
     }
 
     /** @return array{0: array<int, string>, 1: array<int, string>} */
-    private function checkAvailability(Professor $professor, ClassOffering $offering, array $weekdays, array $letters): array
+    private function checkAvailability(Professor $professor, ClassOffering $offering, array $schedule): array
     {
         $availability = ProfessorAvailability::where('professor_id', $professor->id)
             ->where('academic_term_id', $offering->academic_term_id)
@@ -349,7 +421,7 @@ class ScheduleAllocator
 
         $map = TimeBlocks::forShift($offering->shift);
         $blocked = [];
-        foreach ($weekdays as $weekday) {
+        foreach ($schedule as $weekday => $letters) {
             foreach ($letters as $letter) {
                 $cell = $availability->first(fn ($a) => (int) $a->weekday === $weekday && substr((string) $a->starts_at, 0, 5) === $map[$letter]['start']);
                 if (! $cell || $cell->preference === 'unavailable') {
