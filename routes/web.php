@@ -24,6 +24,16 @@ Route::middleware('auth')->group(function () {
     Route::post('/planejamento/alocar/{offering}', [PlanningController::class, 'confirmProfessor'])->name('planning.confirm-professor');
     Route::post('/planejamento/alocar-lote', [PlanningController::class, 'confirmProfessorBulk'])->name('planning.confirm-professor-bulk');
 
+    // Horários das turmas: consulta para todos os perfis (inclusive alunos).
+    Route::get('/horarios', [\App\Http\Controllers\ScheduleController::class, 'index'])->name('schedules.index');
+
+    // Montagem de horários (coordenação): professor, dia, blocos e sala com validação de choques.
+    Route::middleware('can:manage-planning')->prefix('alocacao')->name('allocation.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\AllocationController::class, 'index'])->name('index');
+        Route::post('/copiar', [\App\Http\Controllers\AllocationController::class, 'copy'])->name('copy');
+        Route::put('/{offering}', [\App\Http\Controllers\AllocationController::class, 'update'])->name('update');
+    });
+
     // Disponibilidade (CCG-FOR-02) e habilitação docente.
     // Ficam fora do grupo "access-catalog" para que o próprio professor tenha acesso;
     // a autorização é feita pela ProfessorPolicy.

@@ -14,7 +14,13 @@
         $isTeacher
             ? ['label' => 'Meu painel docente', 'url' => route('profile'), 'icon' => 'home', 'active' => ['profile']]
             : ['label' => 'Painel', 'url' => route('dashboard'), 'icon' => 'home', 'active' => ['dashboard']],
-        ['label' => 'Planejamento de turmas', 'url' => route('planning.index'), 'icon' => 'calendar', 'active' => ['planning.*']],
+        ['label' => 'Horários das turmas', 'url' => route('schedules.index'), 'icon' => 'clock', 'active' => ['schedules.*']],
+        Gate::allows('manage-planning')
+            ? ['label' => 'Montagem de horários', 'url' => route('allocation.index'), 'icon' => 'grid', 'active' => ['allocation.*']]
+            : null,
+        Gate::allows('manage-planning')
+            ? ['label' => 'Planejamento de turmas', 'url' => route('planning.index'), 'icon' => 'calendar', 'active' => ['planning.*']]
+            : null,
     ]))];
 
     if ($isTeacher) {
