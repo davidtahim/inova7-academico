@@ -16,7 +16,10 @@
             : ['label' => 'Painel', 'url' => route('dashboard'), 'icon' => 'home', 'active' => ['dashboard']],
         ['label' => 'Horários das turmas', 'url' => route('schedules.index'), 'icon' => 'clock', 'active' => ['schedules.*']],
         Gate::allows('manage-planning')
-            ? ['label' => 'Montagem de horários', 'url' => route('allocation.index'), 'icon' => 'grid', 'active' => ['allocation.*']]
+            ? ['label' => 'Montagem de horários', 'url' => route('allocation.index'), 'icon' => 'grid', 'active' => ['allocation.index', 'allocation.update', 'allocation.copy']]
+            : null,
+        Gate::allows('manage-planning')
+            ? ['label' => 'Grade global', 'url' => route('allocation.board'), 'icon' => 'layers', 'active' => ['allocation.board*']]
             : null,
         Gate::allows('manage-planning')
             ? ['label' => 'Enturmação', 'url' => route('enrollment.index'), 'icon' => 'users', 'active' => ['enrollment.*']]

@@ -38,6 +38,9 @@ Route::middleware('auth')->group(function () {
     Route::middleware('can:manage-planning')->prefix('alocacao')->name('allocation.')->group(function () {
         Route::get('/', [\App\Http\Controllers\AllocationController::class, 'index'])->name('index');
         Route::post('/copiar', [\App\Http\Controllers\AllocationController::class, 'copy'])->name('copy');
+        Route::get('/grade', [\App\Http\Controllers\ScheduleBoardController::class, 'index'])->name('board');
+        Route::get('/grade/dados', [\App\Http\Controllers\ScheduleBoardController::class, 'data'])->name('board.data');
+        Route::post('/grade/mover', [\App\Http\Controllers\ScheduleBoardController::class, 'move'])->name('board.move');
         Route::post('/publicar', [\App\Http\Controllers\AllocationController::class, 'publish'])->name('publish');
         Route::post('/despublicar', [\App\Http\Controllers\AllocationController::class, 'unpublish'])->name('unpublish');
         Route::put('/{offering}', [\App\Http\Controllers\AllocationController::class, 'update'])->name('update');

@@ -30,6 +30,7 @@
                         @csrf<button class="btn btn-success btn-sm">Publicar grade</button>
                     </form>
                 @endif
+                <a href="{{ route('allocation.board') }}" class="btn btn-primary btn-sm">Grade global</a>
                 <a href="{{ route('schedules.index', ['course' => $courseId]) }}" class="btn btn-outline-secondary btn-sm">Ver como o aluno vê</a>
             </div>
         </div>
