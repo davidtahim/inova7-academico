@@ -54,4 +54,12 @@ class LandingPageTest extends TestCase
         $this->actingAs($teacher)->get(route('teacher.availability'))->assertOk()->assertSee('docs/tutorial-disponibilidade-professor.pdf', false)->assertSee('Tutorial (PDF)');
         $this->actingAs($teacher)->get(route('teacher.dashboard'))->assertOk()->assertSee('Baixe o tutorial (PDF)');
     }
+
+    public function test_coordination_tutorial_pdf_is_published_and_linked(): void
+    {
+        $this->assertFileExists(public_path('docs/tutorial-coordenacao.pdf'));
+        $coordinator = User::create(['name' => 'Coord', 'email' => 'c@x.local', 'password' => 'senha1234', 'role' => 'coordinator', 'is_active' => true]);
+
+        $this->actingAs($coordinator)->get('/')->assertOk()->assertSee('docs/tutorial-coordenacao.pdf', false);
+    }
 }
