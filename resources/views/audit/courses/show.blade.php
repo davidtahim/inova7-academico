@@ -158,7 +158,7 @@
                                             @foreach ($docRows as $d)
                                                 @php $doc = $documents->get($d['key']); $k = $d['key']; @endphp
                                                 <tr>
-                                                    <td>{{ $d['name'] }}@if ($doc?->delivered_at)<br><small class="text-success">Entregue em {{ $doc->delivered_at->format('d/m/Y') }}</small>@endif</td>
+                                                    <td>{{ $d['name'] }}@if ($model = $catalog->template($d['name']))<br><a href="{{ $model['url'] }}" target="_blank" rel="noopener" class="small">⬇ Baixar modelo</a>@endif @if ($doc?->delivered_at)<br><small class="text-success">Entregue em {{ $doc->delivered_at->format('d/m/Y') }}</small>@endif</td>
                                                     <td>
                                                         <select name="docs[{{ $k }}][status]" class="form-select form-select-sm" aria-label="Situação de {{ $d['name'] }}">
                                                             @foreach ($statusLabels as $value => $label)

@@ -42,6 +42,8 @@ class CourseAuditTest extends TestCase
         $this->assertSame('Delegação II', $catalog->band(4.2));
         $this->assertSame('Gestão I', $catalog->band(3.0));
         $this->assertSame('Supervisão I', $catalog->band(1.2));
+        $this->assertStringContainsString('drive.google.com', $catalog->template('CCG-FOR-10 - Avaliação de professores')['url']);
+        $this->assertNull($catalog->template('PPC do curso'));
     }
 
     public function test_coordinator_scores_indicators_and_delivers_documents(): void
@@ -49,7 +51,7 @@ class CourseAuditTest extends TestCase
         Storage::fake('local');
         $this->actingAs($this->coordinator)->get(route('audit.courses.index'))->assertOk()->assertSee('Sistemas de Informação');
         $this->actingAs($this->coordinator)->get(route('audit.courses.show', $this->course))->assertOk()
-            ->assertSee('1.1')->assertSee('Projeto Pedagógico de Curso')->assertSee('CCG-FOR-01 - Horário de aula')->assertSee('Imprescindível');
+            ->assertSee('1.1')->assertSee('Projeto Pedagógico de Curso')->assertSee('CCG-FOR-01 - Horário de aula')->assertSee('Imprescindível')->assertSee('Baixar modelo');
 
         $key = CourseAuditDocument::keyFor('1.12.1', 'CCG-FOR-01 - Horário de aula');
         $this->actingAs($this->coordinator)->post(route('audit.courses.indicator', [$this->course, '1.12.1']), [

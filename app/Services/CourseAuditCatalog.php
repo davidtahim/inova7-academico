@@ -22,6 +22,18 @@ class CourseAuditCatalog
         $this->data = json_decode((string) file_get_contents(database_path("data/auditoria/{$catalog}.json")), true);
     }
 
+    /** Modelo (template) do documento, pelo código no início do nome (ex.: "CCG-FOR-10 - …"). */
+    public function template(string $documentName): ?array
+    {
+        static $models = null;
+        $models ??= json_decode((string) @file_get_contents(database_path('data/auditoria/modelos.json')), true) ?: [];
+        if (! preg_match('/^([A-Z]{3}-(?:FOR|MDL)-\d+)/', $documentName, $m)) {
+            return null;
+        }
+
+        return $models[$m[1]] ?? null;
+    }
+
     public function source(): string
     {
         return $this->data['source'];
