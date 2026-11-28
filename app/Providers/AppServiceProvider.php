@@ -21,6 +21,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('access-imports', fn (User $user) => $user->canAccessImports());
         Gate::define('access-audit', fn (User $user) => $user->canAccessAudit());
         Gate::define('teach', fn (User $user) => $user->isTeacher());
+        // Auditoria de curso: coordenação e TI em qualquer curso; assistente só no curso dele.
+        Gate::define('edit-course-audit', fn (User $user, \App\Models\Course $course) => $user->canManagePlanning()
+            || $course->coordinator_user_id === $user->id
+            || $course->assistants()->whereKey($user->id)->exists());
         Gate::define('impersonate', fn (User $user, User $target) => ! session()->has('impersonator_id') && $user->canImpersonate($target));
         // Laboratórios: gestores de cada área (e o Administrador de TI) aprovam e cadastram; demais perfis (exceto aluno) consultam e pedem.
         Gate::define('view-labs', fn (User $user) => ! $user->isStudent());

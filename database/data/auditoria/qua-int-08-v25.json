@@ -1,0 +1,1423 @@
+{
+ "source": "QUA-INT-08 v.25 (03/02/2025)",
+ "results": [
+  [
+   "Delegação II",
+   4.0
+  ],
+  [
+   "Delegação I",
+   3.7
+  ],
+  [
+   "Gestão II",
+   3.5
+  ],
+  [
+   "Gestão I",
+   3.0
+  ],
+  [
+   "Supervisão II",
+   2.5
+  ],
+  [
+   "Supervisão I",
+   1.0
+  ]
+ ],
+ "dimensions": [
+  {
+   "code": "1",
+   "name": "Organização Didático-Pedagógica"
+  },
+  {
+   "code": "2",
+   "name": "Corpo Docente e Tutorial"
+  },
+  {
+   "code": "3",
+   "name": "Infraestrutura"
+  },
+  {
+   "code": "4",
+   "name": "Gestão Administrativo-acadêmica"
+  }
+ ],
+ "groups": [
+  {
+   "code": "1.10",
+   "name": "Extensão curricularizada",
+   "weight": 1
+  },
+  {
+   "code": "1.11",
+   "name": "Gerenciamento do curso",
+   "weight": 2
+  },
+  {
+   "code": "1.12",
+   "name": "Gerenciamento de aulas e eventos",
+   "weight": 1
+  },
+  {
+   "code": "1.13",
+   "name": "Avaliações externas",
+   "weight": 2
+  },
+  {
+   "code": "1.14",
+   "name": "Iniciação científica",
+   "weight": 1
+  },
+  {
+   "code": "2.11",
+   "name": "Adequação docente",
+   "weight": 2
+  },
+  {
+   "code": "3.4",
+   "name": "Núcleo de práticas jurídicas",
+   "weight": 1
+  },
+  {
+   "code": "4.1",
+   "name": "Gestão acadêmica",
+   "weight": 1
+  },
+  {
+   "code": "4.2",
+   "name": "Portfólios",
+   "weight": 1
+  },
+  {
+   "code": "4.3",
+   "name": "Comunicação interna e externa",
+   "weight": 1
+  },
+  {
+   "code": "4.4",
+   "name": "Plano de ação do curso na auditoria do último ciclo",
+   "weight": 2
+  },
+  {
+   "code": "4.5",
+   "name": "Documentos inseridos no e-ser",
+   "weight": 3
+  },
+  {
+   "code": "4.6",
+   "name": "Avaliações internas",
+   "weight": 2
+  }
+ ],
+ "indicators": [
+  {
+   "code": "1.1",
+   "dimension": "1",
+   "group": null,
+   "name": "Projeto Pedagógico de Curso",
+   "weight": 2,
+   "essential": true,
+   "kind": "nota",
+   "documents": [
+    "PPC do curso",
+    "Planilha de controle de envio da Regulação"
+   ],
+   "support": [
+    "CCG-INT-28 - Elaboração de PPC"
+   ],
+   "category": "Não aplicado (item verificado em planilha interna)",
+   "applies": null,
+   "question": "Elaboração do PPC (procedimentos de construção do PPC).",
+   "options": {
+    "1": "O PPC do curso não está postado no FLUIG, ou passou por 3 ou mais correções.",
+    "2": "O PPC está no FLUIG, porém o PPC passou por 2 correções.",
+    "3": "O PPC está no FLUIG, porém o PPC passou por 1 correção.",
+    "4": "O PPC está no FLUIG, não houve correção, porém, foi entregue fora do prazo.",
+    "5": "O PPC está no FLUIG, não houve correção e foi entregue dentro do prazo."
+   },
+   "criteria": "Elaboração do PPC (procedimentos de construção do PPC). Nota 1 – O PPC do curso não está postado no FLUIG, ou passou por 3 ou mais correções. Nota 2 – O PPC está no FLUIG, porém o PPC passou por 2 correções. Nota 3 – O PPC está no FLUIG, porém o PPC passou por 1 correção. Nota 4 – O PPC está no FLUIG, não houve correção, porém, foi entregue fora do prazo. Nota 5 – O PPC está no FLUIG, não houve correção e foi entregue dentro do prazo."
+  },
+  {
+   "code": "1.2",
+   "dimension": "1",
+   "group": null,
+   "name": "Monitoria",
+   "weight": 1,
+   "essential": true,
+   "kind": "nota",
+   "documents": [
+    "CCG-FOR-27 - Solicitação de monitores",
+    "CCG-FOR-33 - Edital de processo seletivo de monitoria",
+    "CCG-FOR-34 - Edital para resultado de processo seletivo de monitoria",
+    "CCG-FOR-28 - Termo de compromisso",
+    "CCG-FOR-32 - Relação de monitores",
+    "CCG-FOR-29 - Frequência de monitores",
+    "CCG-FOR-31 - Avaliação do desempenho do discente pelo professor orientador",
+    "CCG-MDL-03 - Relatório da monitoria do discente",
+    "Comprovante de divulgação dos editais (quadro de aviso; e- mail; atas de reuniões ou blog)"
+   ],
+   "support": [
+    "PED-RGU-XX11 - Regulamento do Programa de Monitoria",
+    "CCG-PRO-10 - Procedimento de seleção de monitoria"
+   ],
+   "category": "Monitoria",
+   "applies": null,
+   "question": "O processo de monitoria está implementado no curso?",
+   "options": {
+    "1": "Quando nenhum documento referente ao processo foi apresentado e/ou não foi evidenciada a comprovação da divulgação dos editais (em caso de não haver adesão de alunos).",
+    "2": "Quando algum dos documentos foi utilizado indevidamente e/ou não foi apresentado algum dos documentos referentes ao processo ou todos os formulários foram apresentados devidamente, porém, não foi evidenciada a comprovação da divulgação dos editais.",
+    "3": "Quando todos os formulários foram apresentados e os editais divulgados corretamente.",
+    "4": "Quando atente aos requisitos da nota 3 e o curso possui no mínimo três disciplinas distintas com monitoria.",
+    "5": "Quando atente aos requisitos da nota 3 e o curso possui no mínimo cinco disciplinas distintas com monitoria."
+   },
+   "criteria": "O processo de monitoria está implementado no curso? Nota 1 – Quando nenhum documento referente ao processo foi apresentado e/ou não foi evidenciada a comprovação da divulgação dos editais (em caso de não haver adesão de alunos). Nota 2 – Quando algum dos documentos foi utilizado indevidamente e/ou não foi apresentado algum dos documentos referentes ao processo ou todos os formulários foram apresentados devidamente, porém, não foi evidenciada a comprovação da divulgação dos editais. Nota 3 – Quando todos os formulários foram apresentados e os editais divulgados corretamente. Nota 4 – Quando atente aos requisitos da nota 3 e o curso possui no mínimo três disciplinas distintas com monitoria. Nota 5 – Quando atente aos requisitos da nota 3 e o curso possui no mínimo cinco disciplinas distintas com monitoria. *Obs.: O item deverá ser não aplicável se o edital foi lançado, porém não houve adesão dos alunos desde que seja comprovado a publicação dos editais (seleção e resultado) nos meios de comunicações da IES ou o curso só possui turmas em um único turno e período."
+  },
+  {
+   "code": "1.3",
+   "dimension": "1",
+   "group": null,
+   "name": "Avaliação Institucional",
+   "weight": 1,
+   "essential": true,
+   "kind": "nota",
+   "documents": [
+    "CCG-FOR-10 - Avaliação de professores",
+    "CCG-FOR-11 - Tabulação da avaliação de professores",
+    "QUA-FOR-02 - Ações de melhoria para avaliação de docentes",
+    "CCG-FOR-43 - Lista de devolutivas da avaliação institucional",
+    "QUA-FOR-14 - Plano de ação"
+   ],
+   "support": [
+    "QUA-PRO-04 - Planejamento de ação para avaliação de professor"
+   ],
+   "category": "Avaliação institucional e avaliação docente",
+   "applies": null,
+   "question": "Os processos da Avaliação Institucional e a avaliação de seus docentes foram realizados?",
+   "options": {
+    "1": "Quando os documentos referente ao processo não foram apresentados.",
+    "2": "Quando algum dos documentos foi utilizado indevidamente e/ou não foi apresentado algum dos documentos referentes ao processo.",
+    "3": "Quando todos os documentos foram apresentados, elaborados em modelo padrão, devidamente preenchidos.",
+    "4": "Quando atende os critérios do Item 3 e todos os professores do curso obtiveram resultados “desejável” e nos últimos dois semestres, os resultados individuais dos professores evoluíram na avaliação dos alunos.",
+    "5": "Quando atende os critérios do Item 3 e todos os professores obtiveram resultados “desejável” e nos últimos quatro semestres, os resultados individuais dos professores evoluíram na avaliação dos alunos."
+   },
+   "criteria": "Os processos da Avaliação Institucional e a avaliação de seus docentes foram realizados? Nota 1 – Quando os documentos referente ao processo não foram apresentados. Nota 2 – Quando algum dos documentos foi utilizado indevidamente e/ou não foi apresentado algum dos documentos referentes ao processo. Nota 3 – Quando todos os documentos foram apresentados, elaborados em modelo padrão, devidamente preenchidos. Nota 4 – Quando atende os critérios do Item 3 e todos os professores do curso obtiveram resultados “desejável” e nos últimos dois semestres, os resultados individuais dos professores evoluíram na avaliação dos alunos. Nota 5 – Quando atende os critérios do Item 3 e todos os professores obtiveram resultados “desejável” e nos últimos quatro semestres, os resultados individuais dos professores evoluíram na avaliação dos alunos."
+  },
+  {
+   "code": "1.4",
+   "dimension": "1",
+   "group": null,
+   "name": "Extensão Extracurricular",
+   "weight": 2,
+   "essential": true,
+   "kind": "nota",
+   "documents": [
+    "PEX-MDL-01 - Projeto de atividade de extensão extracurricular",
+    "PEX-MDL-02 - Relatório de atividade de extensão extracurricular",
+    "CCG-FOR-52 - Lista de participação"
+   ],
+   "support": [
+    "PED-RGU-XX12 - Regu. de atividade complementar",
+    "PED-RGU-XX21 - Regu. para cursos e atividades de extensão",
+    "PEX-PRO-02 - Atividade de extensão"
+   ],
+   "category": "Extensão Extracurricular",
+   "applies": null,
+   "question": "O curso ofertou as atividades de Extensão Extracurricular nos dois últimos períodos aplicáveis ao curso?",
+   "options": {
+    "1": "Quando os documentos referente ao processo não foram apresentados.",
+    "2": "Quando foram apresentados evidências documentais da oferta de atividades de extensão extracurricular, porém não na quantidade solicitada em regulamento, ou os apresentados dos dois últimos períodos aplicáveis ao curso possui apenas uma ou nenhuma atividade validada por semestre pelo setor de extensão ou algum dos documentos não foram apresentados ou não abrangem as áreas temáticas* diferentes.",
+    "3": "Quando os projetos e relatórios apresentados dos dois últimos períodos aplicáveis ao curso, estão com duas atividades validadas por semestre pelo setor de extensão e englobaram 2 áreas temáticas* diferentes.",
+    "4": "Quando os projetos e relatórios apresentados dos dois últimos períodos aplicáveis ao curso, estão com três atividades validadas por semestre pelo setor de extensão e englobaram 3 áreas temáticas* diferentes.",
+    "5": "Quando os projetos e relatórios apresentados dos dois últimos períodos aplicáveis ao curso, estão com quatro ou mais atividades validadas por semestre pelo setor de extensão e englobaram 4 áreas temáticas* diferentes. *Temáticas: desenvolvimento econômico; Educação ambiental; Saúde; Relações étnico raciais; Educação inclusiva; Valorização da diversidade; Atendimento jurídico; Direitos humanos; Valorização da memória cultural, da produção artística ou do patrimônio cultural; Solidariedade."
+   },
+   "criteria": "O curso ofertou as atividades de Extensão Extracurricular nos dois últimos períodos aplicáveis ao curso? Nota 1 – Quando os documentos referente ao processo não foram apresentados. Nota 2 – Quando foram apresentados evidências documentais da oferta de atividades de extensão extracurricular, porém não na quantidade solicitada em regulamento, ou os apresentados dos dois últimos períodos aplicáveis ao curso possui apenas uma ou nenhuma atividade validada por semestre pelo setor de extensão ou algum dos documentos não foram apresentados ou não abrangem as áreas temáticas* diferentes. Nota 3 – Quando os projetos e relatórios apresentados dos dois últimos períodos aplicáveis ao curso, estão com duas atividades validadas por semestre pelo setor de extensão e englobaram 2 áreas temáticas* diferentes. Nota 4 – Quando os projetos e relatórios apresentados dos dois últimos períodos aplicáveis ao curso, estão com três atividades validadas por semestre pelo setor de extensão e englobaram 3 áreas temáticas* diferentes. Nota 5 – Quando os projetos e relatórios apresentados dos dois últimos períodos aplicáveis ao curso, estão com quatro ou mais atividades validadas por semestre pelo setor de extensão e englobaram 4 áreas temáticas* diferentes. *Temáticas: desenvolvimento econômico; Educação ambiental; Saúde; Relações étnico raciais; Educação inclusiva; Valorização da diversidade; Atendimento jurídico; Direitos humanos; Valorização da memória cultural, da produção artística ou do patrimônio cultural; Solidariedade."
+  },
+  {
+   "code": "1.5",
+   "dimension": "1",
+   "group": null,
+   "name": "Capacita",
+   "weight": 1,
+   "essential": false,
+   "kind": "nota",
+   "documents": [
+    "CCG-MDL-05 - Projeto de sustentabilidade e responsabilidade social",
+    "CCG-MDL-06 - Relatório de sustentabilidade e responsabilidade social",
+    "CCG-FOR-52 - Lista de participação"
+   ],
+   "support": [],
+   "category": "Extensão Extracurricular",
+   "applies": null,
+   "question": "O curso ofertou as atividades CAPACITA?",
+   "options": {
+    "1": "Quando os documentos referente ao processo não foram apresentados.",
+    "2": "Quando foram apresentadas evidências documentais da oferta de atividades do Programa CAPACITA pelo curso, no entanto sem aprovação do projeto e relatório do Setor de Extensão ou algum dos documentos não foram apresentados ou não há participação de alunos na organização em pelo menos 3 atividades.",
+    "3": "Quando foram apresentadas evidências documentais da oferta de atividades do Programa CAPACITA pelo curso tendo sido o projeto e relatório aprovado pelo Setor de Extensão e foram apresentadas evidências da execução com participação de alunos na organização, em pelo menos 3 atividades.",
+    "4": "Quando foram apresentadas evidências documentais da oferta de atividades do Programa CAPACITA ao menos para os dois últimos períodos aplicáveis ao curso tendo sido o projeto e relatório enviado para o Setor de Extensão e foram apresentadas evidências da execução com participação de alunos na organização, em pelo menos 3 atividades.",
+    "5": "Quando foram apresentadas evidências documentais da oferta de atividades do Programa CAPACITA ao menos para os três últimos períodos aplicáveis ao curso tendo sido o projeto e relatório enviado para o Setor de Extensão e foram apresentadas evidências da execução com participação de alunos na organização, em pelo menos 3 atividades."
+   },
+   "criteria": "O curso ofertou as atividades CAPACITA? Nota 1 – Quando os documentos referente ao processo não foram apresentados. Nota 2 – Quando foram apresentadas evidências documentais da oferta de atividades do Programa CAPACITA pelo curso, no entanto sem aprovação do projeto e relatório do Setor de Extensão ou algum dos documentos não foram apresentados ou não há participação de alunos na organização em pelo menos 3 atividades. Nota 3 – Quando foram apresentadas evidências documentais da oferta de atividades do Programa CAPACITA pelo curso tendo sido o projeto e relatório aprovado pelo Setor de Extensão e foram apresentadas evidências da execução com participação de alunos na organização, em pelo menos 3 atividades. Nota 4 – Quando foram apresentadas evidências documentais da oferta de atividades do Programa CAPACITA ao menos para os dois últimos períodos aplicáveis ao curso tendo sido o projeto e relatório enviado para o Setor de Extensão e foram apresentadas evidências da execução com participação de alunos na organização, em pelo menos 3 atividades. Nota 5 – Quando foram apresentadas evidências documentais da oferta de atividades do Programa CAPACITA ao menos para os três últimos períodos aplicáveis ao curso tendo sido o projeto e relatório enviado para o Setor de Extensão e foram apresentadas evidências da execução com participação de alunos na organização, em pelo menos 3 atividades."
+  },
+  {
+   "code": "1.6",
+   "dimension": "1",
+   "group": null,
+   "name": "Estágio Curricular",
+   "weight": 1,
+   "essential": false,
+   "kind": "nota",
+   "documents": [
+    "Portaria de Nomeação do Coordenador/ Responsável do Estágio (para o curso de direito, considerar a portaria do responsável pelo NPJ)",
+    "Relação de Empresas Conveniadas de acordo com a área do curso",
+    "Relatório do RM de alunos matriculados na(s) disciplina(s) de estágios",
+    "CCG-FOR-71 - Controle de estágio do curso",
+    "Relatórios de Estágio"
+   ],
+   "support": [
+    "PED-RGU-XX08 - Regulamento de Estágio Supervisionado"
+   ],
+   "category": "Estágio Curricular",
+   "applies": "Aplicado apenas para cursos que possuem estágio curricular e possuem turmas em período de estágio",
+   "question": "Aplicado apenas para cursos que possuem estágio curricular e possuem turmas em período de estágio. A relação das empresas conveniadas com o curso para realização de estágios curriculares dos alunos foi apresentada? O curso oferece vagas para todos os alunos?",
+   "options": {
+    "1": "Quando os documentos aplicados ao processo não foram apresentados.",
+    "2": "Quando algum dos documentos foi utilizado indevidamente e/ou não foi apresentado algum dos documentos referentes ao processo, ou com base na relação de convênios que foi apresentada, menos de 90% dos alunos estão inseridos nos campos conveniados.",
+    "3": "Quando todos os documentos foram evidenciados, pelo menos 90% dos alunos estão inseridos nos campos conveniados e foram evidenciadas ao menos 20% de amostras de relatórios de estágio dos alunos do último período aplicável ao curso.",
+    "4": "Quando todos os documentos foram evidenciados, pelo menos 90% dos alunos estão inseridos nos campos conveniados e foram evidenciadas ao menos 20% de amostras de relatórios de estágio dos alunos do últimos dois períodos aplicável ao curso.",
+    "5": "Quando todos os documentos foram evidenciados, pelo menos 90% dos alunos estão inseridos nos campos conveniados e foram evidenciadas ao menos 20% de amostras de relatórios de estágio dos alunos dos últimos três períodos aplicável ao curso."
+   },
+   "criteria": "Aplicado apenas para cursos que possuem estágio curricular e possuem turmas em período de estágio. A relação das empresas conveniadas com o curso para realização de estágios curriculares dos alunos foi apresentada? O curso oferece vagas para todos os alunos? Nota 1 – Quando os documentos aplicados ao processo não foram apresentados. Nota 2 – Quando algum dos documentos foi utilizado indevidamente e/ou não foi apresentado algum dos documentos referentes ao processo, ou com base na relação de convênios que foi apresentada, menos de 90% dos alunos estão inseridos nos campos conveniados. Nota 3 – Quando todos os documentos foram evidenciados, pelo menos 90% dos alunos estão inseridos nos campos conveniados e foram evidenciadas ao menos 20% de amostras de relatórios de estágio dos alunos do último período aplicável ao curso. Nota 4 – Quando todos os documentos foram evidenciados, pelo menos 90% dos alunos estão inseridos nos campos conveniados e foram evidenciadas ao menos 20% de amostras de relatórios de estágio dos alunos do últimos dois períodos aplicável ao curso. Nota 5 – Quando todos os documentos foram evidenciados, pelo menos 90% dos alunos estão inseridos nos campos conveniados e foram evidenciadas ao menos 20% de amostras de relatórios de estágio dos alunos dos últimos três períodos aplicável ao curso."
+  },
+  {
+   "code": "1.7",
+   "dimension": "1",
+   "group": null,
+   "name": "TCC",
+   "weight": 1,
+   "essential": false,
+   "kind": "nota",
+   "documents": [
+    "CCG-FOR-24 - Ata da apresentação da defesa do trabalho de conclusão de curso",
+    "CCG-FOR-70 - Aprovação de projeto de trabalho de conclusão de curso",
+    "CCG-MDL-24 - Termo de autorização para publicação no repositorivm",
+    "CCG-FOR-75 - Controle de TCC"
+   ],
+   "support": [
+    "PED-RGU-XX13 - Regulamento de Trabalho de Conclusão de Curso",
+    "http://repositorio.sereducac ional.com/"
+   ],
+   "category": "TCC",
+   "applies": "Aplicado apenas para cursos que possuem TCC e possuem turma no período",
+   "question": "Aplicado apenas para cursos que possuem TCC e possuem turma no período Qual a relação entre a quantidade de egressos e a quantidade de TCC's publicados no Repositório?",
+   "options": {
+    "1": "Quando deixou de apresentar algum dos documentos necessários para o processo de TCC, ou o percentual de publicações no repositório é menor que 50%.",
+    "2": "Quando algum dos documentos foi utilizado indevidamente, ou o percentual de publicações no repositório está entre 50% e 69%.",
+    "3": "Quando apresentou todos os documentos referentes ao último ano e o percentual de publicações no repositório está entre 70% e 79%.",
+    "4": "Quando apresentou todos os documentos referentes ao último ano e o percentual de publicações no repositório está entre 80% e 99%.",
+    "5": "Quando apresentou todos os documentos referentes ao último ano e o percentual de publicações no repositório é igual 100%."
+   },
+   "criteria": "Aplicado apenas para cursos que possuem TCC e possuem turma no período Qual a relação entre a quantidade de egressos e a quantidade de TCC's publicados no Repositório? Nota 1 – Quando deixou de apresentar algum dos documentos necessários para o processo de TCC, ou o percentual de publicações no repositório é menor que 50%. Nota 2 – Quando algum dos documentos foi utilizado indevidamente, ou o percentual de publicações no repositório está entre 50% e 69%. Nota 3 – Quando apresentou todos os documentos referentes ao último ano e o percentual de publicações no repositório está entre 70% e 79%. Nota 4 – Quando apresentou todos os documentos referentes ao último ano e o percentual de publicações no repositório está entre 80% e 99%. Nota 5 – Quando apresentou todos os documentos referentes ao último ano e o percentual de publicações no repositório é igual 100%."
+  },
+  {
+   "code": "1.8",
+   "dimension": "1",
+   "group": null,
+   "name": "Objetivos do curso",
+   "weight": 2,
+   "essential": true,
+   "kind": "nota",
+   "documents": [
+    "CCG-MDL-119 - Portfólio de Objetivos do Curso"
+   ],
+   "support": [],
+   "category": "Gestão do Curso",
+   "applies": null,
+   "question": "A atualização do documento já submetido e aprovado no e-Ser, torna-se necessária mediante a alteração da coordenação e/ou matriz curricular. Os objetivos do curso, constantes no PPC, estão implementados?",
+   "options": {
+    "1": "Os objetivos do curso, constantes no PPC, não estão implementados, considerando o perfil profissional do egresso, a estrutura curricular e o contexto educacional e/ou o PPC do curso não está publicado no Fluig.",
+    "2": "Os objetivos do curso, constantes no PPC, estão implementados de maneira limitada, considerando o perfil profissional do egresso, a estrutura curricular e o contexto educacional.",
+    "3": "Os objetivos do curso, constantes no PPC, estão implementados, considerando o perfil profissional do egresso, a estrutura curricular e o contexto educacional.",
+    "4": "Os objetivos do curso, constantes no PPC, estão implementados, considerando o perfil profissional do egresso, a estrutura curricular, o contexto educacional e características locais e regionais.",
+    "5": "Os objetivos do curso, constantes no PPC, estão implementados, considerando o perfil profissional do egresso, a estrutura curricular, o contexto educacional, características locais e regionais e novas práticas emergentes no campo do conhecimento relacionado ao curso."
+   },
+   "criteria": "A atualização do documento já submetido e aprovado no e-Ser, torna-se necessária mediante a alteração da coordenação e/ou matriz curricular. Os objetivos do curso, constantes no PPC, estão implementados? Nota 1 – Os objetivos do curso, constantes no PPC, não estão implementados, considerando o perfil profissional do egresso, a estrutura curricular e o contexto educacional e/ou o PPC do curso não está publicado no Fluig. Nota 2 – Os objetivos do curso, constantes no PPC, estão implementados de maneira limitada, considerando o perfil profissional do egresso, a estrutura curricular e o contexto educacional. Nota 3 – Os objetivos do curso, constantes no PPC, estão implementados, considerando o perfil profissional do egresso, a estrutura curricular e o contexto educacional. Nota 4 – Os objetivos do curso, constantes no PPC, estão implementados, considerando o perfil profissional do egresso, a estrutura curricular, o contexto educacional e características locais e regionais. Nota 5 – Os objetivos do curso, constantes no PPC, estão implementados, considerando o perfil profissional do egresso, a estrutura curricular, o contexto educacional, características locais e regionais e novas práticas emergentes no campo do conhecimento relacionado ao curso."
+  },
+  {
+   "code": "1.9",
+   "dimension": "1",
+   "group": null,
+   "name": "Conteúdos curriculares",
+   "weight": 2,
+   "essential": true,
+   "kind": "nota",
+   "documents": [
+    "CCG-MDL-125 - Portfólio de Conteúdos Curriculares do Curso"
+   ],
+   "support": [],
+   "category": "Gestão do Curso",
+   "applies": null,
+   "question": "A atualização do documento já submetido e aprovado no e-Ser, torna-se necessária mediante a alteração da coordenação e/ou matriz curricular. Os Conteúdos curriculares, constantes no PPC, promovem o efetivo desenvolvimento do perfil do egresso?",
+   "options": {
+    "1": "Os conteúdos curriculares, constantes no PPC, não promovem o efetivo desenvolvimento do perfil profissional do egresso e/ou o PPC do curso não está publicado no Fluig.",
+    "2": "Os conteúdos curriculares, constantes no PPC, promovem o efetivo desenvolvimento do perfil profissional do egresso, mas não consideram a atualização da área, a adequação das cargas horárias (em horas-relógio), a adequação da bibliografia, a acessibilidade metodológica, a abordagem de conteúdos pertinentes às políticas de educação ambiental, de educação em direitos humanos e de educação das relações étnico- raciais ou o ensino de história e cultura afro- brasileira, africana e indígena.",
+    "3": "Os conteúdos curriculares, constantes no PPC, promovem o efetivo desenvolvimento do perfil profissional do egresso, considerando a atualização da área, a adequação das cargas horárias (em horas-relógio), a adequação da bibliografia, a acessibilidade metodológica, a abordagem de conteúdos pertinentes às políticas de educação ambiental, de educação em direitos humanos e de educação das relações étnico- raciais e o ensino de história e cultura afro- brasileira, africana e indígena.",
+    "4": "Os conteúdos curriculares, constantes no PPC, promovem o efetivo desenvolvimento do perfil profissional do egresso, considerando a atualização da área, a adequação das cargas horárias (em horas-relógio), a adequação da bibliografia, a acessibilidade metodológica, a abordagem de conteúdos pertinentes às políticas de educação ambiental, de educação em direitos humanos e de educação das relações étnico- raciais e o ensino de história e cultura afro- brasileira, africana e indígena, e diferenciam o curso dentro da área profissional.",
+    "5": "Os conteúdos curriculares, constantes no PPC, promovem o efetivo desenvolvimento do perfil profissional do egresso, considerando a atualização da área, a adequação das cargas horárias (em horas-relógio), a adequação da bibliografia, a acessibilidade metodológica, a abordagem de conteúdos pertinentes às políticas de educação ambiental, de educação em direitos humanos e de educação das relações étnico- raciais e o ensino de história e cultura afro- brasileira, africana e indígena, diferenciam o curso dentro da área profissional e induzem o contato com conhecimento recente e inovador."
+   },
+   "criteria": "A atualização do documento já submetido e aprovado no e-Ser, torna-se necessária mediante a alteração da coordenação e/ou matriz curricular. Os Conteúdos curriculares, constantes no PPC, promovem o efetivo desenvolvimento do perfil do egresso? Nota 1 – Os conteúdos curriculares, constantes no PPC, não promovem o efetivo desenvolvimento do perfil profissional do egresso e/ou o PPC do curso não está publicado no Fluig. Nota 2 – Os conteúdos curriculares, constantes no PPC, promovem o efetivo desenvolvimento do perfil profissional do egresso, mas não consideram a atualização da área, a adequação das cargas horárias (em horas-relógio), a adequação da bibliografia, a acessibilidade metodológica, a abordagem de conteúdos pertinentes às políticas de educação ambiental, de educação em direitos humanos e de educação das relações étnico- raciais ou o ensino de história e cultura afro- brasileira, africana e indígena. Nota 3 – Os conteúdos curriculares, constantes no PPC, promovem o efetivo desenvolvimento do perfil profissional do egresso, considerando a atualização da área, a adequação das cargas horárias (em horas-relógio), a adequação da bibliografia, a acessibilidade metodológica, a abordagem de conteúdos pertinentes às políticas de educação ambiental, de educação em direitos humanos e de educação das relações étnico- raciais e o ensino de história e cultura afro- brasileira, africana e indígena. Nota 4 – Os conteúdos curriculares, constantes no PPC, promovem o efetivo desenvolvimento do perfil profissional do egresso, considerando a atualização da área, a adequação das cargas horárias (em horas-relógio), a adequação da bibliografia, a acessibilidade metodológica, a abordagem de conteúdos pertinentes às políticas de educação ambiental, de educação em direitos humanos e de educação das relações étnico- raciais e o ensino de história e cultura afro- brasileira, africana e indígena, e diferenciam o curso dentro da área profissional. Nota 5 – Os conteúdos curriculares, constantes no PPC, promovem o efetivo desenvolvimento do perfil profissional do egresso, considerando a atualização da área, a adequação das cargas horárias (em horas-relógio), a adequação da bibliografia, a acessibilidade metodológica, a abordagem de conteúdos pertinentes às políticas de educação ambiental, de educação em direitos humanos e de educação das relações étnico- raciais e o ensino de história e cultura afro- brasileira, africana e indígena, diferenciam o curso dentro da área profissional e induzem o contato com conhecimento recente e inovador."
+  },
+  {
+   "code": "1.10.1",
+   "dimension": "1",
+   "group": "1.10",
+   "name": "Extensão Curricularizada dos docentes",
+   "weight": null,
+   "essential": false,
+   "kind": "simnao",
+   "documents": [
+    "PEX-FOR-08 – Planilha de Acompanhamento as Turmas de Extensão Curricularizada"
+   ],
+   "support": [],
+   "category": "Extensão Curriculalizada",
+   "applies": null,
+   "question": "1. Docentes do curso submeteram projetos e relatórios de Extensão Curricularizada no ciclo do ano anterior (1º e 2º semestres)?",
+   "options": {
+    "SIM": "Quando projetos e relatórios dos docentes do curso responsáveis pelas disciplinas Atividades Práticas Interdisciplinares de Extensão foram submetidos no e-SER referentes ao ciclo do ano anterior.",
+    "NÃO": "Quando um ou mais docentes do curso responsáveis pelas disciplinas Atividades Práticas Interdisciplinares de Extensão não submeteram projetos e relatórios referentes ao ciclo do ano anterior."
+   },
+   "criteria": "1. Docentes do curso submeteram projetos e relatórios de Extensão Curricularizada no ciclo do ano anterior (1º e 2º semestres)? SIM – Quando projetos e relatórios dos docentes do curso responsáveis pelas disciplinas Atividades Práticas Interdisciplinares de Extensão foram submetidos no e-SER referentes ao ciclo do ano anterior. NÃO – Quando um ou mais docentes do curso responsáveis pelas disciplinas Atividades Práticas Interdisciplinares de Extensão não submeteram projetos e relatórios referentes ao ciclo do ano anterior."
+  },
+  {
+   "code": "1.10.2",
+   "dimension": "1",
+   "group": "1.10",
+   "name": "Extensão Curricularizada dos discentes",
+   "weight": null,
+   "essential": false,
+   "kind": "simnao",
+   "documents": [
+    "PEX-FOR-08 – Planilha de Acompanhamento as Turmas de Extensão Curricularizada"
+   ],
+   "support": [],
+   "category": "Extensão Curriculalizada",
+   "applies": null,
+   "question": "2. Discentes do curso submeteram projetos e relatórios de Extensão Curricularizada no ciclo do ano anterior (1º e 2º semestres)?",
+   "options": {
+    "SIM": "Quando projetos e relatórios dos discentes ou grupos de discentes, que cursaram as disciplinas Atividades Práticas Interdisciplinares de Extensão foram submetidos no e-SER referentes ao ciclo do ano anterior.",
+    "NÃO": "Quando um discente ou grupos de discentes, que cursaram as disciplinas Atividades Práticas Interdisciplinares de Extensão não submeteram projetos e relatórios referentes ao ciclo do ano anterior."
+   },
+   "criteria": "2. Discentes do curso submeteram projetos e relatórios de Extensão Curricularizada no ciclo do ano anterior (1º e 2º semestres)? SIM – Quando projetos e relatórios dos discentes ou grupos de discentes, que cursaram as disciplinas Atividades Práticas Interdisciplinares de Extensão foram submetidos no e-SER referentes ao ciclo do ano anterior. NÃO – Quando um discente ou grupos de discentes, que cursaram as disciplinas Atividades Práticas Interdisciplinares de Extensão não submeteram projetos e relatórios referentes ao ciclo do ano anterior."
+  },
+  {
+   "code": "1.11.1",
+   "dimension": "1",
+   "group": "1.11",
+   "name": "Apresentação do Curso",
+   "weight": null,
+   "essential": false,
+   "kind": "simnao",
+   "documents": [
+    "CCG-MDL-106 - Modelo de apresentação do curso"
+   ],
+   "support": [],
+   "category": "Gestão do Curso",
+   "applies": null,
+   "question": "A atualização do documento já submetido e aprovado no e-Ser, torna-se necessária mediante a alteração da coordenação, matriz curricular e/ou docentes. 1. A apresentação do curso foi apresentada?",
+   "options": {
+    "SIM": "Quando o documento foi apresentado, elaborado em modelo padrão e devidamente preenchido.",
+    "NÃO": "Quando o documento não atende a algum critério estabelecido no conceito sim."
+   },
+   "criteria": "A atualização do documento já submetido e aprovado no e-Ser, torna-se necessária mediante a alteração da coordenação, matriz curricular e/ou docentes. 1. A apresentação do curso foi apresentada? SIM – Quando o documento foi apresentado, elaborado em modelo padrão e devidamente preenchido. NÃO – Quando o documento não atende a algum critério estabelecido no conceito sim."
+  },
+  {
+   "code": "1.11.2",
+   "dimension": "1",
+   "group": "1.11",
+   "name": "Portal Acadêmico",
+   "weight": null,
+   "essential": false,
+   "kind": "simnao",
+   "documents": [
+    "CCG-MDL-104 - Portfólio do portal acadêmico (aluno)"
+   ],
+   "support": [],
+   "category": "Apoio ao Discente",
+   "applies": null,
+   "question": "A atualização do documento já submetido e aprovado no e-Ser, torna-se necessária mediante a previsão de ato regulatório no ano vigente. 2. O portfólio do portal acadêmico do aluno foi apresentado?",
+   "options": {
+    "SIM": "Quando o documento foi apresentado, elaborado em modelo padrão e devidamente preenchido.",
+    "NÃO": "Quando o documento não atende a algum critério estabelecido no conceito sim."
+   },
+   "criteria": "A atualização do documento já submetido e aprovado no e-Ser, torna-se necessária mediante a previsão de ato regulatório no ano vigente. 2. O portfólio do portal acadêmico do aluno foi apresentado? SIM – Quando o documento foi apresentado, elaborado em modelo padrão e devidamente preenchido. NÃO – Quando o documento não atende a algum critério estabelecido no conceito sim."
+  },
+  {
+   "code": "1.11.3",
+   "dimension": "1",
+   "group": "1.11",
+   "name": "Atendimento de alunos",
+   "weight": null,
+   "essential": false,
+   "kind": "simnao",
+   "documents": [
+    "CCG-MDL-101 - Portfólio de atendimento de alunos pela coordenação"
+   ],
+   "support": [],
+   "category": "Apoio ao Discente",
+   "applies": null,
+   "question": "Documentação apresentada por semestre. 3. O portfólio de atendimento de aluno pela coordenação foi apresentado?",
+   "options": {
+    "SIM": "Quando o documento foi apresentado, elaborado em modelo padrão e devidamente preenchido.",
+    "NÃO": "Quando o documento não atende a algum critério estabelecido no conceito sim."
+   },
+   "criteria": "Documentação apresentada por semestre. 3. O portfólio de atendimento de aluno pela coordenação foi apresentado? SIM – Quando o documento foi apresentado, elaborado em modelo padrão e devidamente preenchido. NÃO – Quando o documento não atende a algum critério estabelecido no conceito sim."
+  },
+  {
+   "code": "1.11.4",
+   "dimension": "1",
+   "group": "1.11",
+   "name": "Plano de Gestão da Tutoria",
+   "weight": null,
+   "essential": false,
+   "kind": "simnao",
+   "documents": [
+    "CCG-MDL-99 - Plano de Gestão da Tutoria",
+    "CCG-MDL-98 - Plano de Ação – Cursos"
+   ],
+   "support": [],
+   "category": "Gestão do Curso",
+   "applies": null,
+   "question": "4. O Plano de Gestão da Tutoria foi apresentado?",
+   "options": {
+    "SIM": "Quando o documento foi apresentado, elaborado em modelo padrão, devidamente preenchido e com anexos referentes aos dois últimos semestres.",
+    "NÃO": "Quando o documento não atende a algum critério estabelecido no conceito sim."
+   },
+   "criteria": "4. O Plano de Gestão da Tutoria foi apresentado? SIM – Quando o documento foi apresentado, elaborado em modelo padrão, devidamente preenchido e com anexos referentes aos dois últimos semestres. NÃO – Quando o documento não atende a algum critério estabelecido no conceito sim."
+  },
+  {
+   "code": "1.11.5",
+   "dimension": "1",
+   "group": "1.11",
+   "name": "Planos de Integração",
+   "weight": null,
+   "essential": true,
+   "kind": "simnao",
+   "documents": [
+    "CCG-MDL-49 - Plano de Integração do Curso com a Rede Pública de Ensino (aplicado para cursos de licenciatura)",
+    "CCG-MDL-50 - Plano de Desenvolvimento das Atividades Práticas de Ensino e Integração do Curso com o SUS (aplicado para cursos de saúde)",
+    "CCG-FOR-79 - Relação convênios e razão aluno vagas em serviços de saúde. (aplicado para cursos de saúde)"
+   ],
+   "support": [],
+   "category": "Gestão do Curso",
+   "applies": null,
+   "question": "A atualização do documento já submetido e aprovado no e-Ser, torna-se necessária mediante a alteração de matriz curricular ou convênios. 5. O Plano de integração do curso foi apresentado?",
+   "options": {
+    "SIM": "Quando o(s) documento(s) correspondente(s) ao curso, foi(ram) apresentado(s), elaborado(s) em modelo padrão e devidamente preenchido(s).",
+    "NÃO": "Quando o(s) documento(a) não atende(em) a algum critério estabelecido no conceito sim."
+   },
+   "criteria": "A atualização do documento já submetido e aprovado no e-Ser, torna-se necessária mediante a alteração de matriz curricular ou convênios. 5. O Plano de integração do curso foi apresentado? SIM – Quando o(s) documento(s) correspondente(s) ao curso, foi(ram) apresentado(s), elaborado(s) em modelo padrão e devidamente preenchido(s). NÃO – Quando o(s) documento(a) não atende(em) a algum critério estabelecido no conceito sim."
+  },
+  {
+   "code": "1.12.1",
+   "dimension": "1",
+   "group": "1.12",
+   "name": "Horários",
+   "weight": null,
+   "essential": false,
+   "kind": "simnao",
+   "documents": [
+    "CCG-FOR-01 - Horário de aula",
+    "CCG-FOR-26 - Horário de aplicação de avaliação",
+    "Comprovante de divulgação dos horários"
+   ],
+   "support": [
+    "CCG-INT-01 - Cadastro e alteração de horários de professores",
+    "CCG-INT-16 - Elaboração do horário de aula e horário de avaliação"
+   ],
+   "category": "Horários",
+   "applies": null,
+   "question": "1. A elaboração e divulgação dos horários de aula e prova foram realizados?",
+   "options": {
+    "SIM": "Quando os documentos dos dois últimos semestres foram apresentados, elaborados em modelo padrão, devidamente preenchidos e divulgados (quadro de aviso, e-mail ou blog).",
+    "NÃO": "Quando algum dos documentos não atendem a algum critério estabelecido no conceito sim. EAD – Verificar calendário de webconferências e cronograma de atividades em substituição ao CCG-FOR-01 e CCG-FOR-26."
+   },
+   "criteria": "1. A elaboração e divulgação dos horários de aula e prova foram realizados? SIM - Quando os documentos dos dois últimos semestres foram apresentados, elaborados em modelo padrão, devidamente preenchidos e divulgados (quadro de aviso, e-mail ou blog). NÃO – Quando algum dos documentos não atendem a algum critério estabelecido no conceito sim. EAD – Verificar calendário de webconferências e cronograma de atividades em substituição ao CCG-FOR-01 e CCG-FOR-26."
+  },
+  {
+   "code": "1.12.2",
+   "dimension": "1",
+   "group": "1.12",
+   "name": "Portfólio de disciplinas requisitos",
+   "weight": null,
+   "essential": true,
+   "kind": "simnao",
+   "documents": [
+    "CCG-MDL-48 - Portfólio de disciplinas para requisitos de educação ambiental direitos humanos e educação étnico- raciais e cultura afrodescendentes"
+   ],
+   "support": [],
+   "category": "Gestão do Curso",
+   "applies": null,
+   "question": "A atualização do documento já submetido e aprovado no e-Ser, torna-se necessária mediante a alteração de matriz curricular. 2. O portfólio de disciplinas que atendem aos requisitos de educação ambiental direitos humanos e educação étnico-raciais e cultura afrodescendente foi apresentado?",
+   "options": {
+    "SIM": "Quando o documento foi apresentado, elaborado em modelo padrão e devidamente preenchido.",
+    "NÃO": "Quando o documento não atende a algum critério estabelecido no conceito sim."
+   },
+   "criteria": "A atualização do documento já submetido e aprovado no e-Ser, torna-se necessária mediante a alteração de matriz curricular. 2. O portfólio de disciplinas que atendem aos requisitos de educação ambiental direitos humanos e educação étnico-raciais e cultura afrodescendente foi apresentado? SIM – Quando o documento foi apresentado, elaborado em modelo padrão e devidamente preenchido. NÃO – Quando o documento não atende a algum critério estabelecido no conceito sim."
+  },
+  {
+   "code": "1.12.3",
+   "dimension": "1",
+   "group": "1.12",
+   "name": "Atividades Complementares",
+   "weight": null,
+   "essential": false,
+   "kind": "simnao",
+   "documents": [
+    "CCG-FOR-36 - Planejamento de atividades do semestre",
+    "CCG-MDL-01 - Projeto de atividade de ensino",
+    "CCG-MDL-02 - Relatório de atividade de ensino"
+   ],
+   "support": [
+    "PED-RGU-XX12 - Regulamento de Atividade Complementar",
+    "CCG-PRO-04 - Elaboração de atividades de ensino",
+    "CCG-PRO-11 - Planejamento de atividades do semestre"
+   ],
+   "category": "Atividades de ensino",
+   "applies": null,
+   "question": "3. O planejamento semestral, projeto e relatório de atividade complementar foram apresentados?",
+   "options": {
+    "SIM": "Quando os documentos dos dois últimos semestres foram apresentados, elaborados em modelo padrão e devidamente preenchidos.",
+    "NÃO": "Quando o documento não atende a algum critério estabelecido no conceito sim."
+   },
+   "criteria": "3. O planejamento semestral, projeto e relatório de atividade complementar foram apresentados? SIM – Quando os documentos dos dois últimos semestres foram apresentados, elaborados em modelo padrão e devidamente preenchidos. NÃO – Quando o documento não atende a algum critério estabelecido no conceito sim."
+  },
+  {
+   "code": "1.13.1",
+   "dimension": "1",
+   "group": "1.13",
+   "name": "Portfólio CPA",
+   "weight": null,
+   "essential": false,
+   "kind": "simnao",
+   "documents": [
+    "CCG-MDL-107 - Portfólio de integração CPA e curso"
+   ],
+   "support": [],
+   "category": "CPA",
+   "applies": null,
+   "question": "Documento apresentado por semestre. 1. O portfólio de Integração CPA e Curso foi apresentado?",
+   "options": {
+    "SIM": "Quando o documento foi apresentado, elaborado em modelo padrão e devidamente preenchido.",
+    "NÃO": "Quando o documento não atende a algum critério estabelecido no conceito sim."
+   },
+   "criteria": "Documento apresentado por semestre. 1. O portfólio de Integração CPA e Curso foi apresentado? SIM - Quando o documento foi apresentado, elaborado em modelo padrão e devidamente preenchido. NÃO – Quando o documento não atende a algum critério estabelecido no conceito sim."
+  },
+  {
+   "code": "1.13.2",
+   "dimension": "1",
+   "group": "1.13",
+   "name": "Avaliações INEP",
+   "weight": null,
+   "essential": false,
+   "kind": "simnao",
+   "documents": [
+    "DRU-FOR-01 - Análise dos resultados obtidos em avaliações externas realizadas pelo INEP"
+   ],
+   "support": [],
+   "category": "CPA",
+   "applies": null,
+   "question": "A atualização do documento já submetido e aprovado no e-Ser, torna-se necessária mediante a previsão de ato regulatório no ano vigente. 2. A análise da avaliação do curso, realizada pelo INEP foi apresentada?",
+   "options": {
+    "SIM": "Quando o documento foi apresentado, elaborado em modelo padrão e devidamente preenchido.",
+    "NÃO": "Quando o documento não atende a algum critério estabelecido no conceito sim."
+   },
+   "criteria": "A atualização do documento já submetido e aprovado no e-Ser, torna-se necessária mediante a previsão de ato regulatório no ano vigente. 2. A análise da avaliação do curso, realizada pelo INEP foi apresentada? SIM - Quando o documento foi apresentado, elaborado em modelo padrão e devidamente preenchido. NÃO – Quando o documento não atende a algum critério estabelecido no conceito sim."
+  },
+  {
+   "code": "1.13.3",
+   "dimension": "1",
+   "group": "1.13",
+   "name": "Comissão ENADE",
+   "weight": null,
+   "essential": false,
+   "kind": "simnao",
+   "documents": [
+    "PED-MDL-01 - Portaria de nomeação de comissão ENADE",
+    "CCG-FOR 16 - Ata de reunião – II"
+   ],
+   "support": [
+    "CCG-MAN-02 - Manual ENADE"
+   ],
+   "category": "ENADE",
+   "applies": null,
+   "question": "3. O curso possui comissão ENADE nomeada por Portaria? Foram apresentadas atas de reuniões?",
+   "options": {
+    "SIM": "Quando as portarias de nomeação e as atas estão com os dados corretos, devidamente preenchidas em formulário padrão e ambas foram realizadas na quantidade necessária, de acordo com o Manual ENADE.",
+    "NÃO": "Quando qualquer critério descrito no SIM não foi realizado ou algum documento foi utilizado indevidademente."
+   },
+   "criteria": "3. O curso possui comissão ENADE nomeada por Portaria? Foram apresentadas atas de reuniões? SIM – Quando as portarias de nomeação e as atas estão com os dados corretos, devidamente preenchidas em formulário padrão e ambas foram realizadas na quantidade necessária, de acordo com o Manual ENADE. NÃO – Quando qualquer critério descrito no SIM não foi realizado ou algum documento foi utilizado indevidademente."
+  },
+  {
+   "code": "1.13.4",
+   "dimension": "1",
+   "group": "1.13",
+   "name": "Plano de Ação ENADE",
+   "weight": null,
+   "essential": false,
+   "kind": "simnao",
+   "documents": [
+    "CCG-FOR-64 - Plano de ação ENADE (devidamente aprovado, conforme manual ENADE, quando o curso estiver no ano ENADE). Normativo orientativo no Fluig",
+    "CCG-MAN-02 - Manual ENADE"
+   ],
+   "support": [],
+   "category": "ENADE",
+   "applies": null,
+   "question": "4. O plano de ação das atividades para as turmas ENADE foi apresentado?",
+   "options": {
+    "SIM": "Quando o documento foi apresentado, elaborado em modelo padrão e devidamente preenchido.",
+    "NÃO": "Quando o documento não atende a algum critério estabelecido no conceito sim."
+   },
+   "criteria": "4. O plano de ação das atividades para as turmas ENADE foi apresentado? SIM – Quando o documento foi apresentado, elaborado em modelo padrão e devidamente preenchido. NÃO – Quando o documento não atende a algum critério estabelecido no conceito sim."
+  },
+  {
+   "code": "1.13.5",
+   "dimension": "1",
+   "group": "1.13",
+   "name": "Ações ENADE",
+   "weight": null,
+   "essential": false,
+   "kind": "simnao",
+   "documents": [
+    "Registros das ações contidas no Plano de ação ENADE (atas, projetos, relatórios, folders, portfólio de fotos, lista de presença...)"
+   ],
+   "support": [],
+   "category": "ENADE",
+   "applies": null,
+   "question": "5. Os registros das ações do plano ENADE foram apresentados?",
+   "options": {
+    "SIM": "Quando as ações foram realizadas e os registros foram devidamente apresentados.",
+    "NÃO": "Quando não foi evidenciado o registro de atividades realizadas do Plano de Ação ENADE do curso."
+   },
+   "criteria": "5. Os registros das ações do plano ENADE foram apresentados? SIM – Quando as ações foram realizadas e os registros foram devidamente apresentados. NÃO – Quando não foi evidenciado o registro de atividades realizadas do Plano de Ação ENADE do curso."
+  },
+  {
+   "code": "1.14.1",
+   "dimension": "1",
+   "group": "1.14",
+   "name": "Submissão de Projetos dos docentes",
+   "weight": null,
+   "essential": true,
+   "kind": "simnao",
+   "documents": [
+    "Divulgação do Edital de PIC (quadro de aviso; e-mail; atas de reuniões ou blog)",
+    "Projeto de Iniciação Científica (docente)",
+    "PEX-MDL-63 - Modelo UNI7"
+   ],
+   "support": [],
+   "category": "Iniciação Científica",
+   "applies": "Aplicado somente a Centros Universitários e Universidades",
+   "question": "Aplicado somente a Centros Universitários e Universidades 1. Os docentes do curso submeteram projetos no Programa de Iniciação Científica?",
+   "options": {
+    "SIM": "Quando ao menos um docente do curso submeteu projeto no Programa de Iniciação Científica no ciclo do ano anterior e a documentação está no modelo padrão e correta.",
+    "NÃO": "Quando nenhum docente do curso submeteu projeto no Programa de Iniciação Científica, o documento está com inconsistências ou não foi evidenciado as comprovações de submissão."
+   },
+   "criteria": "Aplicado somente a Centros Universitários e Universidades 1. Os docentes do curso submeteram projetos no Programa de Iniciação Científica? SIM – Quando ao menos um docente do curso submeteu projeto no Programa de Iniciação Científica no ciclo do ano anterior e a documentação está no modelo padrão e correta. NÃO – Quando nenhum docente do curso submeteu projeto no Programa de Iniciação Científica, o documento está com inconsistências ou não foi evidenciado as comprovações de submissão."
+  },
+  {
+   "code": "1.14.2",
+   "dimension": "1",
+   "group": "1.14",
+   "name": "Submissão de Plano de trabalho dos discentes",
+   "weight": null,
+   "essential": true,
+   "kind": "simnao",
+   "documents": [
+    "Divulgação do Edital de PIC (quadro de aviso; e-mail; atas de reuniões ou blog)",
+    "PEX-MDL-64 - Plano de Trabalho do Aluno de Iniciação Científica"
+   ],
+   "support": [],
+   "category": "Iniciação Científica",
+   "applies": "Aplicado somente a Centros Universitários e Universidades",
+   "question": "Aplicado somente a Centros Universitários e Universidades 2. Os discentes do curso submeteram Plano de Trabalho no Programa de Iniciação Científica?",
+   "options": {
+    "SIM": "Quando ao menos um discente do curso submeteu o plano de trabalho no Programa de Iniciação Científica no ciclo do ano anterior e a documentação está no modelo padrão e correta.",
+    "NÃO": "Quando nenhum discente do curso submeteu plano de trabalho no Programa de Iniciação Científica, o documento está com inconsistências ou não foi evidenciado as comprovações de submissão."
+   },
+   "criteria": "Aplicado somente a Centros Universitários e Universidades 2. Os discentes do curso submeteram Plano de Trabalho no Programa de Iniciação Científica? SIM – Quando ao menos um discente do curso submeteu o plano de trabalho no Programa de Iniciação Científica no ciclo do ano anterior e a documentação está no modelo padrão e correta. NÃO – Quando nenhum discente do curso submeteu plano de trabalho no Programa de Iniciação Científica, o documento está com inconsistências ou não foi evidenciado as comprovações de submissão."
+  },
+  {
+   "code": "1.14.3",
+   "dimension": "1",
+   "group": "1.14",
+   "name": "Submissão de Relatórios dos docentes",
+   "weight": null,
+   "essential": true,
+   "kind": "simnao",
+   "documents": [
+    "Divulgação do Edital de PIC (quadro de aviso; e-mail; atas de reuniões ou blog)",
+    "PEX-FOR-06 – Aprovados do Projeto de Iniciação Científica do edital anterior",
+    "PEX-FOR-07 – Controle de Entrega de Relatórios Finais – Iniciação Científica do edital anterior",
+    "PEX-MDL-67 - Relatório Final de Iniciação Científica (Docente) do edital anterior"
+   ],
+   "support": [],
+   "category": "Iniciação Científica",
+   "applies": "Aplicado somente a Centros Universitários e Universidades",
+   "question": "Aplicado somente a Centros Universitários e Universidades 3. Os relatórios de Iniciação Científica dos docentes foram apresentados?",
+   "options": {
+    "SIM": "Quando a planilha de controle e relatórios dos docentes no Programa de Iniciação Científica foram devidamente apresentados e não possuem inconsistências.",
+    "NÃO": "Quando a planilha, ou os relatórios dos docentes no Programa de Iniciação Científica não foram apresentados, possuem alguma inconsistência ou o curso não possui docentes no Programa de Iniciação Científica. Obs.: O item deverá ser não aplicado se o edital foi lançado, porém não houve adesão de alunos aos projetos do curso ou nenhum projeto dos docentes do curso foi aprovado, desde que seja comprovada a divulgação do edital por meio da coordenação."
+   },
+   "criteria": "Aplicado somente a Centros Universitários e Universidades 3. Os relatórios de Iniciação Científica dos docentes foram apresentados? SIM – Quando a planilha de controle e relatórios dos docentes no Programa de Iniciação Científica foram devidamente apresentados e não possuem inconsistências. NÃO – Quando a planilha, ou os relatórios dos docentes no Programa de Iniciação Científica não foram apresentados, possuem alguma inconsistência ou o curso não possui docentes no Programa de Iniciação Científica. Obs.: O item deverá ser não aplicado se o edital foi lançado, porém não houve adesão de alunos aos projetos do curso ou nenhum projeto dos docentes do curso foi aprovado, desde que seja comprovada a divulgação do edital por meio da coordenação."
+  },
+  {
+   "code": "1.14.4",
+   "dimension": "1",
+   "group": "1.14",
+   "name": "Submissão de Relatórios dos discentes",
+   "weight": null,
+   "essential": true,
+   "kind": "simnao",
+   "documents": [
+    "Divulgação do Edital de PIC (quadro de aviso; e-mail; atas de reuniões ou blog)",
+    "PEX-FOR-06 – Aprovados do Projeto de Iniciação Científica do edital anterior",
+    "PEX-FOR-07 – Controle de Entrega de Relatórios Finais – Iniciação Científica do edital anterior",
+    "PEX-MDL-66 - Relatório Final de Iniciação Científica (Discente) do edital anterior"
+   ],
+   "support": [],
+   "category": "Iniciação Científica",
+   "applies": "Aplicado somente a Centros Universitários e Universidades",
+   "question": "Aplicado somente a Centros Universitários e Universidades 4. Os relatórios de Iniciação Científica dos discentes foram apresentados?",
+   "options": {
+    "SIM": "Quando a planilha de aprovados, de controle de entrega e os relatórios dos discentes no Programa de Iniciação Científica foram devidamente apresentados e não possuem inconsistências.",
+    "NÃO": "Quando a planilha, ou os relatórios dos discentes no Programa de Iniciação Científica não foram apresentados, possuem alguma inconsistência ou o curso não possui docentes no Programa de Iniciação Científica. Obs.: O item deverá ser não aplicado se o edital foi lançado, porém não houve adesão dos alunos ou nenhum projeto dos docentes do curso foi aprovado, desde que seja comprovada a divulgação do edital por meio da coordenação."
+   },
+   "criteria": "Aplicado somente a Centros Universitários e Universidades 4. Os relatórios de Iniciação Científica dos discentes foram apresentados? SIM – Quando a planilha de aprovados, de controle de entrega e os relatórios dos discentes no Programa de Iniciação Científica foram devidamente apresentados e não possuem inconsistências. NÃO – Quando a planilha, ou os relatórios dos discentes no Programa de Iniciação Científica não foram apresentados, possuem alguma inconsistência ou o curso não possui docentes no Programa de Iniciação Científica. Obs.: O item deverá ser não aplicado se o edital foi lançado, porém não houve adesão dos alunos ou nenhum projeto dos docentes do curso foi aprovado, desde que seja comprovada a divulgação do edital por meio da coordenação."
+  },
+  {
+   "code": "2.1",
+   "dimension": "2",
+   "group": null,
+   "name": "Núcleo Docente Estruturante",
+   "weight": 2,
+   "essential": true,
+   "kind": "nota",
+   "documents": [
+    "PED-MDL-07 - Portaria de nomeação do NDE",
+    "CCG-FOR-15 - Ata de reunião – I",
+    "CCG-FOR-73 - Planilha de atributos NDE"
+   ],
+   "support": [
+    "PED-RGU-XX14 - Regulamento do Núcleo Docente Estruturante",
+    "REG-XX - Regimento Geral",
+    "CCG-INT-18 - Registro das reuniões"
+   ],
+   "category": "NDE",
+   "applies": null,
+   "question": "O NDE possui titulação e participação adequadas ao funcionamento do curso?",
+   "options": {
+    "1": "Quando os documentos referente ao processo não foram apresentados ou apenas a portaria não foi apresentada ou a portaria apresentada não atende a titulação e número de membros previsto em legislação e regimento.",
+    "2": "Quando algum dos documentos foi utilizado indevidamente e/ou não foi apresentado algum dos documentos referentes ao processo",
+    "3": "Quando o NDE foi nomeado segundo normas regulatórias, todos os documentos foram apresentados, elaborados em modelo padrão, devidamente preenchidos e as atas atendem aos requisitos regulatórios.",
+    "4": "Quando atende aos critérios no conceito 3 e, adicionalmente, foram evidenciadas atas corretamente dos últimos 2 anos.",
+    "5": "Quando atende aos critérios no conceito 3 e, adicionalmente, foram evidenciadas atas corretamente dos últimos 3 anos."
+   },
+   "criteria": "O NDE possui titulação e participação adequadas ao funcionamento do curso? Nota 1 – Quando os documentos referente ao processo não foram apresentados ou apenas a portaria não foi apresentada ou a portaria apresentada não atende a titulação e número de membros previsto em legislação e regimento. Nota 2 – Quando algum dos documentos foi utilizado indevidamente e/ou não foi apresentado algum dos documentos referentes ao processo Nota 3 – Quando o NDE foi nomeado segundo normas regulatórias, todos os documentos foram apresentados, elaborados em modelo padrão, devidamente preenchidos e as atas atendem aos requisitos regulatórios. Nota 4 – Quando atende aos critérios no conceito 3 e, adicionalmente, foram evidenciadas atas corretamente dos últimos 2 anos. Nota 5 – Quando atende aos critérios no conceito 3 e, adicionalmente, foram evidenciadas atas corretamente dos últimos 3 anos."
+  },
+  {
+   "code": "2.2",
+   "dimension": "2",
+   "group": null,
+   "name": "Conselho de Curso",
+   "weight": 2,
+   "essential": false,
+   "kind": "nota",
+   "documents": [
+    "CCG-FOR-15 - Ata de reunião – I",
+    "PED-MDL-04 - Portaria de nomeação de conselho de curso"
+   ],
+   "support": [
+    "REG-XX - Regimento Geral",
+    "CCG-INT-18 - Registro das reuniões"
+   ],
+   "category": "Conselho de Curso",
+   "applies": null,
+   "question": "O colegiado de curso possui composição e participação adequadas ao funcionamento do curso?",
+   "options": {
+    "1": "Quando os documentos referentes ao processo não foram apresentados ou apenas a portaria não foi apresentada ou a portaria apresentada não atende a titulação e número de membros previsto em legislação e regimento.",
+    "2": "Quando alguma das atas não foi apresentada, ou alguma foi preenchida indevidamente.",
+    "3": "Quando o Conselho de Curso foi nomeado segundo normas institucionais, todos os documentos foram apresentados, elaborados em modelo padrão e devidamente preenchidos e as atas atendem aos requisitos regulatórios.",
+    "4": "Quando atende aos critérios no conceito 3 e, adicionalmente, foram evidenciadas atas corretamente dos"
+   },
+   "criteria": "O colegiado de curso possui composição e participação adequadas ao funcionamento do curso? Nota 1 – Quando os documentos referentes ao processo não foram apresentados ou apenas a portaria não foi apresentada ou a portaria apresentada não atende a titulação e número de membros previsto em legislação e regimento. Nota 2 – Quando alguma das atas não foi apresentada, ou alguma foi preenchida indevidamente. Nota 3 – Quando o Conselho de Curso foi nomeado segundo normas institucionais, todos os documentos foram apresentados, elaborados em modelo padrão e devidamente preenchidos e as atas atendem aos requisitos regulatórios. Nota 4 – Quando atende aos critérios no conceito 3 e, adicionalmente, foram evidenciadas atas corretamente dos"
+  },
+  {
+   "code": "2.3",
+   "dimension": "2",
+   "group": null,
+   "name": "Atuação da Coordenação de Curso",
+   "weight": 2,
+   "essential": true,
+   "kind": "nota",
+   "documents": [
+    "PED-MDL-06 - Portaria de Nomeação de Coordenador de Curso",
+    "CCG-MDL-98 - Plano de Ação – Cursos",
+    "Registros de cumprimento do plano de ação do coordenador",
+    "CCG-FOR 16 - Ata de reunião – II (para reuniões com discentes e docentes)",
+    "Nota da auditoria (Consultada pelo auditor)"
+   ],
+   "support": [],
+   "category": "Adequação Docente",
+   "applies": null,
+   "question": "A atuação da coordenação está de acordo com o proposto institucionalmente e no PPC do curso?",
+   "options": {
+    "1": "Quando os documentos aplicáveis ao processo não foram apresentados e/ou o PPC do curso não está publicado no Fluig.",
+    "2": "Quando algum dos documentos foi utilizado indevidamente, ou não foi apresentado algum dos documentos referentes ao processo e/ou não obteve na última auditoria a meta determinada.",
+    "3": "Foi apresentada portaria de nomeação da coordenação correta, foram apresentados os planos de ação da coordenação e os registros de evidências dos planos do último ano, bem como foram apresentadas corretamente as atas de reuniões com o NDE, colegiado, discentes e docentes que foram realizadas conforme calendário e o curso obteve na última auditoria no mínimo a meta determinada.",
+    "4": "Foi apresentada portaria de nomeação da coordenação correta, foram apresentados os planos de ação da coordenação e os registros de evidências dos planos dos últimos 2 anos, bem como foram apresentadas corretamente as atas de reuniões com o NDE, colegiado, discentes e docentes que foram realizadas conforme calendário e o curso obteve nas últimas 2 auditorias no mínimo a meta determinada.",
+    "5": "Foi apresentada portaria de nomeação da coordenação correta, foram apresentados os planos de ação da coordenação e os registros de evidências dos planos dos últimos 3 anos, bem como foram apresentadas corretamente as atas de reuniões com o NDE, colegiado, discentes e docentes que foram realizadas conforme calendário e o curso obteve nas últimas 3 auditorias no mínimo a meta determinada."
+   },
+   "criteria": "A atuação da coordenação está de acordo com o proposto institucionalmente e no PPC do curso? Nota 1 – Quando os documentos aplicáveis ao processo não foram apresentados e/ou o PPC do curso não está publicado no Fluig. Nota 2 – Quando algum dos documentos foi utilizado indevidamente, ou não foi apresentado algum dos documentos referentes ao processo e/ou não obteve na última auditoria a meta determinada. Nota 3 – Foi apresentada portaria de nomeação da coordenação correta, foram apresentados os planos de ação da coordenação e os registros de evidências dos planos do último ano, bem como foram apresentadas corretamente as atas de reuniões com o NDE, colegiado, discentes e docentes que foram realizadas conforme calendário e o curso obteve na última auditoria no mínimo a meta determinada. Nota 4 – Foi apresentada portaria de nomeação da coordenação correta, foram apresentados os planos de ação da coordenação e os registros de evidências dos planos dos últimos 2 anos, bem como foram apresentadas corretamente as atas de reuniões com o NDE, colegiado, discentes e docentes que foram realizadas conforme calendário e o curso obteve nas últimas 2 auditorias no mínimo a meta determinada. Nota 5 – Foi apresentada portaria de nomeação da coordenação correta, foram apresentados os planos de ação da coordenação e os registros de evidências dos planos dos últimos 3 anos, bem como foram apresentadas corretamente as atas de reuniões com o NDE, colegiado, discentes e docentes que foram realizadas conforme calendário e o curso obteve nas últimas 3 auditorias no mínimo a meta determinada."
+  },
+  {
+   "code": "2.4",
+   "dimension": "2",
+   "group": null,
+   "name": "Titulação, Regime de trabalho e Experiência do Corpo Docente",
+   "weight": 2,
+   "essential": true,
+   "kind": "nota",
+   "documents": [
+    "CCG-FOR-72 - Planilha de atributos docentes",
+    "CCG-FOR-77 - Planilha docentes e tutores por aluno",
+    "PEX-FOR-05 - Projetos Submetidos - Iniciação Científica (para Centro Universitário ou Universidade) do Edital vigente",
+    "Comprovação de publicação para agências a fomento externo"
+   ],
+   "support": [],
+   "category": "Adequação Docente",
+   "applies": null,
+   "question": "Sobre a titulação, regime de trabalho e experiências do corpo docente do curso.",
+   "options": {
+    "1": "Quando a documentação necessária não foi apresentada, está com inconsistências ou o corpo docente possui menos de 100% dos docentes com mais de 1 ano de experiência no ensino superior, sendo que menos de 30% destes possui mais de 3 anos; adicionalmente é composto de no mínimo menos de 20% do corpo docente contratado em regime integral e menos de 33% possuem formação stricto sensu sendo menos de 10% destes submeteu projetos de Iniciação Científica Institucionais ou para agências a fomento externo ou não foram apresentadas comprovações das submissões de tais projetos.",
+    "2": "O corpo docente possui menos de 100% dos docentes com mais de 1 ano de experiência no ensino superior, sendo que menos de 30% destes possui mais de 3 anos; adicionalmente é composto de no mínimo 20% do corpo docente contratado em regime integral e menos de 33% possuem formação stricto sensu sendo menos de 10% destes submeteu projetos de Iniciação Científica Institucionais ou para agências a fomento externo e/ou algum dos documentos foi utilizado indevidamente, ou não foi apresentado algum dos documentos referentes ao processo.",
+    "3": "O corpo docente possui 100% dos docentes com no mínimo 1 ano de experiência no ensino superior, sendo que 30% destes possui mais de 3 anos; adicionalmente é composto de no mínimo 20% do corpo docente contratado em regime integral e no mínimo 33% possuem formação stricto sensu sendo que no mínimo 10% destes submeteu projetos de Iniciação Científica Institucionais ou para agências a fomento externo.",
+    "4": "O corpo docente possui 100% dos docentes com no mínimo 1 ano de experiência no ensino superior, sendo que 40% destes possui mais de 3 anos; adicionalmente é composto de no mínimo 20% do corpo docente contratado em regime integral e no mínimo 40% possuem formação stricto sensu sendo que no mínimo 10% destes submeteu projetos de Iniciação Científica Institucionais ou para agências a fomento externo.",
+    "5": "O corpo docente possui 100% dos docentes com no mínimo 1 ano de experiência no ensino superior, sendo que 50% destes possui mais de 3 anos; adicionalmente é composto de no mínimo 20% do corpo docente contratado em regime integral e no mínimo 50% possuem formação stricto sensu sendo que no mínimo 10% destes submeteu projetos de Iniciação Científica Institucionais ou para agências a fomento externo."
+   },
+   "criteria": "Sobre a titulação, regime de trabalho e experiências do corpo docente do curso. Nota 1 – Quando a documentação necessária não foi apresentada, está com inconsistências ou o corpo docente possui menos de 100% dos docentes com mais de 1 ano de experiência no ensino superior, sendo que menos de 30% destes possui mais de 3 anos; adicionalmente é composto de no mínimo menos de 20% do corpo docente contratado em regime integral e menos de 33% possuem formação stricto sensu sendo menos de 10% destes submeteu projetos de Iniciação Científica Institucionais ou para agências a fomento externo ou não foram apresentadas comprovações das submissões de tais projetos. Nota 2 – O corpo docente possui menos de 100% dos docentes com mais de 1 ano de experiência no ensino superior, sendo que menos de 30% destes possui mais de 3 anos; adicionalmente é composto de no mínimo 20% do corpo docente contratado em regime integral e menos de 33% possuem formação stricto sensu sendo menos de 10% destes submeteu projetos de Iniciação Científica Institucionais ou para agências a fomento externo e/ou algum dos documentos foi utilizado indevidamente, ou não foi apresentado algum dos documentos referentes ao processo. Nota 3 – O corpo docente possui 100% dos docentes com no mínimo 1 ano de experiência no ensino superior, sendo que 30% destes possui mais de 3 anos; adicionalmente é composto de no mínimo 20% do corpo docente contratado em regime integral e no mínimo 33% possuem formação stricto sensu sendo que no mínimo 10% destes submeteu projetos de Iniciação Científica Institucionais ou para agências a fomento externo. Nota 4 – O corpo docente possui 100% dos docentes com no mínimo 1 ano de experiência no ensino superior, sendo que 40% destes possui mais de 3 anos; adicionalmente é composto de no mínimo 20% do corpo docente contratado em regime integral e no mínimo 40% possuem formação stricto sensu sendo que no mínimo 10% destes submeteu projetos de Iniciação Científica Institucionais ou para agências a fomento externo. Nota 5 – O corpo docente possui 100% dos docentes com no mínimo 1 ano de experiência no ensino superior, sendo que 50% destes possui mais de 3 anos; adicionalmente é composto de no mínimo 20% do corpo docente contratado em regime integral e no mínimo 50% possuem formação stricto sensu sendo que no mínimo 10% destes submeteu projetos de Iniciação Científica Institucionais ou para agências a fomento externo."
+  },
+  {
+   "code": "2.5",
+   "dimension": "2",
+   "group": null,
+   "name": "Experiência Profissional do Docente",
+   "weight": 2,
+   "essential": false,
+   "kind": "nota",
+   "documents": [
+    "CCG-FOR-72 - Planilha de atributos docentes",
+    "CCG-FOR-77 - Planilha docentes e tutores por aluno"
+   ],
+   "support": [],
+   "category": "Adequação Docente",
+   "applies": "N/A para licenciaturas",
+   "question": "*N/A para licenciaturas Sobre a experiência profissional dos docentes do curso.",
+   "options": {
+    "1": "Quando os documentos não foram apresentados ou o corpo docente possui menos de 100% dos docentes com no mínimo 1 ano de experiência profissional.",
+    "2": "O corpo docente possui 100% dos docentes com no mínimo 1 ano de experiência profissional, sendo que 20% destes possui mais de 3 anos e/ou algum dos documentos foi utilizado indevidamente, ou não foi apresentado algum dos documentos referentes ao processo.",
+    "3": "O corpo docente possui 100% dos docentes com no mínimo 1 ano de experiência profissional, sendo que 30% destes possui mais de 3 anos.",
+    "4": "O corpo docente possui 100% dos docentes com no mínimo 1 ano de experiência profissional, sendo que 40% destes possui mais de 3 anos.",
+    "5": "O corpo docente possui 100% dos docentes com no mínimo 1 ano de experiência profissional, sendo que 50% destes possui mais de 3 anos."
+   },
+   "criteria": "*N/A para licenciaturas Sobre a experiência profissional dos docentes do curso. Nota 1 – Quando os documentos não foram apresentados ou o corpo docente possui menos de 100% dos docentes com no mínimo 1 ano de experiência profissional. Nota 2 – O corpo docente possui 100% dos docentes com no mínimo 1 ano de experiência profissional, sendo que 20% destes possui mais de 3 anos e/ou algum dos documentos foi utilizado indevidamente, ou não foi apresentado algum dos documentos referentes ao processo. Nota 3 – O corpo docente possui 100% dos docentes com no mínimo 1 ano de experiência profissional, sendo que 30% destes possui mais de 3 anos. Nota 4 – O corpo docente possui 100% dos docentes com no mínimo 1 ano de experiência profissional, sendo que 40% destes possui mais de 3 anos. Nota 5 – O corpo docente possui 100% dos docentes com no mínimo 1 ano de experiência profissional, sendo que 50% destes possui mais de 3 anos."
+  },
+  {
+   "code": "2.6",
+   "dimension": "2",
+   "group": null,
+   "name": "Experiência no exercício da docência na educação básica",
+   "weight": 2,
+   "essential": false,
+   "kind": "nota",
+   "documents": [
+    "CCG-FOR-72 - Planilha de atributos docentes",
+    "CCG-FOR-77 - Planilha docentes e tutores por aluno"
+   ],
+   "support": [],
+   "category": "Adequação Docente",
+   "applies": "Obrigatório para Licenciaturas",
+   "question": "* Obrigatório para Licenciaturas Sobre a experiência dos docentes do curso no exercício da docência na educação básica.",
+   "options": {
+    "1": "Quando os documentos não foram apresentados ou o corpo docente possui menos de 100% dos docentes com no mínimo 1 ano de experiência na docência de educação básica.",
+    "2": "O corpo docente possui 100% dos docentes com no mínimo 1 ano de experiência na docência de educação básica, sendo que 20% destes possui mais de 3 anos e/ou algum dos documentos foi utilizado indevidamente, ou não foi apresentado algum dos documentos referentes ao processo.",
+    "3": "O corpo docente possui 100% dos docentes com no mínimo 1 ano de experiência na docência de educação básica, sendo que 30% destes possui mais de 3 anos.",
+    "4": "O corpo docente possui 100% dos docentes com no mínimo 1 ano de experiência na docência de educação básica, sendo que 40% destes possui mais de 3 anos.",
+    "5": "O corpo docente possui 100% dos docentes com no mínimo 1 ano de experiência na docência de educação básica, sendo que 50% destes possui mais de 3 anos."
+   },
+   "criteria": "* Obrigatório para Licenciaturas Sobre a experiência dos docentes do curso no exercício da docência na educação básica. Nota 1 – Quando os documentos não foram apresentados ou o corpo docente possui menos de 100% dos docentes com no mínimo 1 ano de experiência na docência de educação básica. Nota 2 – O corpo docente possui 100% dos docentes com no mínimo 1 ano de experiência na docência de educação básica, sendo que 20% destes possui mais de 3 anos e/ou algum dos documentos foi utilizado indevidamente, ou não foi apresentado algum dos documentos referentes ao processo. Nota 3 – O corpo docente possui 100% dos docentes com no mínimo 1 ano de experiência na docência de educação básica, sendo que 30% destes possui mais de 3 anos. Nota 4 – O corpo docente possui 100% dos docentes com no mínimo 1 ano de experiência na docência de educação básica, sendo que 40% destes possui mais de 3 anos. Nota 5 – O corpo docente possui 100% dos docentes com no mínimo 1 ano de experiência na docência de educação básica, sendo que 50% destes possui mais de 3 anos."
+  },
+  {
+   "code": "2.7",
+   "dimension": "2",
+   "group": null,
+   "name": "Experiência no exercício da docência na educação a distância",
+   "weight": 2,
+   "essential": false,
+   "kind": "nota",
+   "documents": [
+    "CCG-FOR-72 - Planilha de atributos docentes",
+    "CCG-FOR-77 - Planilha docentes e tutores por aluno"
+   ],
+   "support": [],
+   "category": "Adequação Docente",
+   "applies": null,
+   "question": "Sobre a experiência dos docentes do curso no exercício da docência na educação a distância.",
+   "options": {
+    "1": "Quando os documentos não foram apresentados ou o corpo docente possui menos de 100% dos docentes com no mínimo 1 ano de experiência na docência de educação a distância.",
+    "2": "O corpo docente possui 100% dos docentes com no mínimo 1 ano de experiência na docência de educação a distância, sendo que 20% destes possui mais de 3 anos e/ou algum dos documentos foi utilizado indevidamente, ou não foi apresentado algum dos documentos referentes ao processo.",
+    "3": "O corpo docente possui 100% dos docentes com no mínimo 1 ano de experiência na docência de educação a distância, sendo que 30% destes possui mais de 3 anos.",
+    "4": "O corpo docente possui 100% dos docentes com no mínimo 1 ano de experiência na docência de educação a distância, sendo que 40% destes possui mais de 3 anos.",
+    "5": "O corpo docente possui 100% dos docentes com no mínimo 1 ano de experiência na docência de educação a distância, sendo que 50% destes possui mais de 3 anos."
+   },
+   "criteria": "Sobre a experiência dos docentes do curso no exercício da docência na educação a distância. Nota 1 – Quando os documentos não foram apresentados ou o corpo docente possui menos de 100% dos docentes com no mínimo 1 ano de experiência na docência de educação a distância. Nota 2 – O corpo docente possui 100% dos docentes com no mínimo 1 ano de experiência na docência de educação a distância, sendo que 20% destes possui mais de 3 anos e/ou algum dos documentos foi utilizado indevidamente, ou não foi apresentado algum dos documentos referentes ao processo. Nota 3 – O corpo docente possui 100% dos docentes com no mínimo 1 ano de experiência na docência de educação a distância, sendo que 30% destes possui mais de 3 anos. Nota 4 – O corpo docente possui 100% dos docentes com no mínimo 1 ano de experiência na docência de educação a distância, sendo que 40% destes possui mais de 3 anos. Nota 5 – O corpo docente possui 100% dos docentes com no mínimo 1 ano de experiência na docência de educação a distância, sendo que 50% destes possui mais de 3 anos."
+  },
+  {
+   "code": "2.8",
+   "dimension": "2",
+   "group": null,
+   "name": "Produção Científica Cultural, artística ou tecnológica",
+   "weight": 2,
+   "essential": false,
+   "kind": "nota",
+   "documents": [
+    "CCG-FOR-72 - Planilha de atributos docentes",
+    "CCG-FOR-77 - Planilha docentes e tutores por aluno"
+   ],
+   "support": [],
+   "category": "Adequação Docente",
+   "applies": null,
+   "question": "Sobre a quantidade de Produção Científica Cultural, Artística ou Tecnológica dos docentes do curso.",
+   "options": {
+    "1": "Quando os documentos não foram apresentados ou mais de 50% dos docentes não possuem produção nos últimos 3 anos.",
+    "2": "Pelo menos 50% dos docentes possuem, no mínimo, 1 produção nos últimos 3 anos e/ou algum dos documentos foi utilizado indevidamente, ou não foi apresentado algum dos documentos referentes ao processo.",
+    "3": "Pelo menos 50% dos docentes possuem, no mínimo, 4 produções nos últimos 3 anos.",
+    "4": "Pelo menos 50% dos docentes possuem, no mínimo, 7 produções nos últimos 3 anos.",
+    "5": "Pelo menos 50% dos docentes possuem, no mínimo, 9 produções nos últimos 3 anos."
+   },
+   "criteria": "Sobre a quantidade de Produção Científica Cultural, Artística ou Tecnológica dos docentes do curso. Nota 1 – Quando os documentos não foram apresentados ou mais de 50% dos docentes não possuem produção nos últimos 3 anos. Nota 2 – Pelo menos 50% dos docentes possuem, no mínimo, 1 produção nos últimos 3 anos e/ou algum dos documentos foi utilizado indevidamente, ou não foi apresentado algum dos documentos referentes ao processo. Nota 3 – Pelo menos 50% dos docentes possuem, no mínimo, 4 produções nos últimos 3 anos. Nota 4 – Pelo menos 50% dos docentes possuem, no mínimo, 7 produções nos últimos 3 anos. Nota 5 – Pelo menos 50% dos docentes possuem, no mínimo, 9 produções nos últimos 3 anos."
+  },
+  {
+   "code": "2.9",
+   "dimension": "2",
+   "group": null,
+   "name": "Titulação dos tutores",
+   "weight": 2,
+   "essential": false,
+   "kind": "nota",
+   "documents": [
+    "CCG-FOR-74 - planilha de atributos tutores (para EAD e cursos com DOL)",
+    "CCG-FOR-77 - Planilha docentes e tutores por aluno"
+   ],
+   "support": [],
+   "category": "Adequação Docente",
+   "applies": null,
+   "question": "Sobre a titulação do corpo de tutores.",
+   "options": {
+    "1": "Quando os documentos não foram apresentados ou quando nenhum tutor é graduado na área da disciplina pela qual é responsável.",
+    "2": "Quando parte dos tutores é graduada na área da disciplina pelas quais são responsáveis e/ou algum dos documentos foi utilizado indevidamente, ou não foi apresentado algum dos documentos referentes ao processo.",
+    "3": "Quando todos os tutores são graduados na área da disciplina pelas quais são responsáveis.",
+    "4": "Quando todos os tutores são graduados na área da disciplina pelas quais são responsáveis e a maioria possui titulação obtida em pós-graduação lato sensu.",
+    "5": "Quando todos os tutores são graduados na área da disciplina pelas quais são responsáveis e a maioria possui titulação obtida em pós-graduação em stricto sensu."
+   },
+   "criteria": "Sobre a titulação do corpo de tutores. Nota 1 – Quando os documentos não foram apresentados ou quando nenhum tutor é graduado na área da disciplina pela qual é responsável. Nota 2 – Quando parte dos tutores é graduada na área da disciplina pelas quais são responsáveis e/ou algum dos documentos foi utilizado indevidamente, ou não foi apresentado algum dos documentos referentes ao processo. Nota 3 – Quando todos os tutores são graduados na área da disciplina pelas quais são responsáveis. Nota 4 – Quando todos os tutores são graduados na área da disciplina pelas quais são responsáveis e a maioria possui titulação obtida em pós-graduação lato sensu. Nota 5 – Quando todos os tutores são graduados na área da disciplina pelas quais são responsáveis e a maioria possui titulação obtida em pós-graduação em stricto sensu."
+  },
+  {
+   "code": "2.10",
+   "dimension": "2",
+   "group": null,
+   "name": "Experiência dos tutores",
+   "weight": 2,
+   "essential": false,
+   "kind": "nota",
+   "documents": [
+    "CCG-FOR-74 - planilha de atributos tutores (para EAD e cursos com DOL)",
+    "CCG-FOR-77 - Planilha docentes e tutores por aluno"
+   ],
+   "support": [],
+   "category": "Adequação Docente",
+   "applies": null,
+   "question": "Sobre a experiência do corpo de tutores.",
+   "options": {
+    "1": "Quando os documentos não foram apresentados ou nenhum tutor possui experiência comprovada de, pelo menos, 1 ano.",
+    "2": "Quando parte dos tutores possuem experiência comprovada de, pelo menos, 1 ano e/ou algum dos documentos foi utilizado indevidamente, ou não foi apresentado algum dos documentos referentes ao processo.",
+    "3": "Quando todos os tutores possuem experiência comprovada de, pelo menos, 1 ano.",
+    "4": "Quando todos os tutores possuem experiência comprovada de, pelo menos, 2 anos.",
+    "5": "Quando todos os tutores possuem experiência comprovada de, pelo menos, 3 anos."
+   },
+   "criteria": "Sobre a experiência do corpo de tutores. Nota 1 – Quando os documentos não foram apresentados ou nenhum tutor possui experiência comprovada de, pelo menos, 1 ano. Nota 2 – Quando parte dos tutores possuem experiência comprovada de, pelo menos, 1 ano e/ou algum dos documentos foi utilizado indevidamente, ou não foi apresentado algum dos documentos referentes ao processo. Nota 3 – Quando todos os tutores possuem experiência comprovada de, pelo menos, 1 ano. Nota 4 – Quando todos os tutores possuem experiência comprovada de, pelo menos, 2 anos. Nota 5 – Quando todos os tutores possuem experiência comprovada de, pelo menos, 3 anos."
+  },
+  {
+   "code": "2.11.1",
+   "dimension": "2",
+   "group": "2.11",
+   "name": "Adequação Docente",
+   "weight": null,
+   "essential": true,
+   "kind": "simnao",
+   "documents": [
+    "CCG-MDL-22 (EAD) relatório de análise da adequação do corpo docente - cursos EAD",
+    "CCG-MDL-23 relatório de análise da adequação do corpo docente e tutorial - cursos presenciais (com DOL)",
+    "CCG-FOR-66 ficha para análise da adequação do docente",
+    "CCG-FOR-67 ficha para análise da adequação do tutor",
+    "CCG-FOR-72 - planilha de atributos docentes",
+    "CCG-FOR-74 - planilha de atributos tutores (para EAD e cursos com DOL)",
+    "PPC Publicado",
+    "Planilha de controle de envio da Regulação"
+   ],
+   "support": [],
+   "category": "Adequação Docente",
+   "applies": null,
+   "question": "1. Os registros necessários ao processo de Adequação docente foram apresentados? Os indicadores referentes aos docentes e tutores atendem aos mínimo dos conceitos necessários?",
+   "options": {
+    "SIM": "Quando os documentos necessários ao processo foram devidamente apresentados, o relatório de adequação docente está assinado pelo NDE e os indicadores 2.4; 2.5; 2.6; 2.7; 2.9 e 2.10 atendem, no mínimo ao conceito 3.",
+    "NÃO": "Quando o processo não atende a algum critério estabelecido no conceito sim."
+   },
+   "criteria": "1. Os registros necessários ao processo de Adequação docente foram apresentados? Os indicadores referentes aos docentes e tutores atendem aos mínimo dos conceitos necessários? SIM – Quando os documentos necessários ao processo foram devidamente apresentados, o relatório de adequação docente está assinado pelo NDE e os indicadores 2.4; 2.5; 2.6; 2.7; 2.9 e 2.10 atendem, no mínimo ao conceito 3. NÃO – Quando o processo não atende a algum critério estabelecido no conceito sim."
+  },
+  {
+   "code": "3.1",
+   "dimension": "3",
+   "group": null,
+   "name": "Laboratório",
+   "weight": 2,
+   "essential": false,
+   "kind": "nota",
+   "documents": [
+    "CCG-FOR-69 – Monitoramento da Usabilidade dos Laboratórios",
+    "Controle de aulas práticas por turma x disciplina"
+   ],
+   "support": [
+    "PAP’s",
+    "POP’s",
+    "Regulamento de atividades práticas"
+   ],
+   "category": "Laboratórios do curso",
+   "applies": null,
+   "question": "Deve ser apresentado um documento por matriz em funcionamento. A infraestrutura, definida para os laboratórios, está prevista e padronizada para o curso?",
+   "options": {
+    "1": "Quando não foi evidenciado o Monitoramento da Usabilidade dos Laboratórios e, desconhece os procedimentos relativos a PAPs, POPs.",
+    "2": "Quando não foi evidenciado o Monitoramento da Usabilidade dos Laboratórios de todas as matrizes em andamento no curso, ou, algum dos documentos apresentados possui inconsistência, mas conhece os procedimentos relativos a PAPs, POPs.",
+    "3": "Quando foi evidenciado o Monitoramento da Usabilidade dos Laboratórios de todas as matrizes em andamento no curso, bem como conhece os procedimentos relativos a PAPs, POPs.",
+    "4": "Quando atende os critérios do Item 3 e foi apresentado um controle de realização das aulas práticas por turma/disciplina.",
+    "5": "Quando atende os critérios do Item 4 e foi apresentado documento relacionado a usabilidade de cada laboratório."
+   },
+   "criteria": "Deve ser apresentado um documento por matriz em funcionamento. A infraestrutura, definida para os laboratórios, está prevista e padronizada para o curso? Nota 1 – Quando não foi evidenciado o Monitoramento da Usabilidade dos Laboratórios e, desconhece os procedimentos relativos a PAPs, POPs. Nota 2 – Quando não foi evidenciado o Monitoramento da Usabilidade dos Laboratórios de todas as matrizes em andamento no curso, ou, algum dos documentos apresentados possui inconsistência, mas conhece os procedimentos relativos a PAPs, POPs. Nota 3 – Quando foi evidenciado o Monitoramento da Usabilidade dos Laboratórios de todas as matrizes em andamento no curso, bem como conhece os procedimentos relativos a PAPs, POPs. Nota 4 – Quando atende os critérios do Item 3 e foi apresentado um controle de realização das aulas práticas por turma/disciplina. Nota 5 – Quando atende os critérios do Item 4 e foi apresentado documento relacionado a usabilidade de cada laboratório."
+  },
+  {
+   "code": "3.2",
+   "dimension": "3",
+   "group": null,
+   "name": "Bibliografia",
+   "weight": 2,
+   "essential": false,
+   "kind": "nota",
+   "documents": [
+    "BIB-FOR-11 - Exemplares e bibliografia do curso",
+    "CCG-MDL-20 - Relatório de adequação da bibliografia (reconhecimento)",
+    "Solicitação de aquisição de livros",
+    "Relação de Periódicos"
+   ],
+   "support": [
+    "CCG-INT-29 - Cadastro de documentos no e-Ser",
+    "PPC Publicado",
+    "Planilha de controle de envio da Regulação",
+    "Base de Periódicos"
+   ],
+   "category": "Adequação bibliográfica",
+   "applies": null,
+   "question": "Os documentos referentes ao acervo da bibliografia básica, complementar e periódicos do curso foram apresentados?",
+   "options": {
+    "1": "Quando não foi evidenciado o relatório de análise da adequação bibliográfica em modelo padrão, ou a coordenação de curso não conhece os procedimentos de aquisição de bibliografias ou não apresentou dois ou mais documentos necessários ao requisito e/ou o PPC do curso não está publicado no Fluig.",
+    "2": "Quando foi evidenciado o relatório de análise da adequação bibliográfica, porém a coordenação não conhece os procedimentos de aquisição de bibliografias, não apresentou um dos documentos necessários ao requisito ou algum dos documentos apresentados possui inconsistência.",
+    "3": "Quando foi evidenciado o relatório de análise da adequação bibliográfica com todos os documentos necessários ao requisito, e a coordenação do curso demonstra conhecer os procedimentos de aquisição de bibliografias.",
+    "4": "Quando atende aos critérios do item 3 e a maioria das disciplinas do curso possuem indicações de bibliografias virtuais.",
+    "5": "Quando atende aos critérios do item 4 e a maioria dos periódicos são indicados a partir das bases assinadas. OBS.: Caso a coordenação do curso identifique que não há necessidade de solicitar aquisição de obras, deve-se enviar um e-mail com a justificativa à Biblioteca. Este processo não é necessário a cursos reconhecidos."
+   },
+   "criteria": "Os documentos referentes ao acervo da bibliografia básica, complementar e periódicos do curso foram apresentados? Nota 1 – Quando não foi evidenciado o relatório de análise da adequação bibliográfica em modelo padrão, ou a coordenação de curso não conhece os procedimentos de aquisição de bibliografias ou não apresentou dois ou mais documentos necessários ao requisito e/ou o PPC do curso não está publicado no Fluig. Nota 2 – Quando foi evidenciado o relatório de análise da adequação bibliográfica, porém a coordenação não conhece os procedimentos de aquisição de bibliografias, não apresentou um dos documentos necessários ao requisito ou algum dos documentos apresentados possui inconsistência. Nota 3 - Quando foi evidenciado o relatório de análise da adequação bibliográfica com todos os documentos necessários ao requisito, e a coordenação do curso demonstra conhecer os procedimentos de aquisição de bibliografias. Nota 4 - Quando atende aos critérios do item 3 e a maioria das disciplinas do curso possuem indicações de bibliografias virtuais. Nota 5 - Quando atende aos critérios do item 4 e a maioria dos periódicos são indicados a partir das bases assinadas. OBS.: Caso a coordenação do curso identifique que não há necessidade de solicitar aquisição de obras, deve-se enviar um e-mail com a justificativa à Biblioteca. Este processo não é necessário a cursos reconhecidos."
+  },
+  {
+   "code": "3.3",
+   "dimension": "3",
+   "group": null,
+   "name": "Unidades hospitalares de ensino e complexo assistencial",
+   "weight": 2,
+   "essential": true,
+   "kind": "nota",
+   "documents": [
+    "CCG-FOR-78 - relação convenios e razão aluno leito do sus em hospitais",
+    "Planilha gerencial com hospitais conveniados, setores e campos de atuação"
+   ],
+   "support": [],
+   "category": "Gestão do Curso",
+   "applies": "Item exclusivo para medicina",
+   "question": "Item exclusivo para medicina. A IES conta com unidade(s) hospitalar(es), própria(s) ou conveniada(s) que possuam atendimento majoritário pelo SUS, garantida(s) legalmente por período determinado, que apresenta(m) condições para a formação do estudante da área de saúde?",
+   "options": {
+    "1": "Quando os documentos referente ao processo não foram apresentados.",
+    "2": "Quando foram apresentados evidências documentais, com unidades hospitalares que disponha(m) de infra- estrutura básica constituída em menos de cinco setores relacionados ou algum dos documentos não foram apresentado ou possuem inconsistências.",
+    "3": "Quando foram apresentados evidências documentais, com unidades hospitalares que disponha(m) de infra- estrutura básica constituída em cinco setores relacionados.",
+    "4": "Quando foram apresentados evidências documentais, com unidades hospitalares que disponha(m) de infra- estrutura básica constituída em seis setores relacionados.",
+    "5": "Quando foram apresentados evidências documentais, com unidades hospitalares que disponha(m) de infra- estrutura básica constituída em sete setores relacionados. SETORES • Ambulatórios: (pelo menos de clínica médica, pediatria, ginecologia e obstetrícia e cirurgia); • Unidades de internação: (pelo menos de clínica médica, pediatria, ginecologia e obstetrícia e cirurgia); • centros cirúrgico e obstétrico; • unidades de urgência e emergência: (clínica, cirúrgica e traumatológica) • UTI neonatal, pediátrica e de adultos • instalações para o funcionamento do PSF • laboratórios de exames complementares: (setor de imagens, laboratório clínico e de anatomia patológica)."
+   },
+   "criteria": "Item exclusivo para medicina. A IES conta com unidade(s) hospitalar(es), própria(s) ou conveniada(s) que possuam atendimento majoritário pelo SUS, garantida(s) legalmente por período determinado, que apresenta(m) condições para a formação do estudante da área de saúde? Nota 1 – Quando os documentos referente ao processo não foram apresentados. Nota 2 – Quando foram apresentados evidências documentais, com unidades hospitalares que disponha(m) de infra- estrutura básica constituída em menos de cinco setores relacionados ou algum dos documentos não foram apresentado ou possuem inconsistências. Nota 3 – Quando foram apresentados evidências documentais, com unidades hospitalares que disponha(m) de infra- estrutura básica constituída em cinco setores relacionados. Nota 4 – Quando foram apresentados evidências documentais, com unidades hospitalares que disponha(m) de infra- estrutura básica constituída em seis setores relacionados. Nota 5 – Quando foram apresentados evidências documentais, com unidades hospitalares que disponha(m) de infra- estrutura básica constituída em sete setores relacionados. SETORES • Ambulatórios: (pelo menos de clínica médica, pediatria, ginecologia e obstetrícia e cirurgia); • Unidades de internação: (pelo menos de clínica médica, pediatria, ginecologia e obstetrícia e cirurgia); • centros cirúrgico e obstétrico; • unidades de urgência e emergência: (clínica, cirúrgica e traumatológica) • UTI neonatal, pediátrica e de adultos • instalações para o funcionamento do PSF • laboratórios de exames complementares: (setor de imagens, laboratório clínico e de anatomia patológica)."
+  },
+  {
+   "code": "3.4.1",
+   "dimension": "3",
+   "group": "3.4",
+   "name": "Membros do NPJ",
+   "weight": null,
+   "essential": false,
+   "kind": "simnao",
+   "documents": [
+    "Portaria de nomeação do responsável pelo NPJ",
+    "CCG-FOR-76 – Tabela de Atributos do NPJ"
+   ],
+   "support": [
+    "PED-RGU-XX49 - Regulamento das Atividades do Estágio Supervisionado e de Prática Jurídica"
+   ],
+   "category": "Gestão do Curso",
+   "applies": "Aplicado somente ao curso de Direito",
+   "question": "Aplicado somente ao curso de Direito 1. A portaria de nomeação do responsável e tabela de atributos do NPJ foram apresentados?",
+   "options": {
+    "SIM": "Quando a portaria de nomeação e a tabela de atributos foram devidamente preenchidas e apresentadas.",
+    "NÃO": "Quando o documento não atende a algum critério estabelecido no conceito sim."
+   },
+   "criteria": "Aplicado somente ao curso de Direito 1. A portaria de nomeação do responsável e tabela de atributos do NPJ foram apresentados? SIM – Quando a portaria de nomeação e a tabela de atributos foram devidamente preenchidas e apresentadas. NÃO – Quando o documento não atende a algum critério estabelecido no conceito sim."
+  },
+  {
+   "code": "3.4.2",
+   "dimension": "3",
+   "group": "3.4",
+   "name": "Portfólio NPJ",
+   "weight": null,
+   "essential": false,
+   "kind": "simnao",
+   "documents": [
+    "CCG-MDL-105 - Apresentação do Núcleo de Práticas Jurídicas"
+   ],
+   "support": [],
+   "category": "Gestão do Curso",
+   "applies": "Aplicado somente ao curso de Direito",
+   "question": "Aplicado somente ao curso de Direito 2. O Portfólio referente ao Núcleo de Práticas Júridicas foi apresentado?",
+   "options": {
+    "SIM": "Quando o documento foi apresentado, elaborado em modelo padrão e devidamente preenchido.",
+    "NÃO": "Quando o documento não atende a algum critério estabelecido no conceito sim."
+   },
+   "criteria": "Aplicado somente ao curso de Direito 2. O Portfólio referente ao Núcleo de Práticas Júridicas foi apresentado? SIM – Quando o documento foi apresentado, elaborado em modelo padrão e devidamente preenchido. NÃO – Quando o documento não atende a algum critério estabelecido no conceito sim."
+  },
+  {
+   "code": "4.1.1",
+   "dimension": "4",
+   "group": "4.1",
+   "name": "Plano de Aula",
+   "weight": null,
+   "essential": false,
+   "kind": "simnao",
+   "documents": [
+    "https://intranet.sereduc.com/HomePage.aspx"
+   ],
+   "support": [
+    "CCG-PRO-08 - Preenchimento de plano de aula"
+   ],
+   "category": "Não aplicado (item registrado pelo auditor)",
+   "applies": "EAD – Não Aplicado",
+   "question": "EAD – Não Aplicado 1. Os planos de aula do semestre vigente, inseridos no portal do professor, estão de acordo com o plano de ensino da disciplina?",
+   "options": {
+    "SIM": "Quando 100% da amostragem realizada nos planos de aulas estão inseridos no Diário Eletrônico e estão de acordo com o plano de ensino inserido no FLUIG.",
+    "NÃO": "Quando menos de 100% da amostragem realizada nos planos de aulas estão inseridos no Diário Eletrônico ou não estão de acordo com plano de ensino inserido no FLUIG."
+   },
+   "criteria": "EAD – Não Aplicado 1. Os planos de aula do semestre vigente, inseridos no portal do professor, estão de acordo com o plano de ensino da disciplina? SIM – Quando 100% da amostragem realizada nos planos de aulas estão inseridos no Diário Eletrônico e estão de acordo com o plano de ensino inserido no FLUIG. NÃO – Quando menos de 100% da amostragem realizada nos planos de aulas estão inseridos no Diário Eletrônico ou não estão de acordo com plano de ensino inserido no FLUIG."
+  },
+  {
+   "code": "4.1.2",
+   "dimension": "4",
+   "group": "4.1",
+   "name": "Chamada Eletrônica",
+   "weight": null,
+   "essential": false,
+   "kind": "simnao",
+   "documents": [
+    "https://intranet.sereduc.com/HomePage.aspx"
+   ],
+   "support": [],
+   "category": "Não aplicado (item registrado pelo auditor)",
+   "applies": null,
+   "question": "EAD – Verificar planilha e acesso dos alunos ao AVA 2. As chamadas eletrônicas estão sendo realizadas?",
+   "options": {
+    "SIM": "Quando 100% da amostragem realizada nos planos de aulas estão realizando a chamada eletrônica.",
+    "NÃO": "Quando menos de 100% da amostragem realizada nos planos de aulas estão realizando a chamada eletrônica."
+   },
+   "criteria": "EAD – Verificar planilha e acesso dos alunos ao AVA 2. As chamadas eletrônicas estão sendo realizadas? SIM – Quando 100% da amostragem realizada nos planos de aulas estão realizando a chamada eletrônica. NÃO – Quando menos de 100% da amostragem realizada nos planos de aulas estão realizando a chamada eletrônica."
+  },
+  {
+   "code": "4.2.1",
+   "dimension": "4",
+   "group": "4.2",
+   "name": "Sistema de Gestão Integrada",
+   "weight": null,
+   "essential": false,
+   "kind": "simnao",
+   "documents": [
+    "CCG-MDL-103 - Portfólio do sistema de gestão integrada"
+   ],
+   "support": [],
+   "category": "Apoio ao Discente",
+   "applies": null,
+   "question": "Documento apresentado por semestre. 1. O portfólio do sistema de gestão integrada foi apresentado?",
+   "options": {
+    "SIM": "Quando o documento foi apresentado, elaborado em modelo padrão e devidamente preenchido.",
+    "NÃO": "Quando o documento não atende a algum critério estabelecido no conceito sim."
+   },
+   "criteria": "Documento apresentado por semestre. 1. O portfólio do sistema de gestão integrada foi apresentado? SIM - Quando o documento foi apresentado, elaborado em modelo padrão e devidamente preenchido. NÃO – Quando o documento não atende a algum critério estabelecido no conceito sim."
+  },
+  {
+   "code": "4.2.2",
+   "dimension": "4",
+   "group": "4.2",
+   "name": "Comunicação dos cursos",
+   "weight": null,
+   "essential": false,
+   "kind": "simnao",
+   "documents": [
+    "CCG-MDL-102 - Portfólio dos comunicação dos cursos"
+   ],
+   "support": [],
+   "category": "Apoio ao Discente",
+   "applies": null,
+   "question": "Documento apresentado por semestre. 2. O portfólio de comunicação dos cursos foi apresentado?",
+   "options": {
+    "SIM": "Quando o documento foi apresentado, elaborado em modelo padrão e devidamente preenchido.",
+    "NÃO": "Quando o documento não atende a algum critério estabelecido no conceito sim."
+   },
+   "criteria": "Documento apresentado por semestre. 2. O portfólio de comunicação dos cursos foi apresentado? SIM - Quando o documento foi apresentado, elaborado em modelo padrão e devidamente preenchido. NÃO – Quando o documento não atende a algum critério estabelecido no conceito sim."
+  },
+  {
+   "code": "4.3.1",
+   "dimension": "4",
+   "group": "4.3",
+   "name": "Site Institucional",
+   "weight": null,
+   "essential": false,
+   "kind": "simnao",
+   "documents": [
+    "Site do Processo Seletivo"
+   ],
+   "support": [],
+   "category": "Não aplicado (item verificado no site institucional)",
+   "applies": null,
+   "question": "1. As informações do curso estão atualizadas no site institucional?",
+   "options": {
+    "SIM": "Quando todas as informações* do curso estão atualizadas no site institucional.",
+    "NÃO": "Quando alguma das informações* do curso não estão atualizadas no site institucional. *Informações: Finalidade do curso; objetivo geral e específico do curso; perfil do egresso; número de vagas; portarias de atos regulatórios do curso (autorização, reconhecimento e renovação de reconhecimento); matriz curricular; porcentagem das cargas horárias presenciais e EAD; resumo da matriz; nome e foto da coordenação de curso; corpo docente e currículo lattes dos docentes."
+   },
+   "criteria": "1. As informações do curso estão atualizadas no site institucional? SIM – Quando todas as informações* do curso estão atualizadas no site institucional. NÃO – Quando alguma das informações* do curso não estão atualizadas no site institucional. *Informações: Finalidade do curso; objetivo geral e específico do curso; perfil do egresso; número de vagas; portarias de atos regulatórios do curso (autorização, reconhecimento e renovação de reconhecimento); matriz curricular; porcentagem das cargas horárias presenciais e EAD; resumo da matriz; nome e foto da coordenação de curso; corpo docente e currículo lattes dos docentes."
+  },
+  {
+   "code": "4.4.1",
+   "dimension": "4",
+   "group": "4.4",
+   "name": "Plano de ação",
+   "weight": null,
+   "essential": false,
+   "kind": "nota",
+   "documents": [
+    "Relatório do ano anterior",
+    "Plano de ação"
+   ],
+   "support": [],
+   "category": "Não aplicado (item registrado pelo auditor)",
+   "applies": null,
+   "question": "Conceituar de acordo com os seguintes critérios:",
+   "options": {
+    "1": "Quando o curso não elaborou o plano de ação da auditoria do ano anterior.",
+    "2": "Quando o curso elaborou o plano de ação da auditoria do ano anterior e obteve validação no Follow Up em menos de 70% das ações e/ou elaborou de forma indevida/incompleta.",
+    "3": "Quando o curso elaborou o plano de ação da auditoria do ano anterior e obteve validação no Follow Up entre 70% e 90% das ações.",
+    "4": "Quando o curso elaborou o plano de ação da auditoria do ano anterior e obteve validação no Follow Up em 90% das ações.",
+    "5": "Quando o curso não obteve Não Conformidades em indicadores imprescindíveis na auditoria do ano anterior. OBS.: Item não aplicado para curso não avaliado na auditoria do último ciclo."
+   },
+   "criteria": "Conceituar de acordo com os seguintes critérios: Nota 1 – Quando o curso não elaborou o plano de ação da auditoria do ano anterior. Nota 2 – Quando o curso elaborou o plano de ação da auditoria do ano anterior e obteve validação no Follow Up em menos de 70% das ações e/ou elaborou de forma indevida/incompleta. Nota 3 – Quando o curso elaborou o plano de ação da auditoria do ano anterior e obteve validação no Follow Up entre 70% e 90% das ações. Nota 4 – Quando o curso elaborou o plano de ação da auditoria do ano anterior e obteve validação no Follow Up em 90% das ações. Nota 5 – Quando o curso não obteve Não Conformidades em indicadores imprescindíveis na auditoria do ano anterior. OBS.: Item não aplicado para curso não avaliado na auditoria do último ciclo."
+  },
+  {
+   "code": "4.5.1",
+   "dimension": "4",
+   "group": "4.5",
+   "name": "Documentos Inseridos no e- Ser",
+   "weight": null,
+   "essential": false,
+   "kind": "nota",
+   "documents": [
+    "Sistema e-Ser"
+   ],
+   "support": [],
+   "category": "Não aplicado",
+   "applies": null,
+   "question": "Os documentos referentes aos itens auditados remotamente estão inseridos no sistema e-Ser?",
+   "options": {
+    "1": "Quando o percentual de documentos inseridos o sistema e-Ser, em conformidade, é menor que 30%.",
+    "2": "Quando o percentual de documentos inseridos o sistema e-Ser, em conformidade, está entre 30% e 69%.",
+    "3": "Quando o percentual de documentos inseridos o sistema e-Ser, em conformidade, está entre 70% e 89%.",
+    "4": "Quando o percentual de documentos inseridos o sistema e-Ser, em conformidade, está entre 90% e 99%.",
+    "5": "Quando o percentual de documentos inseridos o sistema e-Ser, em conformidade, é de 100%. OBS.: Serão considerados os itens conceituados com, no mínimo, nota três aplicados a todos os itens avaliados remotamente e que possuem categoria no sistema e-Ser."
+   },
+   "criteria": "Os documentos referentes aos itens auditados remotamente estão inseridos no sistema e-Ser? Nota 1 – Quando o percentual de documentos inseridos o sistema e-Ser, em conformidade, é menor que 30%. Nota 2 – Quando o percentual de documentos inseridos o sistema e-Ser, em conformidade, está entre 30% e 69%. Nota 3 – Quando o percentual de documentos inseridos o sistema e-Ser, em conformidade, está entre 70% e 89%. Nota 4 – Quando o percentual de documentos inseridos o sistema e-Ser, em conformidade, está entre 90% e 99%. Nota 5 – Quando o percentual de documentos inseridos o sistema e-Ser, em conformidade, é de 100%. OBS.: Serão considerados os itens conceituados com, no mínimo, nota três aplicados a todos os itens avaliados remotamente e que possuem categoria no sistema e-Ser."
+  },
+  {
+   "code": "4.6.1",
+   "dimension": "4",
+   "group": "4.6",
+   "name": "Avaliação do Coordenador",
+   "weight": null,
+   "essential": false,
+   "kind": "nota",
+   "documents": [],
+   "support": [],
+   "category": "Não Aplicado (item registrado pelo auditor)",
+   "applies": null,
+   "question": "Qual a nota do coordenador na Avaliação sobre Auditoria de Curso? Neste a coordenação do curso será avaliada em temática vinculadas ao curso e sua gestão. Replicar a nota da avaliação. Obs.: O item deverá ser não aplicado se o curso estiver sob responsabilidade do Coordenador Acadêmico/ Diretor da unidade. Serão abordados assuntos vinculados a documentos e legislação regulatória e acadêmicas como: DCN’s, PPC, PDI, Regulamentos e Processos Acadêmicos.",
+   "options": {},
+   "criteria": "Qual a nota do coordenador na Avaliação sobre Auditoria de Curso? Neste a coordenação do curso será avaliada em temática vinculadas ao curso e sua gestão. Replicar a nota da avaliação. Obs.: O item deverá ser não aplicado se o curso estiver sob responsabilidade do Coordenador Acadêmico/ Diretor da unidade. Serão abordados assuntos vinculados a documentos e legislação regulatória e acadêmicas como: DCN’s, PPC, PDI, Regulamentos e Processos Acadêmicos."
+  },
+  {
+   "code": "4.6.2",
+   "dimension": "4",
+   "group": "4.6",
+   "name": "Reunião Discente",
+   "weight": null,
+   "essential": false,
+   "kind": "nota",
+   "documents": [],
+   "support": [],
+   "category": "Não aplicado (item registrado pelo auditor)",
+   "applies": null,
+   "question": "REUNIÃO DO CORPO DISCENTE Qual a média da reunião dos discentes do curso? Neste item o auditor entrevistará os discentes, devidamente matriculados no curso, onde serão abordadas questões vinculadas ao curso e sua gestão. Replicar a nota do questionário aplicado",
+   "options": {},
+   "criteria": "REUNIÃO DO CORPO DISCENTE Qual a média da reunião dos discentes do curso? Neste item o auditor entrevistará os discentes, devidamente matriculados no curso, onde serão abordadas questões vinculadas ao curso e sua gestão. Replicar a nota do questionário aplicado"
+  },
+  {
+   "code": "4.6.3",
+   "dimension": "4",
+   "group": "4.6",
+   "name": "Reunião Docente",
+   "weight": null,
+   "essential": false,
+   "kind": "nota",
+   "documents": [],
+   "support": [],
+   "category": "Não aplicado (item registrado pelo auditor)",
+   "applies": null,
+   "question": "REUNIÃO COM CORPO DOCENTE Qual a média da reunião dos docentes do curso? Neste item o auditor entrevistará docentes, devidamente vinculados ao curso, onde serão abordadas questões vinculadas ao curso e sua gestão. Replicar a nota do questionário aplicado",
+   "options": {},
+   "criteria": "REUNIÃO COM CORPO DOCENTE Qual a média da reunião dos docentes do curso? Neste item o auditor entrevistará docentes, devidamente vinculados ao curso, onde serão abordadas questões vinculadas ao curso e sua gestão. Replicar a nota do questionário aplicado"
+  }
+ ]
+}
