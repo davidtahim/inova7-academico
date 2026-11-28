@@ -73,7 +73,7 @@
 
     $systemItems = array_values(array_filter([
         Gate::allows('manage-users') ? ['label' => 'Usuários e perfis', 'url' => route('admin.users.index'), 'icon' => 'shield', 'active' => ['admin.users.*']] : null,
-        Gate::allows('access-audit') ? ['label' => 'Auditoria', 'url' => route('audit.index'), 'icon' => 'clipboard', 'active' => ['audit.*']] : null,
+        Gate::allows('access-audit') ? ['label' => 'Auditoria', 'url' => route('audit.courses.index'), 'icon' => 'clipboard', 'active' => ['audit.*']] : null,
         Gate::allows('manage-users') ? ['label' => 'Manutenção', 'url' => route('system.maintenance'), 'icon' => 'database', 'active' => ['system.maintenance*']] : null,
     ]));
     if ($systemItems !== []) {

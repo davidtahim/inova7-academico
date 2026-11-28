@@ -262,6 +262,15 @@ Route::middleware('auth')->group(function () {
             Route::post('/templates', [AuditTemplateController::class, 'store'])->name('templates.store');
             Route::get('/documentos/emitir', [AuditDocumentController::class, 'create'])->name('documents.create');
             Route::post('/documentos', [AuditDocumentController::class, 'store'])->name('documents.store');
+
+            // Auditoria de curso (QUA-INT-08): indicadores, documentos e resultado previsto por semestre.
+            Route::prefix('cursos')->name('courses.')->controller(\App\Http\Controllers\CourseAuditController::class)->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::get('/{course}', 'show')->name('show');
+                Route::post('/{course}/dados', 'updateHeader')->name('header');
+                Route::post('/{course}/indicador/{code}', 'updateIndicator')->where('code', '[0-9.]+')->name('indicator');
+                Route::get('/{course}/documento/{document}', 'download')->name('download');
+            });
         });
     });
 
