@@ -50,6 +50,9 @@ Route::middleware('guest')->group(function () {
 | Os nomes das rotas foram mantidos; os endereços antigos redirecionam (301).
 */
 
+// Calendário público dos laboratórios (sem login): só reservas aprovadas, sem dados de quem pediu.
+Route::get('/calendario-laboratorios', [LabReservationController::class, 'publicCalendar'])->name('labs.public');
+
 Route::middleware('auth')->group(function () {
     /*
      * Arquivos do disco "public" (fotos de perfil). Normalmente o Apache entrega

@@ -19,6 +19,7 @@
             </div>
             <div class="d-flex flex-wrap gap-2">
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reservationModal">{{ $manage ? 'Nova reserva' : 'Pedir reserva' }}</button>
+                <a href="{{ route('labs.public', ['area' => $area]) }}" class="btn btn-outline-secondary" target="_blank" rel="noopener" title="Página sem login para divulgar a ocupação dos laboratórios">Calendário público ↗</a>
                 @if ($manage)
                     <form method="POST" action="{{ route('labs.sync') }}" class="m-0">
                         @csrf

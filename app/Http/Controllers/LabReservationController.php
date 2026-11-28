@@ -43,27 +43,7 @@ class LabReservationController extends Controller
         $lab = $labs->firstWhere('id', $request->integer('lab')) ?? $labs->first();
         $term = AcademicTerm::current();
 
-        // Semana exibida: a pedida; senão a atual (ou o início do semestre, se ainda não começou).
-        $reference = $request->filled('semana') ? Carbon::parse($request->input('semana'))
-            : (($term?->starts_at && now()->lt($term->starts_at)) ? $term->starts_at->copy() : now());
-        $monday = $reference->copy()->startOfWeek(Carbon::MONDAY);
-        $days = collect(range(0, 5))->map(fn ($i) => $monday->copy()->addDays($i));
-
-        $reservations = $lab ? LabReservation::with(['turma.subject', 'turma.assignments.professor', 'solicitante'])
-            ->where('laboratorio_id', $lab->id)->whereIn('status', ['Aprovada', 'Pendente'])
-            ->where(fn ($q) => $q->where('recorrente', true)->orWhereBetween('data', [$monday->toDateString(), $monday->copy()->addDays(6)->toDateString()]))
-            ->get() : collect();
-
-        $rows = [];
-        foreach (['MANHÃ' => 'Manhã', 'TARDE' => 'Tarde', 'NOITE' => 'Noite'] as $shift => $label) {
-            foreach (TimeBlocks::forShift($shift) as $letter => $slot) {
-                $cells = [];
-                foreach ($days as $date) {
-                    $cells[] = $this->cell($date, $slot['start'], $slot['end'], $reservations);
-                }
-                $rows[] = ['shift' => $label, 'letter' => $letter, 'start' => $slot['start'], 'end' => $slot['end'], 'cells' => $cells];
-            }
-        }
+        [$monday, $days, $rows, $reservations] = $this->week($request, $lab, $term, ['Aprovada', 'Pendente']);
 
         $manage = $request->user()->managesLabArea($area);
         $pending = LabReservation::with(['laboratorio', 'solicitante'])->where('status', 'Pendente')
@@ -88,6 +68,55 @@ class LabReservationController extends Controller
                 'manual' => $reservations->where('origem', 'manual')->where('status', 'Aprovada')->count(),
             ],
         ]);
+    }
+
+    /**
+     * Semana exibida (a pedida; senão a atual, ou o início do semestre se ainda não começou)
+     * e a grade do laboratório: linhas = blocos A–F/A–E/A–D, colunas = seg–sáb.
+     */
+    private function week(Request $request, ?Room $lab, ?AcademicTerm $term, array $statuses): array
+    {
+        try {
+            $reference = $request->filled('semana') ? Carbon::parse($request->input('semana')) : null;
+        } catch (\Throwable) {
+            $reference = null;
+        }
+        $reference ??= ($term?->starts_at && now()->lt($term->starts_at)) ? $term->starts_at->copy() : now();
+        $monday = $reference->copy()->startOfWeek(Carbon::MONDAY);
+        $days = collect(range(0, 5))->map(fn ($i) => $monday->copy()->addDays($i));
+
+        $reservations = $lab ? LabReservation::with(['turma.subject', 'turma.assignments.professor', 'solicitante'])
+            ->where('laboratorio_id', $lab->id)->whereIn('status', $statuses)
+            ->where(fn ($q) => $q->where('recorrente', true)->orWhereBetween('data', [$monday->toDateString(), $monday->copy()->addDays(6)->toDateString()]))
+            ->get() : collect();
+
+        $rows = [];
+        foreach (['MANHÃ' => 'Manhã', 'TARDE' => 'Tarde', 'NOITE' => 'Noite'] as $shift => $label) {
+            foreach (TimeBlocks::forShift($shift) as $letter => $slot) {
+                $cells = [];
+                foreach ($days as $date) {
+                    $cells[] = $this->cell($date, $slot['start'], $slot['end'], $reservations);
+                }
+                $rows[] = ['shift' => $label, 'letter' => $letter, 'start' => $slot['start'], 'end' => $slot['end'], 'cells' => $cells];
+            }
+        }
+
+        return [$monday, $days, $rows, $reservations];
+    }
+
+    /**
+     * Calendário público (sem login): ocupação aprovada de cada laboratório na semana.
+     * Não mostra pedidos pendentes nem quem pediu.
+     */
+    public function publicCalendar(Request $request)
+    {
+        $area = array_key_exists((string) $request->input('area'), LabAreas::AREAS) ? (string) $request->input('area') : 'ti';
+        $labs = Room::whereIn('type', LabAreas::types($area))->where('active', true)->orderBy('code')->get();
+        $lab = $labs->firstWhere('id', $request->integer('lab')) ?? $labs->first();
+        $term = AcademicTerm::where('status', '!=', 'closed')->orderByDesc('code')->first() ?? AcademicTerm::orderByDesc('code')->first();
+        [$monday, $days, $rows] = $this->week($request, $lab, $term, ['Aprovada']);
+
+        return view('labs.public', compact('area', 'labs', 'lab', 'term', 'monday', 'days', 'rows'));
     }
 
     /** O que ocupa o laboratório numa data e faixa: aula regular, reserva, pedido pendente, livre ou fechado. */

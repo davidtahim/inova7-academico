@@ -217,4 +217,25 @@ class LabReservationTest extends TestCase
         $this->assertSame('engenharia', User::where('email', 'g@x.local')->value('lab_area'));
         $this->actingAs($this->admin)->get(route('admin.users.create'))->assertOk()->assertSee('Área dos laboratórios');
     }
+
+    public function test_public_calendar_shows_only_approved_occupation_without_login(): void
+    {
+        $lp = $this->offering('Lógica de Programação', 20, 'Python', 25);
+        $this->assertTrue($this->apply($lp, [1 => ['A', 'B']], 'Li41')['saved']);
+        $teacher = User::create(['name' => 'Fulana de Tal', 'email' => 'f@x.local', 'password' => 'senha1234', 'role' => 'teacher', 'is_active' => true]);
+        LabReservation::create(['laboratorio_id' => $this->li41->id, 'solicitante_id' => $teacher->id, 'tipo_solicitacao' => 'Prova', 'origem' => 'manual',
+            'titulo' => 'Prova de Redes', 'dia_semana' => 3, 'data' => '2027-03-03', 'hora_inicio' => '18:30', 'hora_fim' => '20:10', 'status' => 'Aprovada']);
+        LabReservation::create(['laboratorio_id' => $this->li41->id, 'solicitante_id' => $teacher->id, 'tipo_solicitacao' => 'Evento', 'origem' => 'manual',
+            'titulo' => 'Pedido Secreto', 'dia_semana' => 4, 'data' => '2027-03-04', 'hora_inicio' => '18:30', 'hora_fim' => '20:10', 'status' => 'Pendente']);
+
+        $this->get(route('labs.public', ['area' => 'ti', 'lab' => $this->li41->id, 'semana' => '2027-03-01']))
+            ->assertOk()
+            ->assertSee('Calendário dos laboratórios')
+            ->assertSee('Prova de Redes')
+            ->assertSee($lp->class_code)
+            ->assertSee('Livre')
+            ->assertDontSee('Pedido Secreto')
+            ->assertDontSee('Fulana de Tal')
+            ->assertSee('Entrar para pedir reserva');
+    }
 }
