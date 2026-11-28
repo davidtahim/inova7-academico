@@ -48,6 +48,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Dados reais: não entram no banco dos testes automatizados.
+        if (app()->environment('testing')) {
+            return;
+        }
         \$report = app(CatalogSync::class)->applyFile(database_path('data/catalogo/{$jsonName}'));
         logger()->info('Catálogo sincronizado ({$jsonName})', \$report);
     }

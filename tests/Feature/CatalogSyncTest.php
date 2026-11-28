@@ -58,6 +58,11 @@ class CatalogSyncTest extends TestCase
         $this->assertNotNull(Subject::where('code', 'X1')->first(), 'Disciplinas nunca são excluídas');
         $this->assertSame(1, CurriculumMatrix::where('code', 'GRA-MAT-2140-H')->firstOrFail()->disciplinesForOffering()->count());
 
+        // Estrutura antiga vazia no arquivo não apaga a do destino.
+        \Illuminate\Support\Facades\DB::table('curriculum_subject')->insert(['curriculum_matrix_id' => $m15->id, 'subject_id' => $lp->id, 'period' => 1, 'sequence' => 1]);
+        app(CatalogSync::class)->apply($file);
+        $this->assertSame(1, \Illuminate\Support\Facades\DB::table('curriculum_subject')->where('curriculum_matrix_id', $m15->id)->count());
+
         // Aplicar de novo não muda nada.
         $again = app(CatalogSync::class)->apply($file);
         $this->assertSame(0, $again['removed']);
