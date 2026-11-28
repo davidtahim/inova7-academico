@@ -59,14 +59,15 @@ class StudentHistoryImporter
                 $user = User::where('registration_number', $registration)->first();
                 $attributes = [
                     'name' => Str::title(Str::lower(trim($first['nome']))),
-                    'role' => 'student',
                     'curriculum_matrix_id' => $matrix?->id,
                     'shift' => $this->shift($first['turno']),
                 ];
                 if ($user) {
+                    // Aluno já cadastrado: atualiza matriz/turno; senha, perfil e status ficam como estão.
                     $user->fill($attributes)->save();
                 } else {
                     $user = User::create($attributes + [
+                        'role' => 'student',
                         'registration_number' => $registration,
                         'email' => $registration . '@' . self::EMAIL_DOMAIN,
                         'password' => 'senha1234',

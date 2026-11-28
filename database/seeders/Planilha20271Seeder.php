@@ -71,14 +71,17 @@ class Planilha20271Seeder extends Seeder
 
     private function seedAdmin(): void
     {
-        User::updateOrCreate(['email' => 'admin@inova7.local'], [
+        // firstOrCreate: em produção, um admin já existente mantém a senha atual.
+        $admin = User::firstOrCreate(['email' => 'admin@inova7.local'], [
             'name' => 'Administrador de TI',
             'password' => self::DEFAULT_PASSWORD,
             'role' => 'admin',
             'is_active' => true,
             'must_change_password' => true,
         ]);
-        $this->summary[] = 'Admin: admin@inova7.local / ' . self::DEFAULT_PASSWORD . ' (troca de senha no primeiro acesso)';
+        $this->summary[] = $admin->wasRecentlyCreated
+            ? 'Admin: admin@inova7.local / ' . self::DEFAULT_PASSWORD . ' (troca de senha no primeiro acesso)'
+            : 'Admin admin@inova7.local já existia: senha mantida';
     }
 
     /** @return array<string, Course> */
@@ -137,15 +140,23 @@ class Planilha20271Seeder extends Seeder
             ]);
 
             if ($email !== '') {
-                User::updateOrCreate(['email' => $email], [
-                    'name' => $name,
-                    'password' => self::DEFAULT_PASSWORD,
-                    'role' => 'teacher',
-                    'is_active' => true,
-                    'must_change_password' => true,
-                    'professor_id' => $professor->id,
-                    'registration_number' => $registration ?: null,
-                ]);
+                $user = User::where('email', $email)->first();
+                if ($user) {
+                    // Usuário existente (ex.: produção): só vincula ao cadastro docente.
+                    // Senha, perfil e status não são alterados.
+                    $user->forceFill(['professor_id' => $professor->id])->save();
+                } else {
+                    User::create([
+                        'name' => $name,
+                        'email' => $email,
+                        'password' => self::DEFAULT_PASSWORD,
+                        'role' => 'teacher',
+                        'is_active' => true,
+                        'must_change_password' => true,
+                        'professor_id' => $professor->id,
+                        'registration_number' => User::where('registration_number', $registration)->exists() ? null : ($registration ?: null),
+                    ]);
+                }
             }
 
             $professors->push($professor);
