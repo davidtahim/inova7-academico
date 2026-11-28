@@ -20,11 +20,10 @@
                 </h2>
                 <p class="text-muted mb-0">
                     @if ($ownArea)
-                        Formulário CCG-FOR-02. Marque os horários em que você <strong>prefere</strong> dar aula e os em que
-                        <strong>pode</strong> dar aula, se precisar. Horários não marcados contam como indisponíveis
-                        para a coordenação e para a montagem automática.
+                        Formulário CCG-FOR-02. Marque os horários em que você <strong>pode dar aula</strong> e destaque com
+                        <strong>Prefiro</strong> os melhores. O que ficar sem marcação conta como <strong>não posso</strong>.
                     @else
-                        Formulário CCG-FOR-02 do semestre {{ $term?->code }}. Horários não marcados contam como indisponíveis.
+                        Formulário CCG-FOR-02 do semestre {{ $term?->code }}. ✓ pode dar aula · ★ prefere · sem marcação: não pode.
                     @endif
                 </p>
             </div>

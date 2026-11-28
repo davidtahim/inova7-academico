@@ -894,7 +894,7 @@ class UserLoginTest extends TestCase
 
         // O professor preenche a própria grade (CCG-FOR-02), como na tela da coordenação.
         $response->assertOk();
-        $response->assertSee('clique ou arraste', false);
+        $response->assertSee('Clique ou arraste nos horários', false);
         $response->assertSee('ag-cell', false);
         $response->assertDontSee('A disponibilidade é preenchida pela oferta Ubíqua');
         $response->assertDontSee('name="subjects[]"');

@@ -12,10 +12,19 @@
     $dayNames = [1 => 'segunda', 2 => 'terça', 3 => 'quarta', 4 => 'quinta', 5 => 'sexta', 6 => 'sábado'];
     // Turnos e letras dos blocos, como na grade das turmas (A, B, C…).
     $shifts = [['Manhã', 0, 6], ['Tarde', 6, 5], ['Noite', 11, 4]];
+    // Linguagem do professor: "posso" é a marcação principal; "prefiro" destaca os melhores
+    // horários; "não posso" apaga. (No banco: available / preferred / unavailable.)
     $states = [
-        'preferred' => ['Preferido', '★', 'Prefiro dar aula neste horário'],
-        'available' => ['Disponível', '✓', 'Posso dar aula, se precisar'],
-        'unavailable' => ['Indisponível', '', 'Não posso'],
+        'available' => ['Posso dar aula', '✓', 'Você pode ter aula neste horário. É a marcação principal.'],
+        'preferred' => ['Prefiro', '★', 'Seus melhores horários: a coordenação e a montagem automática usam estes primeiro.'],
+        'unavailable' => ['Não posso', '', 'Apaga a marcação: nunca haverá aula sua neste horário.'],
+    ];
+    // Atalhos: turno inteiro de segunda a sexta (e sábado de manhã).
+    $presets = [
+        ['Noites, seg a sex', array_column(array_slice($timeSlots, 11, 4), 'start'), [1, 2, 3, 4, 5]],
+        ['Manhãs, seg a sex', array_column(array_slice($timeSlots, 0, 6), 'start'), [1, 2, 3, 4, 5]],
+        ['Tardes, seg a sex', array_column(array_slice($timeSlots, 6, 5), 'start'), [1, 2, 3, 4, 5]],
+        ['Sábado de manhã', array_column(array_slice($timeSlots, 0, 6), 'start'), [6]],
     ];
     $gridId = 'ag-' . $professor->id;
 @endphp
@@ -40,31 +49,37 @@
 
     <div class="card border-0 shadow-sm">
         <div class="card-body">
-            {{-- Barra: pincel, ações e situação do salvamento --}}
-            <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-                @if ($isEditable)
-                    <div class="btn-group ag-brushes" role="radiogroup" aria-label="Marcar horários como">
-                        @foreach ($states as $value => [$label, $icon, $hint])
-                            <input type="radio" class="btn-check" name="{{ $gridId }}-brush" id="{{ $gridId }}-brush-{{ $value }}" value="{{ $value }}" @checked($value === 'preferred') autocomplete="off">
-                            <label class="btn btn-outline-secondary ag-brush ag-brush-{{ $value }}" for="{{ $gridId }}-brush-{{ $value }}" title="{{ $hint }}">
-                                <span class="ag-swatch ag-{{ $value }}" aria-hidden="true">{{ $icon }}</span> {{ $label }}
-                            </label>
-                        @endforeach
-                    </div>
-                    <button type="button" class="btn btn-sm btn-link text-danger" data-ag-clear>Limpar tudo</button>
-                @endif
-                <span class="ms-auto small ag-status" data-ag-status role="status" aria-live="polite">
-                    @if ($isEditable)
-                        <span class="text-success">● Tudo salvo</span>
-                    @endif
-                </span>
-            </div>
             @if ($isEditable)
-                <p class="small text-muted mb-2">
-                    Escolha o tipo acima e <strong>clique ou arraste</strong> sobre os horários.
-                    Clique no <strong>dia</strong> ou no <strong>horário</strong> para preencher a coluna ou a linha inteira.
-                    As mudanças são salvas sozinhas.
-                </p>
+                {{-- Passo 1: o que marcar. Passo 2: onde (grade ou atalhos). --}}
+                <div class="d-flex flex-wrap align-items-baseline gap-2 mb-2">
+                    <span class="ag-step">1</span><strong>O que você quer marcar?</strong>
+                    <span class="ms-auto small ag-status" data-ag-status role="status" aria-live="polite"><span class="text-success">● Tudo salvo</span></span>
+                </div>
+                <div class="row g-2 mb-3 ag-options" role="radiogroup" aria-label="Marcar horários como">
+                    @foreach ($states as $value => [$label, $icon, $hint])
+                        <div class="col-md-4">
+                            <input type="radio" class="btn-check" name="{{ $gridId }}-brush" id="{{ $gridId }}-brush-{{ $value }}" value="{{ $value }}" @checked($value === 'available') autocomplete="off">
+                            <label class="ag-option ag-option-{{ $value }}" for="{{ $gridId }}-brush-{{ $value }}">
+                                <span class="ag-swatch ag-{{ $value }}" aria-hidden="true">{{ $icon ?: '–' }}</span>
+                                <span>
+                                    <span class="d-block fw-semibold">{{ $label }}</span>
+                                    <span class="d-block small text-muted">{{ $hint }}</span>
+                                </span>
+                            </label>
+                        </div>
+                    @endforeach
+                </div>
+
+                <div class="d-flex flex-wrap align-items-baseline gap-2 mb-2">
+                    <span class="ag-step">2</span><strong>Onde?</strong>
+                    <span class="small text-muted">Clique ou arraste nos horários. O dia e o horário no cabeçalho preenchem a coluna ou a linha. Ou use um atalho:</span>
+                </div>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    @foreach ($presets as [$presetLabel, $starts, $presetDays])
+                        <button type="button" class="btn btn-sm btn-outline-primary" data-ag-preset data-starts="{{ implode(',', $starts) }}" data-days="{{ implode(',', $presetDays) }}">{{ $presetLabel }}</button>
+                    @endforeach
+                    <button type="button" class="btn btn-sm btn-outline-danger ms-md-auto" data-ag-clear>Limpar tudo</button>
+                </div>
             @endif
 
             <div class="table-responsive">
@@ -102,7 +117,7 @@
                                     @foreach ($days as $num => $day)
                                         @php $status = $savedAvailabilities[$num][$slot['start'] . ' - ' . $slot['end']] ?? 'unavailable'; @endphp
                                         <td class="p-0">
-                                            <button type="button" class="ag-cell ag-{{ $status }}" data-weekday="{{ $num }}" data-start="{{ $slot['start'] }}" data-end="{{ $slot['end'] }}"
+                                            <button type="button" class="ag-cell ag-{{ $status }}" data-weekday="{{ $num }}" data-start="{{ $slot['start'] }}" data-end="{{ $slot['end'] }}" data-shift="{{ $shiftName }}" data-letter="{{ $letter }}"
                                                 data-status="{{ $status }}" aria-label="{{ ucfirst($dayNames[$num]) }}, {{ $slot['start'] }}: {{ $states[$status][0] }}"
                                                 @disabled(! $isEditable)>
                                                 <span aria-hidden="true">{{ $states[$status][1] }}</span>
@@ -116,11 +131,43 @@
                 </table>
             </div>
 
-            <div class="d-flex flex-wrap gap-3 small mt-3" aria-live="polite">
-                @foreach ($states as $value => [$label, $icon, $hint])
-                    <span><span class="ag-swatch ag-{{ $value }}" aria-hidden="true">{{ $icon }}</span> {{ $label }}: <strong data-ag-count="{{ $value }}">{{ ['preferred' => $preferredCount, 'available' => $availableCount, 'unavailable' => $unavailableCount][$value] }}</strong></span>
-                @endforeach
-                <span class="text-muted ms-auto">{{ $term ? 'Semestre ' . $term->code : '' }}</span>
+            {{-- Resumo em texto: confere o que foi marcado sem ler a grade célula a célula. --}}
+            <div class="ag-summary mt-3" aria-live="polite">
+                <div class="d-flex flex-wrap gap-3 small mb-1">
+                    <span><span class="ag-swatch ag-available" aria-hidden="true">✓</span> Posso: <strong data-ag-count="available">{{ $availableCount }}</strong></span>
+                    <span><span class="ag-swatch ag-preferred" aria-hidden="true">★</span> Prefiro: <strong data-ag-count="preferred">{{ $preferredCount }}</strong></span>
+                    <span class="text-muted">Demais horários: não posso</span>
+                    <span class="text-muted ms-auto">{{ $term ? 'Semestre ' . $term->code : '' }}</span>
+                </div>
+                @php
+                    // Mesmo resumo que o JavaScript atualiza ao editar (também vale para somente leitura).
+                    $summaryLines = [];
+                    foreach ($days as $num => $day) {
+                        $parts = [];
+                        foreach ($shifts as [$shiftName, $offset, $count]) {
+                            $letters = [];
+                            foreach (array_slice($timeSlots, $offset, $count) as $i => $slot) {
+                                $st = $savedAvailabilities[$num][$slot['start'] . ' - ' . $slot['end']] ?? 'unavailable';
+                                if ($st !== 'unavailable') {
+                                    $letters[] = chr(65 + $i) . ($st === 'preferred' ? '★' : '');
+                                }
+                            }
+                            if ($letters) {
+                                $parts[] = $shiftName . ' ' . implode(' ', $letters);
+                            }
+                        }
+                        if ($parts) {
+                            $summaryLines[] = [$day, implode(' · ', $parts)];
+                        }
+                    }
+                @endphp
+                <ul class="list-unstyled small mb-0" data-ag-summary>
+                    @forelse ($summaryLines as [$day, $text])
+                        <li><strong>{{ $day }}</strong> — {{ $text }}</li>
+                    @empty
+                        <li class="text-warning-emphasis">Nenhum horário marcado ainda: para a coordenação, {{ $isEditable ? 'você não pode' : 'o professor não pode' }} dar aula em nenhum horário.</li>
+                    @endforelse
+                </ul>
             </div>
         </div>
     </div>
@@ -140,12 +187,16 @@
     .ag-cell:not(:disabled) { cursor: pointer; }
     .ag-cell:not(:disabled):hover { box-shadow: inset 0 0 0 2px rgba(12, 61, 103, .35); }
     .ag-cell:focus-visible { outline: 3px solid #0c3d67; outline-offset: -3px; position: relative; }
-    .ag-preferred { background: #198754; color: #fff; }
+    .ag-preferred { background: #0f6b40; color: #fff; }
     .ag-available { background: #9fd3b3; color: #0f5132; }
+    .ag-step { display: inline-grid; place-items: center; width: 1.5rem; height: 1.5rem; border-radius: 50%; background: #0c3d67; color: #fff; font-size: .8rem; font-weight: 700; flex-shrink: 0; }
+    .ag-option { display: flex; gap: .75rem; align-items: flex-start; height: 100%; padding: .7rem .85rem; border: 2px solid #dee2e6; border-radius: .6rem; cursor: pointer; background: #fff; transition: border-color .12s, background-color .12s; }
+    .ag-option:hover { border-color: #9fb7cc; }
+    .btn-check:checked + .ag-option { border-color: #0c3d67; background: #f1f6fb; box-shadow: 0 0 0 3px rgba(12, 61, 103, .12); }
+    .btn-check:focus-visible + .ag-option { outline: 3px solid #0c3d67; outline-offset: 2px; }
+    .ag-option .ag-swatch { width: 1.6rem; height: 1.6rem; font-size: .9rem; margin-top: .1rem; flex-shrink: 0; }
     .ag-unavailable { background: #f8f9fa; color: #adb5bd; }
     .ag-swatch { display: inline-flex; align-items: center; justify-content: center; width: 1.1rem; height: 1.1rem; border-radius: .25rem; font-size: .7rem; border: 1px solid rgba(0, 0, 0, .1); vertical-align: -3px; }
-    .ag-brush { font-size: .875rem; }
-    .btn-check:checked + .ag-brush { background: #0c3d67; border-color: #0c3d67; color: #fff; }
     @media (max-width: 575.98px) {
         .ag-time-col { width: 4.4rem; white-space: nowrap; font-size: .72rem; }
         .ag-time-col .ag-head-btn { padding-left: .15rem; }
@@ -189,9 +240,27 @@
             }
 
             function counts() {
-                ['preferred', 'available', 'unavailable'].forEach(v => {
-                    root.querySelector('[data-ag-count="' + v + '"]').textContent = cells.filter(c => c.dataset.status === v).length;
+                ['preferred', 'available'].forEach(v => {
+                    const el = root.querySelector('[data-ag-count="' + v + '"]');
+                    if (el) el.textContent = cells.filter(c => c.dataset.status === v).length;
                 });
+                summary();
+            }
+
+            // Resumo em texto por dia: "Seg — Noite A★ B · Tarde C".
+            function summary() {
+                const list = root.querySelector('[data-ag-summary]');
+                if (!list) return;
+                const short = { 1: 'Seg', 2: 'Ter', 3: 'Qua', 4: 'Qui', 5: 'Sex', 6: 'Sáb' };
+                const lines = [];
+                for (let d = 1; d <= 6; d++) {
+                    const marked = cells.filter(c => c.dataset.weekday === String(d) && c.dataset.status !== 'unavailable');
+                    if (!marked.length) continue;
+                    const byShift = {};
+                    marked.forEach(c => { (byShift[c.dataset.shift] ||= []).push(c.dataset.letter + (c.dataset.status === 'preferred' ? '★' : '')); });
+                    lines.push('<li><strong>' + short[d] + '</strong> — ' + Object.entries(byShift).map(([shift, letters]) => shift + ' ' + letters.join(' ')).join(' · ') + '</li>');
+                }
+                list.innerHTML = lines.length ? lines.join('') : '<li class="text-warning-emphasis">Nenhum horário marcado ainda: para a coordenação, você não pode dar aula em nenhum horário.</li>';
             }
 
             function setStatus(state, detail) {
@@ -274,6 +343,11 @@
             }
             root.querySelectorAll('[data-ag-fill-day]').forEach(b => b.addEventListener('click', () => fill(cells.filter(c => c.dataset.weekday === b.dataset.agFillDay))));
             root.querySelectorAll('[data-ag-fill-row]').forEach(b => b.addEventListener('click', () => fill(cells.filter(c => c.dataset.start === b.dataset.agFillRow))));
+            // Atalhos de turno: aplicam a opção escolhida (ou desfazem, se já estiver toda assim).
+            root.querySelectorAll('[data-ag-preset]').forEach(b => b.addEventListener('click', () => {
+                const starts = b.dataset.starts.split(','), days = b.dataset.days.split(',');
+                fill(cells.filter(c => starts.includes(c.dataset.start) && days.includes(c.dataset.weekday)));
+            }));
             root.querySelector('[data-ag-clear]').addEventListener('click', () => {
                 if (confirm('Marcar todos os horários como indisponíveis?')) {
                     let any = false;
@@ -294,6 +368,7 @@
                 }
             });
             window.addEventListener('beforeunload', ev => { if (failed) { ev.preventDefault(); ev.returnValue = ''; } });
+            summary();
         })();
     </script>
 @endif
