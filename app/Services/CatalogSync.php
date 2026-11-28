@@ -135,8 +135,9 @@ class CatalogSync
                     $report['removed']++;
                 }
 
-                // Estrutura antiga (consultas): substitui pela do arquivo.
-                if (array_key_exists('subjects', $m)) {
+                // Estrutura antiga (consultas): substitui pela do arquivo só quando ele a traz
+                // preenchida; vazia no arquivo não apaga a do destino.
+                if (! empty($m['subjects'])) {
                     DB::table('curriculum_subject')->where('curriculum_matrix_id', $matrix->id)->delete();
                     foreach ($m['subjects'] as $row) {
                         if ($sid = $subjectId($row['subject_code'])) {
