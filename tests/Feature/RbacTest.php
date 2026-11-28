@@ -98,11 +98,14 @@ class RbacTest extends TestCase
         $matrix = $this->matrix();
         $subject = Subject::create(['code' => 'SI101', 'name' => 'Algoritmos']);
 
-        $this->actingAs($coordinator)->get(route('admin.matrices.disciplines.show', $matrix))->assertOk();
+        // A grade da matriz agora é a visão "por matriz" da tela de disciplinas.
+        $gradeUrl = route('admin.subjects.index', ['matriz' => $matrix->id]);
+        $this->actingAs($coordinator)->get(route('admin.matrices.disciplines.show', $matrix))->assertRedirect($gradeUrl);
+        $this->actingAs($coordinator)->get($gradeUrl)->assertOk()->assertSee('Adicionar à ' . $matrix->name);
 
         $this->actingAs($coordinator)
             ->post(route('admin.matrices.disciplines.store', $matrix), $this->linkPayload($subject))
-            ->assertRedirect(route('admin.matrices.disciplines.show', $matrix));
+            ->assertRedirect($gradeUrl . '#periodo-1');
 
         $link = CurriculumMatrixDiscipline::firstOrFail();
         $this->assertSame('LABORATORIO_INFORMATICA', $link->required_room_type);
@@ -115,7 +118,7 @@ class RbacTest extends TestCase
                 'offering_type' => 'OBRIGATORIA',
                 'allows_shared_class' => '1',
             ])
-            ->assertRedirect(route('admin.matrices.disciplines.show', $matrix));
+            ->assertRedirect($gradeUrl . '#periodo-2');
 
         $link->refresh();
         $this->assertSame(2, $link->period);

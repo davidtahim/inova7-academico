@@ -17,6 +17,11 @@
                             @if (isset($subject->id))
                                 @method('PUT')
                             @endif
+                            @if (request('matriz'))
+                                {{-- Veio da grade de uma matriz: depois de salvar, volta para vincular. --}}
+                                <input type="hidden" name="matriz" value="{{ request('matriz') }}">
+                                <div class="alert alert-info small">Depois de salvar, você volta para a matriz para escolher o período e as aulas por semana.</div>
+                            @endif
 
                             <div class="mb-3">
                                 <label class="form-label">Código</label>
@@ -76,7 +81,7 @@
                             </div>
 
                             <div class="d-flex justify-content-end gap-2">
-                                <a href="{{ route('admin.subjects.index') }}"
+                                <a href="{{ route('admin.subjects.index', array_filter(['matriz' => request('matriz')])) }}"
                                     class="btn btn-outline-secondary">Cancelar</a>
                                 <button type="submit" class="btn btn-primary">Salvar</button>
                             </div>

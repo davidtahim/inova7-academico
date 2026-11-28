@@ -82,6 +82,9 @@
                 @if (session('warning'))
                     <div class="alert alert-warning mt-3">{{ session('warning') }}</div>
                 @endif
+                @if (session('error'))
+                    <div class="alert alert-danger mt-3" role="alert">{{ session('error') }}</div>
+                @endif
                 @yield('content')
             </main>
         </div>
