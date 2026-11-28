@@ -41,6 +41,13 @@
                                 <div class="form-text">Ex.: Bacharelado, Licenciatura, Tecnólogo.</div>
                             </div>
 
+                            <div class="mb-3">
+                                <label class="form-label" for="coordinator_name">Coordenador(a) do curso</label>
+                                <input type="text" id="coordinator_name" name="coordinator_name" class="form-control" maxlength="255"
+                                    value="{{ old('coordinator_name', $course->coordinator_name ?? '') }}" placeholder="Ex.: Prof. Maria Souza">
+                                <div class="form-text">Sai no formulário CCG-FOR-02 dos professores: "SISTEMAS DE INFORMAÇÃO – PROF. …".</div>
+                            </div>
+
                             <div class="form-check form-switch mb-4">
                                 <input class="form-check-input" type="checkbox" name="active" value="1"
                                     {{ old('active', $course->active ?? true) ? 'checked' : '' }}>

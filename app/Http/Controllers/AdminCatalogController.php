@@ -222,6 +222,7 @@ class AdminCatalogController extends Controller
             'code' => ['required', 'string', 'max:50', 'unique:courses,code'],
             'name' => ['required', 'string', 'max:255', $this->uniqueCourseName()],
             'degree' => ['nullable', 'string', 'max:255'],
+            'coordinator_name' => ['nullable', 'string', 'max:255'],
             'active' => ['nullable', 'boolean'],
         ]);
 
@@ -272,6 +273,7 @@ class AdminCatalogController extends Controller
             'code' => ['required', 'string', 'max:50', 'unique:courses,code,' . $course->id],
             'name' => ['required', 'string', 'max:255', $this->uniqueCourseName($course)],
             'degree' => ['nullable', 'string', 'max:255'],
+            'coordinator_name' => ['nullable', 'string', 'max:255'],
             'active' => ['nullable', 'boolean'],
         ]);
 
