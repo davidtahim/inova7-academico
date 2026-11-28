@@ -8,6 +8,7 @@ use App\Models\Room;
 use App\Services\GradeLaboratorioSyncService;
 use App\Services\LabRules;
 use App\Services\TimeBlocks;
+use App\Support\LabAreas;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -22,9 +23,23 @@ class LabReservationController extends Controller
 {
     public const MANUAL_TYPES = ['Avulsa' => 'Reserva avulsa', 'Evento' => 'Evento', 'Prova' => 'Prova', 'Monitoria' => 'Monitoria / estudo'];
 
+    /** Área exibida: a pedida; senão a do gestor; senão TI. */
+    private function area(Request $request): string
+    {
+        $area = (string) $request->input('area', $request->user()->isLabManager() ? $request->user()->lab_area : 'ti');
+
+        return array_key_exists($area, LabAreas::AREAS) ? $area : 'ti';
+    }
+
+    private function authorizeArea(Request $request, ?string $area): void
+    {
+        abort_unless($request->user()->managesLabArea($area), 403, 'Estes laboratórios são de outra área: só o gestor dela (ou o Administrador de TI) pode decidir.');
+    }
+
     public function index(Request $request)
     {
-        $labs = Room::where('type', LabRules::LAB)->orderByDesc('active')->orderBy('code')->get();
+        $area = $this->area($request);
+        $labs = Room::whereIn('type', LabAreas::types($area))->orderByDesc('active')->orderBy('code')->get();
         $lab = $labs->firstWhere('id', $request->integer('lab')) ?? $labs->first();
         $term = AcademicTerm::current();
 
@@ -50,18 +65,21 @@ class LabReservationController extends Controller
             }
         }
 
-        $manage = Gate::allows('manage-labs');
+        $manage = $request->user()->managesLabArea($area);
         $pending = LabReservation::with(['laboratorio', 'solicitante'])->where('status', 'Pendente')
+            ->whereHas('laboratorio', fn ($q) => $q->whereIn('type', LabAreas::types($area)))
             ->when(! $manage, fn ($q) => $q->where('solicitante_id', $request->user()->id))
             ->orderBy('data')->orderBy('hora_inicio')->get();
 
-        // Aulas teóricas ocupando laboratório na grade (Art. 8º III): lista para corrigir.
+        // Turmas que não exigem este tipo de laboratório ocupando-o na grade (Art. 8º III): lista para corrigir.
         $theoryInLabs = LabReservation::with('turma.subject', 'turma.matrixDiscipline', 'laboratorio')
             ->where('origem', 'grade')->where('status', 'Aprovada')->when($term, fn ($q) => $q->where('academic_term_id', $term->id))
-            ->get()->filter(fn ($r) => $r->turma && ! LabRules::offeringRequiresLab($r->turma))
+            ->whereHas('laboratorio', fn ($q) => $q->whereIn('type', LabAreas::types($area)))
+            ->get()->filter(fn ($r) => $r->turma && $r->laboratorio && LabRules::requiredLabType($r->turma->subject, $r->turma->matrixDiscipline) !== $r->laboratorio->type)
             ->unique('turma_id')->values();
 
         return view('labs.index', [
+            'area' => $area,
             'theoryInLabs' => $theoryInLabs,
             'labs' => $labs, 'lab' => $lab, 'term' => $term, 'days' => $days, 'monday' => $monday, 'rows' => $rows,
             'pending' => $pending, 'manage' => $manage, 'types' => self::MANUAL_TYPES,
@@ -94,7 +112,7 @@ class LabReservationController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'laboratorio_id' => ['required', Rule::exists('rooms', 'id')->where('type', LabRules::LAB)],
+            'laboratorio_id' => ['required', Rule::exists('rooms', 'id')->whereIn('type', LabAreas::labTypes())],
             'tipo_solicitacao' => ['required', Rule::in(array_keys(self::MANUAL_TYPES))],
             'titulo' => ['required', 'string', 'max:150'],
             'data' => ['required', 'date', 'after_or_equal:today'],
@@ -132,20 +150,21 @@ class LabReservationController extends Controller
             return back()->withInput()->with('error', $conflict);
         }
 
-        // O NTI cadastra já aprovada; os demais perfis pedem e aguardam aprovação.
-        $approve = Gate::allows('manage-labs');
+        // O gestor da área (ou o Admin TI) cadastra já aprovada; os demais pedem e aguardam aprovação.
+        $approve = $request->user()->managesLabArea($lab->labArea());
         $reservation->status = $approve ? 'Aprovada' : 'Pendente';
         $reservation->aprovado_por = $approve ? $request->user()->id : null;
         $reservation->save();
 
         $warning = $lab->computers && ($data['participantes'] ?? 0) > $lab->computers ? " Atenção: {$data['participantes']} participantes para {$lab->computers} computadores." : '';
 
-        return redirect()->route('labs.index', ['lab' => $lab->id, 'semana' => $date->toDateString()])
-            ->with('success', ($approve ? 'Reserva registrada e aprovada.' : 'Pedido enviado ao NTI: aguarda aprovação.') . $warning);
+        return redirect()->route('labs.index', ['area' => $lab->labArea(), 'lab' => $lab->id, 'semana' => $date->toDateString()])
+            ->with('success', ($approve ? 'Reserva registrada e aprovada.' : 'Pedido enviado ao gestor dos laboratórios: aguarda aprovação.') . $warning);
     }
 
     public function approve(Request $request, LabReservation $reservation)
     {
+        $this->authorizeArea($request, $reservation->laboratorio?->labArea());
         if ($conflict = $this->conflict($reservation)) {
             return back()->with('error', 'Não aprovada: ' . $conflict);
         }
@@ -156,6 +175,7 @@ class LabReservationController extends Controller
 
     public function reject(Request $request, LabReservation $reservation)
     {
+        $this->authorizeArea($request, $reservation->laboratorio?->labArea());
         $reservation->update(['status' => 'Recusada', 'aprovado_por' => $request->user()->id, 'observacoes' => trim(($reservation->observacoes ?? '') . "\nRecusada: " . $request->input('motivo', 'sem motivo informado'))]);
 
         return back()->with('success', 'Pedido recusado.');
@@ -164,7 +184,7 @@ class LabReservationController extends Controller
     public function cancel(Request $request, LabReservation $reservation)
     {
         abort_if($reservation->isFromGrade(), 403, 'Aula regular é cancelada pela grade horária (tire a aula ou troque a sala na montagem).');
-        abort_unless(Gate::allows('manage-labs') || (int) $reservation->solicitante_id === (int) $request->user()->id, 403);
+        abort_unless($request->user()->managesLabArea($reservation->laboratorio?->labArea()) || (int) $reservation->solicitante_id === (int) $request->user()->id, 403);
         $reservation->update(['status' => 'Cancelada']);
 
         return back()->with('success', 'Reserva cancelada: o horário ficou livre.');
@@ -202,27 +222,37 @@ class LabReservationController extends Controller
 
     // ---------------------------------------------------------------- cadastro dos laboratórios
 
-    public function rooms()
+    public function rooms(Request $request)
     {
-        return view('labs.rooms', ['labs' => Room::where('type', LabRules::LAB)->orderBy('code')->get()]);
+        $area = $this->area($request);
+        $this->authorizeArea($request, $area);
+
+        return view('labs.rooms', [
+            'area' => $area,
+            'labs' => Room::whereIn('type', LabAreas::types($area))->orderBy('code')->get(),
+        ]);
     }
 
     public function storeRoom(Request $request)
     {
+        $area = $this->area($request);
+        $this->authorizeArea($request, $area);
         $data = $request->validate([
             'code' => ['required', 'string', 'max:30', 'unique:rooms,code'],
             'name' => ['nullable', 'string', 'max:100'],
+            'type' => ['required', Rule::in(LabAreas::types($area))],
             'computers' => ['nullable', 'integer', 'min:0', 'max:500'],
             'softwares' => ['nullable', 'string', 'max:4000'],
         ]);
-        Room::create($data + ['name' => $data['name'] ?? $data['code'], 'type' => LabRules::LAB, 'active' => true]);
+        Room::create($data + ['name' => $data['name'] ?? $data['code'], 'active' => true]);
 
         return back()->with('success', "Laboratório {$data['code']} cadastrado.");
     }
 
     public function updateRoom(Request $request, Room $room)
     {
-        abort_unless($room->isComputerLab(), 404);
+        abort_unless($room->isLab(), 404);
+        $this->authorizeArea($request, $room->labArea());
         $data = $request->validate([
             'name' => ['nullable', 'string', 'max:100'],
             'computers' => ['nullable', 'integer', 'min:0', 'max:500'],

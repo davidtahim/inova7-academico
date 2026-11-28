@@ -11,10 +11,10 @@
     <div class="container-fluid py-3 px-0">
         <div class="d-flex flex-wrap gap-2 align-items-end justify-content-between mb-3">
             <div>
-                <h2 class="h4 mb-1">Laboratórios de informática{{ $term ? ' — ' . $term->code : '' }}</h2>
+                <h2 class="h4 mb-1">Laboratórios — {{ \App\Support\LabAreas::label($area) }}{{ $term ? ' · ' . $term->code : '' }}</h2>
                 <p class="text-muted small mb-0">
                     Aulas regulares entram sozinhas a partir da grade horária (Art. 16 I). Reservas avulsas, eventos e provas
-                    são pedidas aqui e aprovadas pelo NTI. Horários livres ficam para monitoria e estudo (Art. 16 II).
+                    são pedidas aqui e aprovadas pelo gestor dos laboratórios da área. Horários livres ficam para monitoria e estudo (Art. 16 II).
                 </p>
             </div>
             <div class="d-flex flex-wrap gap-2">
@@ -24,21 +24,28 @@
                         @csrf
                         <button type="submit" class="btn btn-outline-secondary" title="Recria as reservas das aulas regulares a partir da grade do semestre">Sincronizar com a grade</button>
                     </form>
-                    <a href="{{ route('labs.rooms') }}" class="btn btn-outline-secondary">Cadastro de laboratórios</a>
+                    <a href="{{ route('labs.rooms', ['area' => $area]) }}" class="btn btn-outline-secondary">Cadastro de laboratórios</a>
                 @endif
             </div>
         </div>
 
+        {{-- Áreas: TI (NTI), Saúde, Comunicação, Engenharias, Arquitetura --}}
+        <nav class="d-flex flex-wrap gap-2 mb-3" aria-label="Áreas de laboratórios">
+            @foreach (\App\Support\LabAreas::options() as $key => $label)
+                <a href="{{ route('labs.index', ['area' => $key]) }}" class="btn btn-sm {{ $area === $key ? 'btn-primary' : 'btn-outline-primary' }}" @if ($area === $key) aria-current="page" @endif>{{ $label }}</a>
+            @endforeach
+        </nav>
+
         @if ($labs->isEmpty())
-            <div class="alert alert-warning">Nenhum laboratório de informática cadastrado.
-                @if ($manage) <a href="{{ route('labs.rooms') }}">Cadastre os laboratórios</a>. @endif
+            <div class="alert alert-warning">Nenhum laboratório de {{ \App\Support\LabAreas::label($area) }} cadastrado.
+                @if ($manage) <a href="{{ route('labs.rooms', ['area' => $area]) }}">Cadastre os laboratórios</a>. @endif
             </div>
         @else
             {{-- Pedidos pendentes: para o NTI decidir; para os demais, os próprios pedidos. --}}
             @if ($pending->isNotEmpty())
                 <section class="card border-0 shadow-sm mb-3 border-start border-4 border-warning" aria-labelledby="pending-title">
                     <div class="card-body">
-                        <h3 class="h6" id="pending-title">{{ $manage ? 'Pedidos aguardando o NTI' : 'Seus pedidos aguardando o NTI' }} ({{ $pending->count() }})</h3>
+                        <h3 class="h6" id="pending-title">{{ $manage ? 'Pedidos aguardando sua aprovação' : 'Seus pedidos aguardando o gestor' }} ({{ $pending->count() }})</h3>
                         <ul class="list-unstyled mb-0 d-grid gap-2">
                             @foreach ($pending as $p)
                                 <li class="d-flex flex-wrap align-items-center gap-2 small">
@@ -67,8 +74,8 @@
 
             @if ($theoryInLabs->isNotEmpty() && ($manage || Gate::allows('manage-planning')))
                 <details class="alert alert-warning small mb-3">
-                    <summary><strong>{{ $theoryInLabs->count() }} turma(s) teórica(s) ocupando laboratório na grade</strong> (Art. 8º III: laboratório só para carga prática).
-                        Cadastre a carga prática da disciplina ou troque a sala na montagem.</summary>
+                    <summary><strong>{{ $theoryInLabs->count() }} turma(s) ocupando laboratório sem exigi-lo</strong> (Art. 8º III: laboratório só para carga prática da área).
+                        Informe a carga prática / o tipo de laboratório da disciplina na matriz, ou troque a sala na montagem.</summary>
                     <ul class="mb-0 mt-2">
                         @foreach ($theoryInLabs->take(30) as $r)
                             <li>{{ $r->turma->subject?->name }} ({{ $r->turma->class_code }}) em {{ $r->laboratorio?->code }}
@@ -83,18 +90,18 @@
             {{-- Escolha do laboratório e da semana --}}
             <nav class="d-flex flex-wrap gap-2 mb-2" aria-label="Laboratórios">
                 @foreach ($labs as $l)
-                    <a href="{{ route('labs.index', ['lab' => $l->id, 'semana' => $monday->toDateString()]) }}"
+                    <a href="{{ route('labs.index', ['area' => $area, 'lab' => $l->id, 'semana' => $monday->toDateString()]) }}"
                         class="btn btn-sm {{ $lab && $l->id === $lab->id ? 'btn-dark' : 'btn-outline-secondary' }} {{ $l->active ? '' : 'opacity-50' }}"
                         @if ($lab && $l->id === $lab->id) aria-current="page" @endif>
-                        {{ $l->code }}{{ $l->computers ? ' · ' . $l->computers . ' PCs' : '' }}{{ $l->active ? '' : ' (inativo)' }}
+                        {{ $l->code }}{{ $l->computers ? ' · ' . $l->computers . ($l->isComputerLab() ? ' PCs' : ' vagas') : '' }}{{ $l->active ? '' : ' (inativo)' }}
                     </a>
                 @endforeach
             </nav>
             <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-                <a class="btn btn-sm btn-outline-secondary" href="{{ route('labs.index', ['lab' => $lab->id, 'semana' => $monday->copy()->subWeek()->toDateString()]) }}" aria-label="Semana anterior">‹</a>
+                <a class="btn btn-sm btn-outline-secondary" href="{{ route('labs.index', ['area' => $area, 'lab' => $lab->id, 'semana' => $monday->copy()->subWeek()->toDateString()]) }}" aria-label="Semana anterior">‹</a>
                 <strong class="small">Semana de {{ $weekLabel }}</strong>
-                <a class="btn btn-sm btn-outline-secondary" href="{{ route('labs.index', ['lab' => $lab->id, 'semana' => $monday->copy()->addWeek()->toDateString()]) }}" aria-label="Próxima semana">›</a>
-                <a class="btn btn-sm btn-link" href="{{ route('labs.index', ['lab' => $lab->id]) }}">Hoje</a>
+                <a class="btn btn-sm btn-outline-secondary" href="{{ route('labs.index', ['area' => $area, 'lab' => $lab->id, 'semana' => $monday->copy()->addWeek()->toDateString()]) }}" aria-label="Próxima semana">›</a>
+                <a class="btn btn-sm btn-link" href="{{ route('labs.index', ['area' => $area, 'lab' => $lab->id]) }}">Hoje</a>
                 <span class="ms-auto small text-muted">
                     {{ $stats['grade'] }} aulas regulares · {{ $stats['manual'] }} reservas aprovadas
                     @if ($lab->softwares) · <span title="{{ $lab->softwares }}">softwares: {{ \Illuminate\Support\Str::limit($lab->softwares, 60) }}</span> @endif
@@ -104,7 +111,7 @@
             <div class="d-flex flex-wrap gap-3 small mb-2" aria-hidden="true">
                 <span><span class="lab-chip lab-grade">Aula regular</span> grade prática (Art. 16 I)</span>
                 <span><span class="lab-chip lab-manual">Reserva</span> avulsa, evento ou prova</span>
-                <span><span class="lab-chip lab-pending">Pendente</span> aguardando o NTI</span>
+                <span><span class="lab-chip lab-pending">Pendente</span> aguardando o gestor</span>
                 <span><span class="lab-chip lab-free">Livre</span> monitoria e estudo (Art. 16 II)</span>
             </div>
 
@@ -176,7 +183,7 @@
             <form class="modal-content" method="POST" action="{{ route('labs.reservations.store') }}">
                 @csrf
                 <div class="modal-header">
-                    <h2 class="modal-title h5" id="reservationTitle">{{ $manage ? 'Nova reserva' : 'Pedir reserva ao NTI' }}</h2>
+                    <h2 class="modal-title h5" id="reservationTitle">{{ $manage ? 'Nova reserva' : 'Pedir reserva' }} — {{ \App\Support\LabAreas::label($area) }}</h2>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
                 <div class="modal-body">
@@ -185,7 +192,7 @@
                             <label class="form-label" for="res-lab">Laboratório *</label>
                             <select id="res-lab" name="laboratorio_id" class="form-select" required>
                                 @foreach ($labs->where('active', true) as $l)
-                                    <option value="{{ $l->id }}" @selected((int) old('laboratorio_id', $lab?->id) === $l->id)>{{ $l->code }}{{ $l->computers ? ' · ' . $l->computers . ' PCs' : '' }}</option>
+                                    <option value="{{ $l->id }}" @selected((int) old('laboratorio_id', $lab?->id) === $l->id)>{{ $l->code }}{{ $l->computers ? ' · ' . $l->computers . ($l->isComputerLab() ? ' PCs' : ' vagas') : '' }}</option>
                                 @endforeach
                             </select>
                         </div>

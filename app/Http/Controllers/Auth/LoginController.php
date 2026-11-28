@@ -67,6 +67,14 @@ class LoginController extends Controller
             return redirect()->route('teacher.dashboard');
         }
 
+        if ($user->isLabManager()) {
+            if ($user->must_change_password) {
+                return redirect()->route('profile.edit')->with('warning', 'Defina uma nova senha para continuar.');
+            }
+
+            return redirect()->route('labs.index', ['area' => $user->lab_area]);
+        }
+
         if ($user->isStaff()) {
             if ($user->must_change_password) {
                 return redirect()->route('profile.edit')->with('warning', 'Defina uma nova senha para continuar.');

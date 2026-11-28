@@ -73,7 +73,7 @@ class ScheduleAllocator
             $students = array_key_exists('student_count', $input) && $input['student_count'] !== null ? (int) $input['student_count'] : null;
             array_push($errors, ...LabRules::roomErrors($offering, $room, $students));
         }
-        if ($room?->isComputerLab() && $dayIntervals !== []) {
+        if ($room?->isLab() && $dayIntervals !== []) {
             // Reserva aprovada pelo NTI (prova, evento, avulsa) no mesmo laboratório e horário.
             array_push($errors, ...LabRules::reservationConflicts($offering, $room, $dayIntervals));
         }

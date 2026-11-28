@@ -162,4 +162,59 @@ class LabReservationTest extends TestCase
         ]);
         $this->assertSame('LABORATORIO_INFORMATICA', CurriculumMatrixDiscipline::where('subject_id', $subject->id)->value('required_room_type'));
     }
+
+    public function test_lab_managers_decide_only_for_their_area_and_admin_for_all(): void
+    {
+        $saudeLab = Room::create(['code' => 'LabSaude1', 'name' => 'Anatomia', 'type' => 'LABORATORIO_SAUDE', 'computers' => 40]);
+        $gestorTi = User::create(['name' => 'Gestor TI', 'email' => 'gti@x.local', 'password' => 'senha1234', 'role' => 'lab_manager', 'lab_area' => 'ti', 'is_active' => true]);
+        $gestorSaude = User::create(['name' => 'Gestora Saúde', 'email' => 'gs@x.local', 'password' => 'senha1234', 'role' => 'lab_manager', 'lab_area' => 'saude', 'is_active' => true]);
+        $this->assertSame('Gestor de laboratórios — TI (NTI)', $gestorTi->role_label);
+
+        $pedido = LabReservation::create(['laboratorio_id' => $this->li41->id, 'tipo_solicitacao' => 'Avulsa', 'origem' => 'manual', 'titulo' => 'Oficina',
+            'dia_semana' => 2, 'data' => '2027-03-02', 'hora_inicio' => '14:00', 'hora_fim' => '15:00', 'status' => 'Pendente']);
+        $this->actingAs($gestorSaude)->post(route('labs.reservations.approve', $pedido))->assertForbidden();
+        $this->actingAs($gestorTi)->post(route('labs.reservations.approve', $pedido))->assertSessionHas('success');
+
+        // Reserva criada pela gestora da Saúde no laboratório dela já entra aprovada.
+        $this->actingAs($gestorSaude)->post(route('labs.reservations.store'), [
+            'laboratorio_id' => $saudeLab->id, 'tipo_solicitacao' => 'Prova', 'titulo' => 'Prova prática',
+            'data' => '2027-03-03', 'hora_inicio' => '08:20', 'hora_fim' => '10:00',
+        ])->assertRedirect();
+        $this->assertSame('Aprovada', LabReservation::where('titulo', 'Prova prática')->value('status'));
+
+        $this->actingAs($gestorSaude)->get(route('labs.index'))->assertOk()->assertSee('Laboratórios — Saúde')->assertSee('LabSaude1');
+        $this->actingAs($gestorSaude)->get(route('labs.rooms', ['area' => 'ti']))->assertForbidden();
+        $this->actingAs($gestorSaude)->put(route('labs.rooms.update', $this->li41), ['computers' => 1])->assertForbidden();
+        $this->actingAs($this->admin)->get(route('labs.rooms', ['area' => 'saude']))->assertOk()->assertSee('LabSaude1');
+
+        // Gestor entra direto no painel da sua área.
+        $this->post('/logout');
+        $this->post('/login', ['email' => 'gs@x.local', 'password' => 'senha1234'])->assertRedirect(route('labs.index', ['area' => 'saude']));
+    }
+
+    public function test_other_areas_follow_the_same_grade_rules(): void
+    {
+        $saudeLab = Room::create(['code' => 'LabSaude1', 'name' => 'Anatomia', 'type' => 'LABORATORIO_SAUDE', 'computers' => 40]);
+        $anatomia = $this->offering('Anatomia', 0);
+        $anatomia->matrixDiscipline->update(['required_room_type' => 'LABORATORIO_SAUDE']);
+        $etica = $this->offering('Ética', 0);
+
+        $this->assertStringContainsString('exige Laboratório de Saúde', $this->apply($anatomia, [1 => ['A', 'B']], 'Li41')['errors'][0]);
+        $this->assertStringContainsString('não exige laboratório de saúde', $this->apply($etica, [1 => ['C', 'D']], 'LabSaude1')['errors'][0]);
+        $this->assertTrue($this->apply($anatomia, [1 => ['A', 'B']], 'LabSaude1')['saved']);
+        $this->assertSame($saudeLab->id, LabReservation::where('turma_id', $anatomia->id)->value('laboratorio_id'));
+    }
+
+    public function test_it_admin_registers_a_lab_manager_with_an_area(): void
+    {
+        $this->actingAs($this->admin)->post(route('admin.users.store'), [
+            'name' => 'Gestor', 'email' => 'g@x.local', 'role' => 'lab_manager', 'password' => 'senha1234', 'password_confirmation' => 'senha1234',
+        ])->assertSessionHasErrors('lab_area');
+
+        $this->actingAs($this->admin)->post(route('admin.users.store'), [
+            'name' => 'Gestor', 'email' => 'g@x.local', 'role' => 'lab_manager', 'lab_area' => 'engenharia', 'password' => 'senha1234', 'password_confirmation' => 'senha1234',
+        ]);
+        $this->assertSame('engenharia', User::where('email', 'g@x.local')->value('lab_area'));
+        $this->actingAs($this->admin)->get(route('admin.users.create'))->assertOk()->assertSee('Área dos laboratórios');
+    }
 }

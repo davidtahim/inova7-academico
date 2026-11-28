@@ -59,7 +59,7 @@
     if (Gate::allows('view-labs')) {
         $sections[] = ['label' => 'Laboratórios', 'items' => array_values(array_filter([
             ['label' => 'Reservas de laboratórios', 'url' => route('labs.index'), 'icon' => 'calendar', 'active' => ['labs.index', 'labs.reservations.*']],
-            Gate::allows('manage-labs') ? ['label' => 'Cadastro de laboratórios', 'url' => route('labs.rooms'), 'icon' => 'database', 'active' => ['labs.rooms*']] : null,
+            Gate::allows('manage-labs') ? ['label' => 'Cadastro de laboratórios', 'url' => route('labs.rooms', $user->isLabManager() ? ['area' => $user->lab_area] : []), 'icon' => 'database', 'active' => ['labs.rooms*']] : null,
         ]))];
     }
 

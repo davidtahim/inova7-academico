@@ -8,6 +8,7 @@ use App\Models\LabReservation;
 use App\Models\Room;
 use App\Models\Subject;
 use Illuminate\Support\Collection;
+use App\Support\LabAreas;
 use Illuminate\Support\Str;
 
 /**
@@ -23,9 +24,23 @@ class LabRules
     /** Horário de funcionamento (Art. 4º): seg–sex 07:30–22:20, sábado 07:30–12:00. */
     public const OPENING = [1 => ['07:30', '22:20'], 2 => ['07:30', '22:20'], 3 => ['07:30', '22:20'], 4 => ['07:30', '22:20'], 5 => ['07:30', '22:20'], 6 => ['07:30', '12:00']];
 
+    /**
+     * Tipo de laboratório que a disciplina exige: o pedido na matriz (TI, Saúde, Comunicação,
+     * Engenharias, Arquitetura); sem tipo na matriz, carga prática > 0 exige laboratório de
+     * informática (Art. 8º III). null = disciplina teórica, sem laboratório.
+     */
+    public static function requiredLabType(?Subject $subject, ?CurriculumMatrixDiscipline $link = null): ?string
+    {
+        if (LabAreas::isLabType($link?->required_room_type)) {
+            return $link->required_room_type;
+        }
+
+        return (int) ($subject?->practice_hours ?? 0) > 0 && ! $link?->required_room_type ? self::LAB : null;
+    }
+
     public static function requiresLab(?Subject $subject, ?CurriculumMatrixDiscipline $link = null): bool
     {
-        return (int) ($subject?->practice_hours ?? 0) > 0 || $link?->required_room_type === self::LAB;
+        return self::requiredLabType($subject, $link) !== null;
     }
 
     public static function offeringRequiresLab(ClassOffering $offering): bool
@@ -57,23 +72,27 @@ class LabRules
     public static function roomErrors(ClassOffering $offering, Room $room, ?int $students = null): array
     {
         $errors = [];
-        $practical = self::offeringRequiresLab($offering);
+        $need = self::requiredLabType($offering->subject, $offering->matrixDiscipline);
         $students ??= $offering->student_count;
+        $name = $offering->subject?->name;
 
-        if ($practical && ! $room->isComputerLab()) {
-            $errors[] = "{$offering->subject?->name} tem carga prática e precisa de laboratório de informática (Art. 8º III); {$room->code} é " . Str::lower($room->type_label) . '.';
+        if ($need && $room->type !== $need) {
+            $errors[] = "{$name} precisa de " . Str::lower(Room::TYPES[$need] ?? $need)
+                . ($need === self::LAB ? ' (carga prática, Art. 8º III)' : '') . "; {$room->code} é " . Str::lower($room->type_label) . '.';
         }
-        if (! $practical && $room->isComputerLab()) {
-            $errors[] = "{$offering->subject?->name} é 100% teórica: laboratório de informática não é usado na grade regular (Art. 8º III). Escolha uma sala comum.";
+        if (! $need && $room->isLab()) {
+            $errors[] = $room->isComputerLab()
+                ? "{$name} é 100% teórica: laboratório de informática não é usado na grade regular (Art. 8º III). Escolha uma sala comum."
+                : "{$name} não exige " . Str::lower($room->type_label) . ": o laboratório fica para as disciplinas práticas da área. Escolha uma sala comum.";
         }
-        if ($room->isComputerLab()) {
+        if ($room->isLab()) {
             if (! $room->active) {
                 $errors[] = "Laboratório {$room->code} está inativo.";
             }
             if ($students && $room->computers !== null && $room->computers < $students) {
-                $errors[] = "Laboratório {$room->code} tem {$room->computers} computadores para {$students} alunos.";
+                $errors[] = "Laboratório {$room->code} tem {$room->computers} " . ($room->isComputerLab() ? 'computadores' : 'vagas') . " para {$students} alunos.";
             }
-            if ($missing = self::missingSoftware($offering->subject, $room)) {
+            if ($room->isComputerLab() && $missing = self::missingSoftware($offering->subject, $room)) {
                 $errors[] = "Laboratório {$room->code} não tem os softwares exigidos: " . implode(', ', $missing) . '.';
             }
         }
@@ -97,8 +116,8 @@ class LabRules
                 return false;
             }
 
-            // Outros tipos exigidos (ex.: laboratório de engenharia) continuam valendo.
-            return ! $required || $required === self::LAB || $room->type === $required;
+            // Tipos exigidos que não são laboratório (ex.: sala de prática) continuam valendo.
+            return ! $required || LabAreas::isLabType($required) || $room->type === $required;
         })->values();
     }
 

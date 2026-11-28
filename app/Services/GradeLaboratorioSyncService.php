@@ -22,7 +22,7 @@ class GradeLaboratorioSyncService
     {
         $offering->loadMissing(['slots', 'term', 'assignments']);
         $term = $offering->term;
-        $labs = Room::where('type', LabRules::LAB)->get()->keyBy(fn ($r) => mb_strtolower($r->code));
+        $labs = Room::whereIn('type', \App\Support\LabAreas::labTypes())->get()->keyBy(fn ($r) => mb_strtolower($r->code));
         $actor ??= auth()->user();
 
         $existing = LabReservation::where('turma_id', $offering->id)->where('origem', 'grade')->get()

@@ -95,7 +95,9 @@ class UserManagementController extends Controller
         $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email',
-            'role' => 'required|in:admin,coordinator,teacher,student,staff',
+            'role' => 'required|in:admin,coordinator,teacher,student,staff,lab_manager',
+            // Gestor de laboratórios: a área define os laboratórios que ele administra.
+            'lab_area' => ['nullable', 'required_if:role,lab_manager', \Illuminate\Validation\Rule::in(array_keys(\App\Support\LabAreas::AREAS))],
         ];
 
         if (Schema::hasColumn('users', 'registration_number')) {
@@ -121,6 +123,7 @@ class UserManagementController extends Controller
                 'email' => $validated['email'],
                 'password' => Hash::make($validated['password']),
                 'role' => $validated['role'],
+                'lab_area' => $validated['role'] === 'lab_manager' ? $validated['lab_area'] : null,
                 'must_change_password' => true,
             ];
 
@@ -208,7 +211,9 @@ class UserManagementController extends Controller
         $rules = [
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'role' => 'required|in:admin,coordinator,teacher,student,staff',
+            'role' => 'required|in:admin,coordinator,teacher,student,staff,lab_manager',
+            // Gestor de laboratórios: a área define os laboratórios que ele administra.
+            'lab_area' => ['nullable', 'required_if:role,lab_manager', \Illuminate\Validation\Rule::in(array_keys(\App\Support\LabAreas::AREAS))],
         ];
 
         if (Schema::hasColumn('users', 'registration_number')) {
@@ -226,6 +231,7 @@ class UserManagementController extends Controller
             $user->name = $validated['name'];
             $user->email = $validated['email'];
             $user->role = $validated['role'];
+            $user->lab_area = $validated['role'] === 'lab_manager' ? ($validated['lab_area'] ?? null) : null;
 
             if (Schema::hasColumn('users', 'registration_number') && ! empty($validated['registration_number'])) {
                 $user->registration_number = $validated['registration_number'];
