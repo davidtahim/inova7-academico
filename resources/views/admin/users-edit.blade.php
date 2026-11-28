@@ -120,6 +120,29 @@
                                 })();
                             </script>
 
+                            {{-- Professor: cursos em que atua (filtram "Minhas disciplinas"). --}}
+                            <div class="mb-3" id="teacher-courses-field">
+                                <input type="hidden" name="courses_submitted" value="1">
+                                <span class="form-label fw-500 d-block">Cursos em que o professor atua</span>
+                                <div class="d-grid gap-1 border rounded p-2" role="group" aria-label="Cursos do professor">
+                                    @foreach ($courses as $course)
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="course_ids[]" value="{{ $course->id }}" id="course-{{ $course->id }}"
+                                                @checked(in_array($course->id, old('course_ids', $professorCourseIds)))>
+                                            <label class="form-check-label" for="course-{{ $course->id }}">{{ $course->name }} <span class="text-muted small">{{ $course->code }}</span></label>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <small class="text-muted">Em "Minhas disciplinas", o professor vê só as matrizes destes cursos. Nenhum marcado: vê todos.</small>
+                            </div>
+                            <script>
+                                (function () {
+                                    const role = document.getElementById('role'), field = document.getElementById('teacher-courses-field');
+                                    const toggle = () => { field.hidden = role.value !== 'teacher'; };
+                                    role.addEventListener('change', toggle); toggle();
+                                })();
+                            </script>
+
                             <!-- Status -->
                             <div class="mb-3">
                                 <div class="form-check form-switch">
