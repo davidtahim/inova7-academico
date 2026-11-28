@@ -26,7 +26,8 @@ class ClassOffering extends Model {
             return 0;
         }
 
-        return (int) ($this->classes_per_week ?? $this->matrixDiscipline?->weekly_hours ?? 0);
+        // Sem matriz (ex.: curso sem matriz cadastrada), a hora-aula da oferta é a melhor estimativa.
+        return (int) ($this->classes_per_week ?? $this->matrixDiscipline?->weekly_hours ?? round((float) $this->weekly_hours));
     }
     
     /**

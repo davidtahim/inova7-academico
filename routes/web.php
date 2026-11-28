@@ -40,6 +40,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/copiar', [\App\Http\Controllers\AllocationController::class, 'copy'])->name('copy');
         Route::get('/grade', [\App\Http\Controllers\ScheduleBoardController::class, 'index'])->name('board');
         Route::get('/grade/dados', [\App\Http\Controllers\ScheduleBoardController::class, 'data'])->name('board.data');
+        Route::get('/resolver/problema', [\App\Http\Controllers\SolverController::class, 'problem'])->name('solver.problem');
+        Route::post('/resolver/aplicar', [\App\Http\Controllers\SolverController::class, 'apply'])->name('solver.apply');
         Route::post('/grade/mover', [\App\Http\Controllers\ScheduleBoardController::class, 'move'])->name('board.move');
         Route::post('/publicar', [\App\Http\Controllers\AllocationController::class, 'publish'])->name('publish');
         Route::post('/despublicar', [\App\Http\Controllers\AllocationController::class, 'unpublish'])->name('unpublish');

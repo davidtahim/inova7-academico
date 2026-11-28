@@ -65,10 +65,10 @@ class ScheduleBoardTest extends TestCase
         $lp = $this->offering('CSE0280101NNA', 'Lógica de Programação', 2);
         $bd = $this->offering('CSE0280103NNA', 'Banco de Dados', 2);
 
-        // Nada alocado: 4 aulas faltando = 4 restrições rígidas.
+        // Nada alocado: 4 aulas faltando = 4 restrições rígidas; 2 disciplinas sem professor (2 × 50).
         $score = $scorer->score($this->term);
         $this->assertSame(4, $score['hard']);
-        $this->assertSame(4000, $score['total']);
+        $this->assertSame(4000 + 100, $score['total']);
 
         // Ana com A em uma turma e D em outra na segunda: 2 janelas (B, C).
         $allocator->apply($lp, ['professor_id' => $this->ana->id, 'placements' => [1 => ['A'], 3 => ['A']], 'room' => 'Sala 40']);
