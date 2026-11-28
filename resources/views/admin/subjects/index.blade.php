@@ -337,7 +337,12 @@
                                         @endforelse
                                     </td>
                                     <td class="text-end text-nowrap">
-                                        <a href="{{ route('admin.subjects.edit', $subject) }}" class="btn btn-sm btn-outline-primary">Editar</a>
+                                        @if ($matrices->isNotEmpty())
+                                            <button type="button" class="btn btn-sm {{ $subject->offeringLinks->isEmpty() ? 'btn-primary' : 'btn-outline-primary' }}"
+                                                data-bs-toggle="modal" data-bs-target="#catalogLinkModal"
+                                                data-subject-id="{{ $subject->id }}" data-subject-name="{{ $subject->name }}">Adicionar à matriz</button>
+                                        @endif
+                                        <a href="{{ route('admin.subjects.edit', $subject) }}" class="btn btn-sm btn-outline-secondary">Editar</a>
                                         <form action="{{ route('admin.subjects.destroy', $subject) }}" method="POST" class="d-inline-block">
                                             @csrf
                                             @method('DELETE')
@@ -357,6 +362,99 @@
                     </table>
                 </div>
             </div>
+            {{-- Pôr uma disciplina do catálogo numa matriz (escolhe matriz e período aqui). --}}
+            @if ($matrices->isNotEmpty())
+                <div class="modal fade" id="catalogLinkModal" tabindex="-1" aria-labelledby="catalogLinkTitle" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                        <form class="modal-content" method="POST" id="catalogLinkForm"
+                            data-action-template="{{ route('admin.matrices.disciplines.store', ['matrix' => '__ID__']) }}">
+                            @csrf
+                            <input type="hidden" name="subject_id" id="catalogLinkSubject">
+                            <div class="modal-header">
+                                <h2 class="modal-title h5" id="catalogLinkTitle">Adicionar à matriz</h2>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p class="mb-3"><strong id="catalogLinkName"></strong></p>
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label class="form-label" for="catalogLinkMatrix">Matriz (curso) *</label>
+                                        <select id="catalogLinkMatrix" class="form-select" required>
+                                            <option value="">Selecione…</option>
+                                            @foreach ($matrices->groupBy(fn ($m) => $m->course?->name ?? 'Sem curso') as $courseName => $group)
+                                                <optgroup label="{{ $courseName }}">
+                                                    @foreach ($group as $m)
+                                                        <option value="{{ $m->id }}">{{ $m->name }} ({{ $m->code }})</option>
+                                                    @endforeach
+                                                </optgroup>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label" for="catalogLinkPeriod">Período *</label>
+                                        <select name="period" id="catalogLinkPeriod" class="form-select" required>
+                                            @for ($p = 1; $p <= 8; $p++)
+                                                <option value="{{ $p }}">{{ $p }}º período</option>
+                                            @endfor
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label" for="catalogLinkWeekly">Aulas por semana *</label>
+                                        <input type="number" name="weekly_hours" id="catalogLinkWeekly" class="form-control" min="0" max="30" value="2" required>
+                                        <div class="form-text">40h e 60h = 2; 80h = 3.</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label" for="catalogLinkShift">Turno *</label>
+                                        <select name="shift" id="catalogLinkShift" class="form-select" required>
+                                            @foreach ($shifts as $key => $label)
+                                                <option value="{{ $key }}" @selected($key === 'NOITE')>{{ $label }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label" for="catalogLinkType">Tipo de oferta *</label>
+                                        <select name="offering_type" id="catalogLinkType" class="form-select" required>
+                                            @foreach ($offeringTypes as $key => $label)
+                                                <option value="{{ $key }}">{{ $label }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label" for="catalogLinkRoom">Sala exigida</label>
+                                        <select name="required_room_type" id="catalogLinkRoom" class="form-select">
+                                            <option value="">Qualquer sala</option>
+                                            @foreach ($roomTypes as $key => $label)
+                                                <option value="{{ $key }}">{{ $label }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-primary">Adicionar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <script>
+                    (function () {
+                        const modal = document.getElementById('catalogLinkModal');
+                        const form = document.getElementById('catalogLinkForm');
+                        const matrix = document.getElementById('catalogLinkMatrix');
+                        modal.addEventListener('show.bs.modal', ev => {
+                            const d = ev.relatedTarget?.dataset || {};
+                            document.getElementById('catalogLinkSubject').value = d.subjectId || '';
+                            document.getElementById('catalogLinkName').textContent = d.subjectName || '';
+                        });
+                        // A rota de gravação é da matriz escolhida.
+                        form.addEventListener('submit', ev => {
+                            if (!matrix.value) { ev.preventDefault(); matrix.focus(); return; }
+                            form.action = form.dataset.actionTemplate.replace('__ID__', matrix.value);
+                        });
+                    })();
+                </script>
+            @endif
         @endif
     </div>
 

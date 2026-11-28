@@ -104,4 +104,19 @@ class SubjectsCatalogTest extends TestCase
         $staff = User::create(['name' => 'Func', 'email' => 'f@x.local', 'password' => 'senha1234', 'role' => 'staff', 'is_active' => true]);
         $this->actingAs($staff)->get(route('admin.subjects.index', ['matriz' => $this->m15->id]))->assertForbidden();
     }
+
+    public function test_catalog_offers_adding_an_unlinked_subject_to_a_matrix(): void
+    {
+        $avulsa = Subject::where('name', 'Disciplina Avulsa')->firstOrFail();
+
+        $this->actingAs($this->coordinator)->get(route('admin.subjects.index', ['matriz' => 'sem']))
+            ->assertOk()->assertSee('Adicionar à matriz')->assertSee('catalogLinkModal', false);
+
+        $this->actingAs($this->coordinator)->post(route('admin.matrices.disciplines.store', $this->m56), [
+            'subject_id' => $avulsa->id, 'period' => 3, 'shift' => 'NOITE', 'weekly_hours' => 2, 'offering_type' => 'OBRIGATORIA',
+        ])->assertRedirect(route('admin.subjects.index', ['matriz' => $this->m56->id]) . '#periodo-3');
+
+        $this->actingAs($this->coordinator)->get(route('admin.subjects.index', ['matriz' => 999]))
+            ->assertOk()->assertSee('A matriz #999 não foi encontrada');
+    }
 }
