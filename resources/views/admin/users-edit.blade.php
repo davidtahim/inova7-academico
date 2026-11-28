@@ -143,6 +143,33 @@
                                 })();
                             </script>
 
+                            {{-- Coordenação ou Administrador de TI: cursos que coordena (CCG-FOR-02 e painel). --}}
+                            <div class="mb-3" id="coordinated-courses-field">
+                                <input type="hidden" name="coordinated_submitted" value="1">
+                                <span class="form-label fw-500 d-block">Cursos que coordena</span>
+                                <div class="d-grid gap-1 border rounded p-2" role="group" aria-label="Cursos que coordena">
+                                    @foreach ($courses as $course)
+                                        @php $otherCoordinator = $course->coordinator_user_id && $course->coordinator_user_id !== $user->id ? $course->coordinator : null; @endphp
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="coordinated_course_ids[]" value="{{ $course->id }}" id="coord-course-{{ $course->id }}"
+                                                @checked(in_array($course->id, old('coordinated_course_ids', $coordinatedCourseIds)))>
+                                            <label class="form-check-label" for="coord-course-{{ $course->id }}">
+                                                {{ $course->name }} <span class="text-muted small">{{ $course->code }}</span>
+                                                @if ($otherCoordinator)<span class="small text-warning-emphasis">· hoje com {{ $otherCoordinator->name }}</span>@endif
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <small class="text-muted">Um curso tem um coordenador. Marcar aqui tira o curso de quem o coordenava. O Administrador de TI pode coordenar cursos sem mudar de perfil.</small>
+                            </div>
+                            <script>
+                                (function () {
+                                    const role = document.getElementById('role'), field = document.getElementById('coordinated-courses-field');
+                                    const toggle = () => { field.hidden = !['admin', 'coordinator'].includes(role.value); };
+                                    role.addEventListener('change', toggle); toggle();
+                                })();
+                            </script>
+
                             <!-- Status -->
                             <div class="mb-3">
                                 <div class="form-check form-switch">

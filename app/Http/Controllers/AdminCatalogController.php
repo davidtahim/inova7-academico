@@ -180,12 +180,19 @@ class AdminCatalogController extends Controller
         ]);
     }
 
+    /** Quem pode coordenar curso: coordenação e Administrador de TI ativos. */
+    private function coordinatorOptions()
+    {
+        return \App\Models\User::whereIn('role', ['admin', 'coordinator'])->where('is_active', true)->orderBy('name')->get(['id', 'name', 'email', 'role']);
+    }
+
     public function courseCreate()
     {
         $this->ensureAdmin();
 
         return view('admin.courses.form', [
             'course' => new Course(),
+            'coordinators' => $this->coordinatorOptions(),
         ]);
     }
 
@@ -223,6 +230,7 @@ class AdminCatalogController extends Controller
             'name' => ['required', 'string', 'max:255', $this->uniqueCourseName()],
             'degree' => ['nullable', 'string', 'max:255'],
             'coordinator_name' => ['nullable', 'string', 'max:255'],
+            'coordinator_user_id' => ['nullable', 'integer', \Illuminate\Validation\Rule::exists('users', 'id')->whereIn('role', ['admin', 'coordinator'])],
             'active' => ['nullable', 'boolean'],
         ]);
 
@@ -237,6 +245,7 @@ class AdminCatalogController extends Controller
 
         return view('admin.courses.form', [
             'course' => $course,
+            'coordinators' => $this->coordinatorOptions(),
             'courseMatrices' => $course->matrices()->withCount('disciplinesForOffering')->orderBy('name')->get(),
             'otherMatrices' => CurriculumMatrix::with('course')->where('course_id', '!=', $course->id)->orderBy('name')->get(),
         ]);
@@ -274,6 +283,7 @@ class AdminCatalogController extends Controller
             'name' => ['required', 'string', 'max:255', $this->uniqueCourseName($course)],
             'degree' => ['nullable', 'string', 'max:255'],
             'coordinator_name' => ['nullable', 'string', 'max:255'],
+            'coordinator_user_id' => ['nullable', 'integer', \Illuminate\Validation\Rule::exists('users', 'id')->whereIn('role', ['admin', 'coordinator'])],
             'active' => ['nullable', 'boolean'],
         ]);
 

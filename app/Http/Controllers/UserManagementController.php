@@ -194,8 +194,10 @@ class UserManagementController extends Controller
             'user' => $user,
             'roles' => User::roleOptions(),
             // Cursos do professor: limitam as matrizes que ele vê em "Minhas disciplinas".
-            'courses' => \App\Models\Course::where('active', true)->orderBy('name')->get(),
+            'courses' => \App\Models\Course::with('coordinator')->where('active', true)->orderBy('name')->get(),
             'professorCourseIds' => $user->professor?->courses->pluck('id')->all() ?? [],
+            // Coordenação ou Administrador de TI que também coordena: cursos sob a coordenação dele.
+            'coordinatedCourseIds' => $user->coordinatedCourses()->pluck('id')->all(),
         ]);
     }
 
@@ -219,6 +221,8 @@ class UserManagementController extends Controller
             'lab_area' => ['nullable', 'required_if:role,lab_manager', \Illuminate\Validation\Rule::in(array_keys(\App\Support\LabAreas::AREAS))],
             'course_ids' => ['nullable', 'array'],
             'course_ids.*' => ['integer', 'exists:courses,id'],
+            'coordinated_course_ids' => ['nullable', 'array'],
+            'coordinated_course_ids.*' => ['integer', 'exists:courses,id'],
         ];
 
         if (Schema::hasColumn('users', 'registration_number')) {
@@ -264,6 +268,15 @@ class UserManagementController extends Controller
                 // Remover vínculo se não é mais professor
                 $user->professor_id = null;
                 $user->save();
+            }
+
+            // Cursos que coordena (coordenação e Administrador de TI). Outro perfil deixa de coordenar.
+            if ($request->has('coordinated_submitted') || ! $user->canCoordinate()) {
+                $ids = $user->canCoordinate() ? array_map('intval', $validated['coordinated_course_ids'] ?? []) : [];
+                \App\Models\Course::where('coordinator_user_id', $user->id)->when($user->canCoordinate(), fn ($q) => $q->where('active', true))->whereNotIn('id', $ids ?: [0])->update(['coordinator_user_id' => null]);
+                if ($ids) {
+                    \App\Models\Course::whereIn('id', $ids)->update(['coordinator_user_id' => $user->id]);
+                }
             }
 
             DB::commit();
