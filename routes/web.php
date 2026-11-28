@@ -12,6 +12,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DiagnosticsController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\ImportController;
+use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\PlanningController;
 use App\Http\Controllers\ScenarioController;
 use App\Http\Controllers\ProfessorAvailabilityController;
@@ -41,7 +42,7 @@ Route::middleware('guest')->group(function () {
 |   /cadastros/...   Cursos, matrizes, disciplinas, professores   admin, coordenação (manage-catalog)
 |   /consultas/...   Catálogo somente leitura                     admin, coordenação, funcionário (access-catalog)
 |   /importacoes/..  Oferta Ubíqua, TOTVS, professores            admin, coordenação, funcionário (access-imports)
-|   /sistema/...     Usuários (manage-users) e auditoria (access-audit)
+|   /sistema/...     Usuários e manutenção (manage-users), auditoria (access-audit)
 |   /perfil          Meus dados e senha                           todos
 |
 | Os nomes das rotas foram mantidos; os endereços antigos redirecionam (301).
@@ -189,6 +190,14 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::prefix('sistema')->group(function () {
+        // Manutenção sem terminal (HostGator): migrations e caches pelo navegador.
+        Route::middleware('can:manage-users')->prefix('manutencao')->name('system.maintenance')->controller(MaintenanceController::class)->group(function () {
+            Route::get('/', 'index')->name('');
+            Route::post('/migrations', 'migrate')->name('.migrate');
+            Route::post('/caches', 'clearCaches')->name('.clear');
+            Route::post('/storage-link', 'storageLink')->name('.storage-link');
+        });
+
         Route::middleware('can:manage-users')->prefix('usuarios')->name('admin.users.')->controller(UserManagementController::class)->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/novo', 'create')->name('create');

@@ -120,13 +120,15 @@ class TeachingQualificationTest extends TestCase
         $this->professor->subjects()->sync([$this->bancoDados->id]);
 
         $this->actingAs($this->teacher)
-            ->get(route('admin.professors.subjects', $this->professor))
+            ->get(route('teacher.subjects'))
             ->assertOk()
             ->assertSeeInOrder(['Análise e Desenvolvimento de Sistemas', 'Matriz 56', 'Sistemas de Informação', 'Matriz 15'])
             ->assertSee('1º período')
             ->assertSee('100% EaD')
-            ->assertSee('Lab. Informática')
-            ->assertSee('Compartilhada')
+            ->assertSee('Lab. informática')
+            ->assertSee('Você marcou')
+            ->assertSee('Só as marcadas')
+            ->assertSee('Alterações não salvas', false)
             ->assertViewHas('selectedIds', [$this->bancoDados->id])
             ->assertViewHas('selectedCount', 1)
             ->assertViewHas('totalSubjects', 3);
