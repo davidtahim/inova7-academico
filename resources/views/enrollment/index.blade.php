@@ -30,10 +30,54 @@
             @endif
         </div>
 
+        {{-- Importação dos históricos em PDF (sem CSV). Aberta quando ainda não há alunos. --}}
+        <details class="card border-0 shadow-sm mb-3" id="import-histories" @if (! $matrix || $errors->has('historicos') || $errors->has('historicos.*')) open @endif>
+            <summary class="card-header bg-white fw-semibold py-2">Importar históricos escolares (PDF)</summary>
+            <div class="card-body">
+                <form method="POST" action="{{ route('enrollment.import-histories') }}" enctype="multipart/form-data" class="row g-3 align-items-end" data-import-form>
+                    @csrf
+                    <div class="col-md-4">
+                        <label for="import-matrix" class="form-label small fw-semibold">Matriz curricular dos alunos</label>
+                        <select id="import-matrix" name="matrix" class="form-select" required>
+                            @foreach ($importMatrices as $option)
+                                <option value="{{ $option->id }}" @selected((int) old('matrix', $defaultImportMatrix) === $option->id)>{{ $option->course?->name }} — {{ $option->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label for="import-files" class="form-label small fw-semibold">Históricos (um ou vários PDFs)</label>
+                        <input id="import-files" type="file" name="historicos[]" accept="application/pdf,.pdf" multiple required
+                            class="form-control @if ($errors->has('historicos') || $errors->has('historicos.*')) is-invalid @endif" aria-describedby="import-help">
+                        @foreach (['historicos', 'historicos.*'] as $field)
+                            @error($field)<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                        @endforeach
+                    </div>
+                    <div class="col-md-3 d-grid">
+                        <button type="submit" class="btn btn-primary" data-import-submit>Importar históricos</button>
+                    </div>
+                    <p id="import-help" class="form-text small mb-0 col-12">
+                        Lê matrícula, nome, turno e a situação de cada disciplina (cursada, dispensada, cursando, reprovada, falta cursar).
+                        CPF, RG e data de nascimento são ignorados e os PDFs não ficam guardados no sistema.
+                        Reimportar o mesmo aluno atualiza o histórico dele.
+                    </p>
+                </form>
+                @if (session('import_failed'))
+                    <div class="alert alert-warning small mt-3 mb-0">
+                        Não foi possível ler: {{ implode(', ', session('import_failed')) }}. Confira se são PDFs do histórico com texto (não digitalizados).
+                    </div>
+                @endif
+            </div>
+        </details>
+        <script>
+            document.querySelector('[data-import-form]')?.addEventListener('submit', e => {
+                const btn = e.target.querySelector('[data-import-submit]');
+                btn.disabled = true; btn.textContent = 'Lendo históricos…';
+            });
+        </script>
+
         @if (! $matrix)
             <div class="alert alert-secondary">
-                Nenhum aluno com matriz definida. Importe os históricos com
-                <code>php artisan alunos:importar-historico caminho/historico.csv</code>.
+                Nenhum aluno com matriz definida ainda. Importe os históricos acima para gerar a enturmação.
             </div>
         @else
             @if ($report)

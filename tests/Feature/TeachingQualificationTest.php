@@ -184,4 +184,64 @@ class TeachingQualificationTest extends TestCase
 
         $this->assertSame([$this->bancoDados->id], $this->professor->subjects()->pluck('subjects.id')->all());
     }
+
+    public function test_teacher_sees_only_matrices_of_assigned_courses(): void
+    {
+        $this->professor->courses()->sync([$this->ads->course_id]);
+        // Marcada antes, num curso que não é mais dele: continua visível para desmarcar.
+        $this->professor->subjects()->sync([$this->bancoDados->id]);
+
+        $this->actingAs($this->teacher)
+            ->get(route('teacher.subjects'))
+            ->assertOk()
+            ->assertSee('Matriz 56')
+            ->assertDontSee('Matriz 15')
+            ->assertSee('Mostrando as disciplinas dos seus cursos')
+            ->assertSee('Marcadas em outros cursos')
+            ->assertSee('Banco de Dados');
+    }
+
+    public function test_teacher_without_courses_sees_every_matrix(): void
+    {
+        $this->actingAs($this->teacher)
+            ->get(route('teacher.subjects'))
+            ->assertOk()
+            ->assertSee('Matriz 56')
+            ->assertSee('Matriz 15')
+            ->assertDontSee('Mostrando as disciplinas dos seus cursos');
+    }
+
+    public function test_admin_sets_the_courses_of_a_teacher(): void
+    {
+        $admin = User::create([
+            'name' => 'Admin', 'email' => 'admin@inova7.local', 'password' => 'senha1234',
+            'role' => 'admin', 'is_active' => true,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.users.edit', $this->teacher))
+            ->assertOk()
+            ->assertSee('Cursos em que o professor atua')
+            ->assertSee('Análise e Desenvolvimento de Sistemas');
+
+        $this->actingAs($admin)
+            ->put(route('admin.users.update', $this->teacher), [
+                'name' => 'Prof. Ana', 'email' => 'ana@prof.local', 'role' => 'teacher', 'is_active' => 1,
+                'courses_submitted' => 1, 'course_ids' => [$this->ads->course_id],
+            ])
+            ->assertRedirect(route('admin.users.show', $this->teacher));
+
+        // O vínculo com o professor existente é mantido (sem criar outro cadastro).
+        $this->assertSame($this->professor->id, $this->teacher->fresh()->professor_id);
+        $this->assertSame(1, Professor::count());
+        $this->assertSame([$this->ads->course_id], $this->professor->courses()->pluck('courses.id')->all());
+
+        // Desmarcar todos: volta a ver todas as matrizes.
+        $this->actingAs($admin)
+            ->put(route('admin.users.update', $this->teacher), [
+                'name' => 'Prof. Ana', 'email' => 'ana@prof.local', 'role' => 'teacher', 'is_active' => 1,
+                'courses_submitted' => 1,
+            ]);
+        $this->assertSame(0, $this->professor->courses()->count());
+    }
 }

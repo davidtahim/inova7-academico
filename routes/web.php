@@ -112,6 +112,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/', [EnrollmentController::class, 'index'])->name('index');
             Route::post('/gerar', [EnrollmentController::class, 'plan'])->name('plan');
             Route::post('/abrir-turma', [EnrollmentController::class, 'openClass'])->name('open-class');
+            Route::post('/importar-historicos', [EnrollmentController::class, 'importHistories'])->name('import-histories');
         });
 
         Route::prefix('turmas')->name('planning.')->group(function () {

@@ -41,17 +41,18 @@ class StudentHistoryImporter
         return $this->import($rows, $source);
     }
 
-    public function import(array $rows, string $source): array
+    /** @param CurriculumMatrix|null $target Matriz escolhida na tela: vale para todos os alunos do lote. */
+    public function import(array $rows, string $source, ?CurriculumMatrix $target = null): array
     {
         $students = [];
         $statuses = 0;
         $unknown = [];
 
-        DB::transaction(function () use ($rows, $source, &$students, &$statuses, &$unknown) {
+        DB::transaction(function () use ($rows, $source, $target, &$students, &$statuses, &$unknown) {
             foreach (collect($rows)->groupBy('matricula') as $registration => $items) {
                 $first = $items->first();
                 $matrixCode = self::CURRICULUM_TO_MATRIX[$first['curriculo']] ?? null;
-                $matrix = $matrixCode ? CurriculumMatrix::where('code', $matrixCode)->first() : null;
+                $matrix = $target ?? ($matrixCode ? CurriculumMatrix::where('code', $matrixCode)->first() : null);
                 if (! $matrix) {
                     $unknown[$first['curriculo']] = true;
                 }

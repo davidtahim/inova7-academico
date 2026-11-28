@@ -188,11 +188,14 @@ class UserManagementController extends Controller
     {
         $this->ensureAdminTi();
 
-        $user->load('professor');
+        $user->load('professor.courses');
 
         return view('admin.users-edit', [
             'user' => $user,
             'roles' => User::roleOptions(),
+            // Cursos do professor: limitam as matrizes que ele vê em "Minhas disciplinas".
+            'courses' => \App\Models\Course::where('active', true)->orderBy('name')->get(),
+            'professorCourseIds' => $user->professor?->courses->pluck('id')->all() ?? [],
         ]);
     }
 
@@ -214,6 +217,8 @@ class UserManagementController extends Controller
             'role' => 'required|in:admin,coordinator,teacher,student,staff,lab_manager',
             // Gestor de laboratórios: a área define os laboratórios que ele administra.
             'lab_area' => ['nullable', 'required_if:role,lab_manager', \Illuminate\Validation\Rule::in(array_keys(\App\Support\LabAreas::AREAS))],
+            'course_ids' => ['nullable', 'array'],
+            'course_ids.*' => ['integer', 'exists:courses,id'],
         ];
 
         if (Schema::hasColumn('users', 'registration_number')) {
@@ -251,6 +256,10 @@ class UserManagementController extends Controller
             // Sincronizar professor se mudou para teacher
             if ($validated['role'] === 'teacher') {
                 $this->createOrUpdateProfessor($user);
+                // Cursos em que o professor atua (vazio = todos).
+                if ($request->has('courses_submitted') && ($professor = $user->fresh()->resolveProfessor())) {
+                    $professor->courses()->sync($validated['course_ids'] ?? []);
+                }
             } elseif ($validated['role'] !== 'teacher' && $user->professor_id) {
                 // Remover vínculo se não é mais professor
                 $user->professor_id = null;
@@ -361,7 +370,9 @@ class UserManagementController extends Controller
             return;
         }
 
-        $professor = Professor::where('email', $user->email)->first();
+        // Mantém o professor já vinculado (o e-mail do cadastro docente pode ser outro).
+        $professor = ($user->professor_id ? Professor::find($user->professor_id) : null)
+            ?? Professor::where('email', $user->email)->first();
 
         if ($professor) {
             $professor->update([

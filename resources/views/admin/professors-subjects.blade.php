@@ -36,6 +36,10 @@
             </div>
         </div>
 
+        @if ($ownArea && $courseFilter->isNotEmpty())
+            <p class="small text-muted mb-3">Mostrando as disciplinas dos seus cursos: <strong>{{ $courseFilter->pluck('name')->implode(', ') }}</strong>. Se faltar algum curso, fale com a coordenação.</p>
+        @endif
+
         @if (! $isEditable)
             <div class="alert alert-secondary">Somente leitura: apenas a coordenação ou o próprio professor alteram a habilitação.</div>
         @endif
@@ -137,7 +141,7 @@
                     @if ($matrices->isEmpty() || $otherSubjects->contains(fn ($s) => isset($selectedLookup[$s->id]))) open @endif>
                     <summary class="card-header bg-white border-0 d-flex flex-wrap gap-2 align-items-center">
                         <span class="chevron" aria-hidden="true">›</span>
-                        <span class="me-auto"><strong>Outras disciplinas</strong> <span class="text-muted small">· fora das matrizes atuais</span></span>
+                        <span class="me-auto"><strong>{{ $ownArea && $courseFilter->isNotEmpty() ? 'Marcadas em outros cursos' : 'Outras disciplinas' }}</strong> <span class="text-muted small">· {{ $ownArea && $courseFilter->isNotEmpty() ? 'você pode desmarcar' : 'fora das matrizes atuais' }}</span></span>
                         <span class="badge rounded-pill bg-light text-dark border" data-group-counter>0 de {{ $otherSubjects->count() }}</span>
                     </summary>
                     <ul class="list-unstyled mb-0">

@@ -24,10 +24,15 @@ class TeachingQualificationCatalog
      *     total_subjects: int
      * }
      */
-    public function build(): array
+    /**
+     * @param  array<int>|null  $courseIds  só as matrizes destes cursos (cursos do professor); null = todos
+     * @param  array<int>  $selectedIds  disciplinas já marcadas: com filtro, as de fora dos cursos continuam visíveis
+     */
+    public function build(?array $courseIds = null, array $selectedIds = []): array
     {
         $matrices = CurriculumMatrix::query()
             ->whereIn('status', self::ACTIVE_MATRIX_STATUSES)
+            ->when($courseIds, fn ($query) => $query->whereIn('course_id', $courseIds))
             ->whereHas('course', fn ($query) => $query->where('active', true))
             ->whereHas('disciplinesForOffering')
             ->with([
@@ -55,6 +60,8 @@ class TeachingQualificationCatalog
 
         $others = Subject::query()
             ->whereNotIn('id', $inMatrices->all())
+            // Com filtro de cursos, "outras" são só as já marcadas (para poder desmarcar).
+            ->when($courseIds, fn ($query) => $query->whereIn('id', $selectedIds ?: [0]))
             ->orderBy('name')
             ->get();
 

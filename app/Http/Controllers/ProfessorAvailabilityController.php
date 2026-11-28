@@ -151,7 +151,9 @@ class ProfessorAvailabilityController extends Controller
     public function showSubjects(Professor $professor, TeachingQualificationCatalog $catalog)
     {
         $selectedSubjects = $professor->subjects()->orderBy('name')->get();
-        $data = $catalog->build();
+        // Na área do professor, só as matrizes dos cursos em que ele atua (definidos pelo Admin TI).
+        $courses = request()->routeIs('teacher.*') ? $professor->courses()->orderBy('name')->get() : collect();
+        $data = $catalog->build($courses->isNotEmpty() ? $courses->pluck('id')->all() : null, $selectedSubjects->pluck('id')->all());
 
         return view('admin.professors-subjects', [
             'professor' => $professor,
@@ -164,6 +166,7 @@ class ProfessorAvailabilityController extends Controller
             'unselectedCount' => max(0, $data['total_subjects'] - $selectedSubjects->count()),
             'isEditable' => Gate::allows('updateSubjects', $professor),
             'roomTypes' => self::ROOM_TYPE_LABELS,
+            'courseFilter' => $courses,
         ]);
     }
 

@@ -59,7 +59,7 @@ A matriz de permissões fica em `App\Models\User` (`can*()`), nos Gates de `App\
    - **Diagnóstico**: por que a grade não fecha, com o mapa de disputa por horário;
    - **Versões**: salvar, restaurar, exportar e importar.
 5. **Publicar** (Montagem por turma): só então alunos e professores veem os horários.
-6. **Enturmação** dos alunos de matrizes antigas, a partir dos históricos.
+6. **Enturmação** dos alunos de matrizes antigas: envie os históricos em PDF na própria tela (um ou vários arquivos), escolha a matriz (ex.: SI 2019.1) e gere a enturmação.
 
 Semestre com status **Concluído** é somente consulta: o planejamento e a disponibilidade não aceitam alterações.
 
@@ -122,7 +122,7 @@ docker compose exec -T app php artisan migrate:fresh --seed
   - `professor@inova7.local` (professor)
   - `aluno@inova7.local` (aluno)
 - `CargaPlanilhasSeeder`: dados reais das planilhas de 2027.1 e 2026.1 (CSV em `database/seeders/data/`), com salas, cargas, siglas e a grade de 2026.1 copiada para 2027.1.
-- **Históricos de alunos** contêm dados pessoais: **nunca** os versione. Veja `tools/historicos/LEIA-ME.md`.
+- **Históricos de alunos** contêm dados pessoais: **nunca** os versione. Importe os PDFs pela tela de Enturmação (CPF/RG são ignorados e o arquivo não é guardado); o caminho por CSV está em `tools/historicos/LEIA-ME.md`.
 
 ### Testes
 

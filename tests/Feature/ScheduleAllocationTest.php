@@ -295,4 +295,26 @@ class ScheduleAllocationTest extends TestCase
         // (exceto aulas conjuntas, permitidas).
         $this->assertSame([], app(\App\Services\ConflictDetector::class)->forTerm($target->id)->pluck('message')->all());
     }
+
+    public function test_modal_saves_different_blocks_per_day_and_reopens_on_error(): void
+    {
+        $first = $this->offering('CSE0280101NNA', 'Lógica de Programação');
+        $coordinator = User::create(['name' => 'Coord', 'email' => 'c2@x.local', 'password' => 'senha1234', 'role' => 'coordinator', 'is_active' => true]);
+
+        $this->actingAs($coordinator)->from(route('allocation.index'))
+            ->put(route('allocation.update', $first), ['per_day' => 1, 'professor_id' => $this->ana->id, 'room' => 'Sala 40', 'placements' => ['1' => ['A', 'B'], '3' => ['C']]])
+            ->assertSessionHas('allocation', fn ($f) => ($f['saved'] ?? false) === true);
+        $this->assertSame([1 => ['A', 'B'], 3 => ['C']], $this->allocator->currentInput($first->fresh(['slots', 'assignments']))['placements']);
+
+        $page = $this->actingAs($coordinator)->get(route('allocation.index'))->assertOk()
+            ->assertSee('Seg AB · Qua C')->assertSee('allocModal', false)->assertSee('data-edit="' . $first->id . '"', false);
+
+        // Choque com a própria turma: volta com o erro e o modal reabre com o que foi preenchido.
+        $second = $this->offering('CSE0280101NNA', 'Matemática');
+        $this->actingAs($coordinator)->from(route('allocation.index'))
+            ->put(route('allocation.update', $second), ['per_day' => 1, 'placements' => ['1' => ['A']], 'room' => 'Sala 40'])
+            ->assertSessionHas('allocation', fn ($f) => ! isset($f['saved']) && str_contains(implode(' ', $f['errors']), 'já tem'));
+        $this->actingAs($coordinator)->withSession(['allocation' => ['id' => $second->id, 'errors' => ['A turma já tem Lógica']]])
+            ->get(route('allocation.index'))->assertSee('"open":true', false);
+    }
 }
