@@ -1,6 +1,7 @@
 {{--
     Grade semanal de uma turma. Variáveis: $letters (TimeBlocks::forShift), $weekdays,
-    $entries ([weekday][letter] => [{subject, professor, room, offering_id}]), $compact (opcional).
+    $entries ([weekday][letter] => [{subject, professor, room, offering_id}]), $compact (opcional),
+    $editable (opcional: cada aula vira botão data-edit, que abre o modal partials.allocation-modal).
 --}}
 @php
     $palette = ['#e7f1ff', '#e8f6ee', '#fff4e0', '#f3e8ff', '#ffe8ec', '#e6f7f8', '#f1f3f5', '#fdf2d6'];
@@ -30,7 +31,12 @@
                         @endphp
                         <td class="{{ $clash ? 'weekly-grid-clash' : '' }}">
                             @foreach ($items as $item)
+                                @if ($editable ?? false)
+                                <button type="button" class="weekly-grid-item weekly-grid-edit" data-edit="{{ $item['offering_id'] }}" aria-haspopup="dialog"
+                                    title="Editar {{ $item['subject'] }}" style="background: {{ $colorFor($item['offering_id']) }}">
+                                @else
                                 <div class="weekly-grid-item" style="background: {{ $colorFor($item['offering_id']) }}">
+                                @endif
                                     <strong>{{ $item['subject'] }}</strong>
                                     @unless ($compact ?? false)
                                         <span>{{ $item['professor'] ?? 'Professor a definir' }}</span>
@@ -38,7 +44,7 @@
                                     @if ($item['room'])
                                         <span class="weekly-grid-room">{{ $item['room'] }}</span>
                                     @endif
-                                </div>
+                                @if ($editable ?? false)</button>@else</div>@endif
                             @endforeach
                             @if ($clash)
                                 <span class="visually-hidden">Choque de horário</span>
@@ -64,6 +70,9 @@
         .weekly-grid-item strong { display: block; font-size: .72rem; }
         .weekly-grid-item span { display: block; color: #495057; font-size: .7rem; }
         .weekly-grid-room { font-weight: 600; color: #0c3d67 !important; }
+        .weekly-grid-edit { display: block; width: 100%; text-align: left; border: 0; color: inherit; cursor: pointer; }
+        .weekly-grid-edit:hover { box-shadow: inset 0 0 0 2px #1264a3; }
+        .weekly-grid-edit:focus-visible { outline: 3px solid #0c3d67; outline-offset: 1px; }
         .weekly-grid-clash { background: #fff1f1; box-shadow: inset 0 0 0 2px #dc3545; }
         .weekly-grid-compact { min-width: 520px; }
     </style>
