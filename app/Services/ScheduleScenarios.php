@@ -127,13 +127,13 @@ class ScheduleScenarios
      *
      * @return array{saved: int, unchanged: int, rejected: array<int, string>, unmatched: array<int, string>, backup: ScheduleScenario, score_after: int, hard_after: int}
      */
-    public function restore(ScheduleScenario $scenario, ?User $user): array
+    public function restore(ScheduleScenario $scenario, ?User $user, ?array $courseIds = null): array
     {
         $term = $scenario->term;
         $backup = $this->save($term, 'Antes de restaurar "' . $scenario->name . '"', $user, 'auto');
 
         [$items, $unmatched] = $this->resolve($term, $scenario->payload['items'] ?? []);
-        $result = $this->applyChanges($term, $items);
+        $result = $this->applyChanges($term, $items, $courseIds);
         $after = $this->scorer->score($term);
 
         return $result + ['unmatched' => $unmatched, 'backup' => $backup, 'score_after' => $after['total'], 'hard_after' => $after['hard']];
@@ -194,10 +194,12 @@ class ScheduleScenarios
      * @param  array<int, array{id: int, professor_id: ?int, room: ?string, placements: array, confirmed?: bool}>  $items
      * @return array{saved: int, unchanged: int, rejected: array<int, string>}
      */
-    public function applyChanges(AcademicTerm $term, array $items): array
+    /** @param array<int>|null $courseIds só altera turmas destes cursos (coordenação); null = todas. */
+    public function applyChanges(AcademicTerm $term, array $items, ?array $courseIds = null): array
     {
         $offerings = ClassOffering::with(['slots', 'assignments', 'subject', 'matrixDiscipline'])
             ->where('academic_term_id', $term->id)
+            ->when($courseIds !== null, fn ($q) => $q->whereIn('course_id', $courseIds ?: [0]))
             ->whereIn('id', array_column($items, 'id'))
             ->get()->keyBy('id');
 

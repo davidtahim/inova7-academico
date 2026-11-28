@@ -20,7 +20,8 @@ class SolverController extends Controller
         $term = AvailabilityGrid::selectedTerm();
         abort_unless($term, 404);
 
-        return response()->json($builder->build($term));
+        // Coordenação: só as turmas dos próprios cursos se movem; as outras ficam como estão.
+        return response()->json($builder->build($term, \App\Support\CourseScope::ids()));
     }
 
     public function apply(Request $request, ScheduleScenarios $scenarios, ScheduleScorer $scorer): JsonResponse
@@ -39,7 +40,7 @@ class SolverController extends Controller
         $before = $scorer->score($term);
         // Rede de segurança: a grade de antes fica guardada como versão automática.
         $scenarios->save($term, 'Antes de aplicar o resolvedor', $request->user(), 'auto');
-        $result = $scenarios->applyChanges($term, $validated['solution']);
+        $result = $scenarios->applyChanges($term, $validated['solution'], \App\Support\CourseScope::ids());
 
         $after = $scorer->score($term);
 

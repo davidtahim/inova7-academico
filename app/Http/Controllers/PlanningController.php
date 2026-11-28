@@ -24,6 +24,7 @@ class PlanningController extends Controller
 
         $query = ClassOffering::with(['course', 'subject', 'assignments.professor', 'slots.professor'])->when($term, fn($q) => $q->where('academic_term_id', $term->id));
         if ($request->filled('course')) $query->where('course_id', $request->integer('course'));
+        \App\Support\CourseScope::filter($query); // coordenação: só os próprios cursos
         if ($request->filled('shift')) $query->where('shift', $request->string('shift'));
 
         $offerings = $query
@@ -49,7 +50,7 @@ class PlanningController extends Controller
         return view('planning.index', [
             'term' => $term,
             'terms' => AcademicTerm::latest('id')->get(),
-            'courses' => Course::orderBy('name')->get(),
+            'courses' => \App\Support\CourseScope::filter(Course::query(), 'id')->orderBy('name')->get(),
             'offerings' => $offerings,
             'professors' => $professors,
             'conflicts' => $term ? $detector->forTerm($term->id) : collect(),
@@ -107,6 +108,7 @@ class PlanningController extends Controller
         if (! empty($validated['course_id'])) {
             $query->where('course_id', $validated['course_id']);
         }
+        \App\Support\CourseScope::filter($query);
 
         $offerings = $query->get();
 

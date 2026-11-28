@@ -22,14 +22,14 @@ class AllocationController extends Controller
     public function index(Request $request, ConflictDetector $detector, AllocationModal $modal)
     {
         $term = AvailabilityGrid::selectedTerm();
-        $courses = Course::where('active', true)->orderBy('name')->get();
+        $courses = \App\Support\CourseScope::filter(Course::where('active', true), 'id')->orderBy('name')->get();
         $courseId = $request->integer('course') ?: $courses->first()?->id;
 
         $offerings = $term
             ? ClassOffering::with(['subject', 'course', 'slots', 'assignments.professor', 'matrixDiscipline'])
                 ->where('academic_term_id', $term->id)
                 ->where('occurs', true)
-                ->when($courseId, fn ($q) => $q->where('course_id', $courseId))
+                ->when($courseId, fn ($q) => $q->where('course_id', $courseId), fn ($q) => \App\Support\CourseScope::filter($q))
                 ->when($request->filled('shift'), fn ($q) => $q->where('shift', $request->string('shift')))
                 ->when($request->filled('period'), fn ($q) => $q->where('period', $request->integer('period')))
                 ->orderBy('period')->orderBy('class_code')
@@ -106,6 +106,8 @@ class AllocationController extends Controller
     /** RF07: torna a grade do semestre visível para alunos e professores. */
     public function publish(Request $request, ConflictDetector $detector)
     {
+        // Publicar vale para o semestre inteiro (todos os cursos): só quem não está restrito a cursos.
+        abort_if(\App\Support\CourseScope::restricted(), 403, 'Publicar a grade vale para todos os cursos: peça ao Administrador de TI.');
         $term = AvailabilityGrid::selectedTerm();
         abort_unless($term, 404);
 
@@ -117,6 +119,7 @@ class AllocationController extends Controller
 
     public function unpublish()
     {
+        abort_if(\App\Support\CourseScope::restricted(), 403, 'Despublicar a grade vale para todos os cursos: peça ao Administrador de TI.');
         $term = AvailabilityGrid::selectedTerm();
         abort_unless($term, 404);
         $term->update(['schedule_published_at' => null, 'schedule_published_by' => null]);
@@ -134,7 +137,7 @@ class AllocationController extends Controller
         ]);
 
         $source = AcademicTerm::findOrFail($validated['source_term_id']);
-        $report = $allocator->copyFromTerm($source, $target);
+        $report = $allocator->copyFromTerm($source, $target, \App\Support\CourseScope::ids());
 
         return back()->with('copy_report', ['source' => $source->code, 'target' => $target->code] + $report);
     }

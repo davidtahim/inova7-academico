@@ -11,7 +11,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->alias(['term.open' => \App\Http\Middleware\EnsureTermIsOpen::class, 'not.impersonating' => \App\Http\Middleware\BlockWhileImpersonating::class]);
+        $middleware->alias(['term.open' => \App\Http\Middleware\EnsureTermIsOpen::class, 'not.impersonating' => \App\Http\Middleware\BlockWhileImpersonating::class, 'course.scope' => \App\Http\Middleware\EnsureCourseScope::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Mantém os tratamentos padrão do Laravel.

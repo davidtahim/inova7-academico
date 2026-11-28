@@ -1,0 +1,1126 @@
+{
+ "fonte": "Planilha \"Matrizes\" (TOTVS), só status Atual e Ativa; SI e ADS fora (já corretas no sistema).",
+ "courses": [
+  {
+   "code": "GRA-PPC-02108",
+   "name": "Terapia Ocupacional",
+   "degree": "Bacharelado",
+   "active": true
+  },
+  {
+   "code": "UNI7EADGRC",
+   "name": "Redes de Computadores (EaD)",
+   "degree": "Tecnólogo",
+   "active": true
+  },
+  {
+   "code": "GRA-PPC-02296",
+   "name": "Publicidade e Propaganda",
+   "degree": "Bacharelado",
+   "active": true
+  },
+  {
+   "code": "GRA-PPC-0212",
+   "name": "Psicologia",
+   "degree": "Bacharelado",
+   "active": true
+  },
+  {
+   "code": "GRA-PPC-0235",
+   "name": "Pedagogia",
+   "degree": "Licenciatura",
+   "active": true
+  },
+  {
+   "code": "UNI7EADGPD",
+   "name": "Pedagogia (EaD)",
+   "degree": "Licenciatura",
+   "active": true
+  },
+  {
+   "code": "GRA-PPC-0211",
+   "name": "Nutrição",
+   "degree": "Bacharelado",
+   "active": true
+  },
+  {
+   "code": "GRA-PPC-0249",
+   "name": "Negócios Imobiliários",
+   "degree": "Tecnólogo",
+   "active": true
+  },
+  {
+   "code": "GRA-PPC-0287",
+   "name": "Medicina Veterinária",
+   "degree": "Bacharelado",
+   "active": true
+  },
+  {
+   "code": "EADP837",
+   "name": "MBA em Gerenciamento de Projetos",
+   "degree": "MBA",
+   "active": true
+  },
+  {
+   "code": "GRA-PPC-0241",
+   "name": "Logística",
+   "degree": "Tecnólogo",
+   "active": true
+  },
+  {
+   "code": "GRA-PPC-0210",
+   "name": "Fonoaudiologia",
+   "degree": "Bacharelado",
+   "active": true
+  },
+  {
+   "code": "GRA-PPC-0209",
+   "name": "Fisioterapia",
+   "degree": "Bacharelado",
+   "active": true
+  },
+  {
+   "code": "GRA-PPC-0208",
+   "name": "Farmácia",
+   "degree": "Bacharelado",
+   "active": true
+  },
+  {
+   "code": "GRA-PPC-0246",
+   "name": "Engenharia Mecânica",
+   "degree": "Bacharelado",
+   "active": true
+  },
+  {
+   "code": "GRA-PPC-0245",
+   "name": "Engenharia Elétrica",
+   "degree": "Bacharelado",
+   "active": true
+  },
+  {
+   "code": "GRA-PPC-0264",
+   "name": "Engenharia de Produção",
+   "degree": "Bacharelado",
+   "active": true
+  },
+  {
+   "code": "GRA-PPC-0247",
+   "name": "Engenharia Civil",
+   "degree": "Bacharelado",
+   "active": true
+  },
+  {
+   "code": "GRA-PPC-0207",
+   "name": "Enfermagem",
+   "degree": "Bacharelado",
+   "active": true
+  },
+  {
+   "code": "GRA-PPC-0215",
+   "name": "Educação Física",
+   "degree": "Bacharelado",
+   "active": true
+  },
+  {
+   "code": "GRA-PPC-0204",
+   "name": "Direito",
+   "degree": "Bacharelado",
+   "active": true
+  },
+  {
+   "code": "GRA-PPC-0236",
+   "name": "Design Gráfico",
+   "degree": "Bacharelado",
+   "active": true
+  },
+  {
+   "code": "GRA-PPC-0201-2",
+   "name": "Comunicação Social - Publicidade e Propaganda",
+   "degree": "Bacharelado",
+   "active": true
+  },
+  {
+   "code": "GRA-PPC-0201-1",
+   "name": "Comunicação Social - Jornalismo",
+   "degree": "Bacharelado",
+   "active": true
+  },
+  {
+   "code": "GRA-PPC-0291",
+   "name": "Comércio Exterior",
+   "degree": "Tecnólogo",
+   "active": true
+  },
+  {
+   "code": "GRA-PPC-0229",
+   "name": "Ciências Contábeis",
+   "degree": "Bacharelado",
+   "active": true
+  },
+  {
+   "code": "UNI7EADGCC",
+   "name": "Ciências Contábeis (EaD)",
+   "degree": "Bacharelado",
+   "active": true
+  },
+  {
+   "code": "GRA-PPC-0205",
+   "name": "Biomedicina",
+   "degree": "Bacharelado",
+   "active": true
+  },
+  {
+   "code": "CSE330",
+   "name": "Bacharelado em Inteligência Artificial",
+   "degree": "Bacharelado",
+   "active": true
+  },
+  {
+   "code": "GRA-PPC-0230",
+   "name": "Arquitetura e Urbanismo",
+   "degree": "Bacharelado",
+   "active": true
+  },
+  {
+   "code": "GRA-PPC-0202",
+   "name": "Administração",
+   "degree": "Bacharelado",
+   "active": true
+  },
+  {
+   "code": "UNI7EADGAD",
+   "name": "Administração (EaD)",
+   "degree": "Bacharelado",
+   "active": true
+  }
+ ],
+ "matrices": [
+  {
+   "course_code": "GRA-PPC-02108",
+   "code": "GRA-MAT-02108-E",
+   "name": "Matriz 3",
+   "version": "3",
+   "status": "Atual",
+   "effective_from": null,
+   "source_code": "3"
+  },
+  {
+   "course_code": "GRA-PPC-02108",
+   "code": "GRA-MAT-02108-D",
+   "name": "Matriz 2",
+   "version": "2",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "2"
+  },
+  {
+   "course_code": "UNI7EADGRC",
+   "code": "EADGRC21",
+   "name": "Redes de Computadores 2021.1",
+   "version": "2021.1",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "EADGRC21"
+  },
+  {
+   "course_code": "GRA-PPC-02296",
+   "code": "UNI71080",
+   "name": "Publicidade e Propaganda 2013.1 - Imperador",
+   "version": "2013.1",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "UNI71080"
+  },
+  {
+   "course_code": "GRA-PPC-0212",
+   "code": "GPS2023.1",
+   "name": "Psicologia 2023.1",
+   "version": "2023.1",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "GPS2023.1"
+  },
+  {
+   "course_code": "GRA-PPC-0212",
+   "code": "GPS2021.2",
+   "name": "Psicologia 2021.2",
+   "version": "2021.2",
+   "status": "Ativa",
+   "effective_from": "2021-07-01",
+   "source_code": "GPS2021.2"
+  },
+  {
+   "course_code": "GRA-PPC-0212",
+   "code": "GPS2019.1",
+   "name": "Psicologia 2019.1",
+   "version": "2019.1",
+   "status": "Ativa",
+   "effective_from": "2019-01-01",
+   "source_code": "GPS2019.1"
+  },
+  {
+   "course_code": "GRA-PPC-0212",
+   "code": "UNI71060",
+   "name": "Psicologia 2016.1",
+   "version": "2016.1",
+   "status": "Ativa",
+   "effective_from": "2016-02-01",
+   "source_code": "UNI71060"
+  },
+  {
+   "course_code": "GRA-PPC-0212",
+   "code": "GRA-MAT-0212-F",
+   "name": "Matriz 14",
+   "version": "14",
+   "status": "Atual",
+   "effective_from": null,
+   "source_code": "14"
+  },
+  {
+   "course_code": "GRA-PPC-0212",
+   "code": "GRA-MAT-0212-F-ENF",
+   "name": "Matriz 14 - Ênfase Social da Saúde",
+   "version": "14",
+   "status": "Atual",
+   "effective_from": null,
+   "source_code": "14"
+  },
+  {
+   "course_code": "GRA-PPC-0212",
+   "code": "GRA-MAT-0212-E",
+   "name": "Matriz 13",
+   "version": "13",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "13"
+  },
+  {
+   "course_code": "GRA-PPC-0212",
+   "code": "GRA-MAT-0212-E-ENF",
+   "name": "Matriz 13 - Ênfase Social da Saúde",
+   "version": "13",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "13"
+  },
+  {
+   "course_code": "GRA-PPC-0235",
+   "code": "GPD2023.1",
+   "name": "Pedagogia 2023.1",
+   "version": "2023.1",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "GPD2023.1"
+  },
+  {
+   "course_code": "GRA-PPC-0235",
+   "code": "GPD2019.1",
+   "name": "Pedagogia 2019.1",
+   "version": "2019.1",
+   "status": "Ativa",
+   "effective_from": "2019-01-01",
+   "source_code": "GPD2019.1"
+  },
+  {
+   "course_code": "GRA-PPC-0235",
+   "code": "UNI7700",
+   "name": "Pedagogia 2012.1",
+   "version": "2012.1",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "UNI7700"
+  },
+  {
+   "course_code": "UNI7EADGPD",
+   "code": "EADGPD20.1",
+   "name": "Pedagogia",
+   "version": "EADGPD20.1",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "EADGPD20.1"
+  },
+  {
+   "course_code": "GRA-PPC-0235",
+   "code": "GRA-MAT-0235-F",
+   "name": "Matriz 14",
+   "version": "14",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "14"
+  },
+  {
+   "course_code": "GRA-PPC-0235",
+   "code": "GRA-MAT-0235-G",
+   "name": "Matriz 15",
+   "version": "15",
+   "status": "Atual",
+   "effective_from": null,
+   "source_code": "15"
+  },
+  {
+   "course_code": "GRA-PPC-0211",
+   "code": "GNU2023.1",
+   "name": "Nutrição",
+   "version": "GNU2023.1",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "GNU2023.1"
+  },
+  {
+   "course_code": "GRA-PPC-0211",
+   "code": "GRA-MAT-0211-H",
+   "name": "Matriz 13",
+   "version": "13",
+   "status": "Atual",
+   "effective_from": null,
+   "source_code": "13"
+  },
+  {
+   "course_code": "GRA-PPC-0211",
+   "code": "GRA-MAT-0211-G",
+   "name": "Matriz 12",
+   "version": "12",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "12"
+  },
+  {
+   "course_code": "GRA-PPC-0249",
+   "code": "UNI7934",
+   "name": "Negócios Imobiliários 2010.1",
+   "version": "2010.1",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "UNI7934"
+  },
+  {
+   "course_code": "GRA-PPC-0287",
+   "code": "GMV2023.1",
+   "name": "Medicina Veterinária 2023.1",
+   "version": "2023.1",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "GMV2023.1"
+  },
+  {
+   "course_code": "GRA-PPC-0287",
+   "code": "GRA-MAT-0287-F",
+   "name": "Matriz 8",
+   "version": "8",
+   "status": "Atual",
+   "effective_from": null,
+   "source_code": "8"
+  },
+  {
+   "course_code": "GRA-PPC-0287",
+   "code": "GRA-MAT-0287-E",
+   "name": "Matriz 5",
+   "version": "5",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "5"
+  },
+  {
+   "course_code": "EADP837",
+   "code": "POS-PLE-EEFF-G",
+   "name": "Matriz 1",
+   "version": "1",
+   "status": "Atual",
+   "effective_from": null,
+   "source_code": "1"
+  },
+  {
+   "course_code": "GRA-PPC-0241",
+   "code": "UNI7931",
+   "name": "Logística 2010.1",
+   "version": "2010.1",
+   "status": "Ativa",
+   "effective_from": "2010-02-01",
+   "source_code": "UNI7931"
+  },
+  {
+   "course_code": "GRA-PPC-0241",
+   "code": "GRA-MAT-0241-H",
+   "name": "Matriz 21",
+   "version": "21",
+   "status": "Atual",
+   "effective_from": null,
+   "source_code": "21"
+  },
+  {
+   "course_code": "GRA-PPC-0210",
+   "code": "GRA-MAT-0210-E",
+   "name": "Matriz 4",
+   "version": "4",
+   "status": "Atual",
+   "effective_from": null,
+   "source_code": "4"
+  },
+  {
+   "course_code": "GRA-PPC-0210",
+   "code": "GRA-MAT-0210-D",
+   "name": "Matriz 3",
+   "version": "3",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "3"
+  },
+  {
+   "course_code": "GRA-PPC-0209",
+   "code": "GRA-MAT-0209-H",
+   "name": "Matriz 18",
+   "version": "18",
+   "status": "Atual",
+   "effective_from": null,
+   "source_code": "18"
+  },
+  {
+   "course_code": "GRA-PPC-0209",
+   "code": "GRA-MAT-0209-G",
+   "name": "Matriz 17",
+   "version": "17",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "17"
+  },
+  {
+   "course_code": "GRA-PPC-0209",
+   "code": "GFI2023.1",
+   "name": "Fisioterapia 2023.1",
+   "version": "2023.1",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "GFI2023.1"
+  },
+  {
+   "course_code": "GRA-PPC-0208",
+   "code": "GRA-MAT-0208-I",
+   "name": "Matriz 16",
+   "version": "16",
+   "status": "Atual",
+   "effective_from": null,
+   "source_code": "16"
+  },
+  {
+   "course_code": "GRA-PPC-0208",
+   "code": "GRA-MAT-0208-H",
+   "name": "Matriz 15",
+   "version": "15",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "15"
+  },
+  {
+   "course_code": "GRA-PPC-0208",
+   "code": "GFA2023.1",
+   "name": "Farmácia 2023.1",
+   "version": "2023.1",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "GFA2023.1"
+  },
+  {
+   "course_code": "GRA-PPC-0246",
+   "code": "GRA-MAT-0246-H",
+   "name": "Matriz 9",
+   "version": "9",
+   "status": "Atual",
+   "effective_from": null,
+   "source_code": "9"
+  },
+  {
+   "course_code": "GRA-PPC-0246",
+   "code": "GRA-MAT-0246-G",
+   "name": "Matriz 8",
+   "version": "8",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "8"
+  },
+  {
+   "course_code": "GRA-PPC-0246",
+   "code": "GEM2023.1",
+   "name": "Engenharia Mecânica 2023.1",
+   "version": "2023.1",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "GEM2023.1"
+  },
+  {
+   "course_code": "GRA-PPC-0246",
+   "code": "GEM2020.1",
+   "name": "Engenharia Mecânica 2020.1",
+   "version": "2020.1",
+   "status": "Ativa",
+   "effective_from": "2020-01-01",
+   "source_code": "GEM2020.1"
+  },
+  {
+   "course_code": "GRA-PPC-0246",
+   "code": "GEM2019.1",
+   "name": "Engenharia Mecânica 2019.1",
+   "version": "2019.1",
+   "status": "Ativa",
+   "effective_from": "2019-01-01",
+   "source_code": "GEM2019.1"
+  },
+  {
+   "course_code": "GRA-PPC-0245",
+   "code": "GRA-MAT-0245-G",
+   "name": "Matriz 9",
+   "version": "9",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "9"
+  },
+  {
+   "course_code": "GRA-PPC-0245",
+   "code": "GRA-MAT-0245-H",
+   "name": "Matriz 10",
+   "version": "10",
+   "status": "Atual",
+   "effective_from": null,
+   "source_code": "10"
+  },
+  {
+   "course_code": "GRA-PPC-0245",
+   "code": "GEE2023.1",
+   "name": "Engenharia Elétrica 2023.1",
+   "version": "2023.1",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "GEE2023.1"
+  },
+  {
+   "course_code": "GRA-PPC-0245",
+   "code": "GEE2020.1",
+   "name": "Engenharia Elétrica 2020.1",
+   "version": "2020.1",
+   "status": "Ativa",
+   "effective_from": "2020-01-01",
+   "source_code": "GEE2020.1"
+  },
+  {
+   "course_code": "GRA-PPC-0264",
+   "code": "GRA-MAT-0264-F",
+   "name": "Matriz 9",
+   "version": "9",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "9"
+  },
+  {
+   "course_code": "GRA-PPC-0264",
+   "code": "GRA-MAT-0264-G",
+   "name": "Matriz 10",
+   "version": "10",
+   "status": "Atual",
+   "effective_from": null,
+   "source_code": "10"
+  },
+  {
+   "course_code": "GRA-PPC-0264",
+   "code": "GEP2023.1",
+   "name": "Engenharia de Produção 2023.1",
+   "version": "2023.1",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "GEP2023.1"
+  },
+  {
+   "course_code": "GRA-PPC-0264",
+   "code": "GEP2020.1",
+   "name": "Engenharia de Produção 2020.1",
+   "version": "2020.1",
+   "status": "Ativa",
+   "effective_from": "2020-01-01",
+   "source_code": "GEP2020.1"
+  },
+  {
+   "course_code": "GRA-PPC-0264",
+   "code": "GEP2019.1",
+   "name": "Engenharia de Produção 2019.1",
+   "version": "2019.1",
+   "status": "Ativa",
+   "effective_from": "2019-01-01",
+   "source_code": "GEP2019.1"
+  },
+  {
+   "course_code": "GRA-PPC-0264",
+   "code": "UNI7950",
+   "name": "Engenharia de Produção 2013.1",
+   "version": "2013.1",
+   "status": "Ativa",
+   "effective_from": "2013-02-04",
+   "source_code": "UNI7950"
+  },
+  {
+   "course_code": "GRA-PPC-0247",
+   "code": "GRA-MAT-0247-H",
+   "name": "Matriz 9",
+   "version": "9",
+   "status": "Atual",
+   "effective_from": null,
+   "source_code": "9"
+  },
+  {
+   "course_code": "GRA-PPC-0247",
+   "code": "GRA-MAT-0247-G",
+   "name": "Matriz 8",
+   "version": "8",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "8"
+  },
+  {
+   "course_code": "GRA-PPC-0247",
+   "code": "GEC2023.1",
+   "name": "Engenharia Civil 2023.1",
+   "version": "2023.1",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "GEC2023.1"
+  },
+  {
+   "course_code": "GRA-PPC-0247",
+   "code": "GEC2020.1",
+   "name": "Engenharia Civil 2020.1",
+   "version": "2020.1",
+   "status": "Ativa",
+   "effective_from": "2019-01-01",
+   "source_code": "GEC2020.1"
+  },
+  {
+   "course_code": "GRA-PPC-0247",
+   "code": "GEC2019.1",
+   "name": "Engenharia Civil 2019.1",
+   "version": "2019.1",
+   "status": "Ativa",
+   "effective_from": "2019-01-01",
+   "source_code": "GEC2019.1"
+  },
+  {
+   "course_code": "GRA-PPC-0207",
+   "code": "GRA-MAT-0207-H",
+   "name": "Matriz 18",
+   "version": "18",
+   "status": "Atual",
+   "effective_from": null,
+   "source_code": "18"
+  },
+  {
+   "course_code": "GRA-PPC-0207",
+   "code": "GRA-MAT-0207-G",
+   "name": "Matriz 17",
+   "version": "17",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "17"
+  },
+  {
+   "course_code": "GRA-PPC-0215",
+   "code": "GRA-MAT-0215-E",
+   "name": "Matriz 16",
+   "version": "16",
+   "status": "Atual",
+   "effective_from": null,
+   "source_code": "16"
+  },
+  {
+   "course_code": "GRA-PPC-0204",
+   "code": "GRA-MAT-0204-G",
+   "name": "Matriz 44",
+   "version": "44",
+   "status": "Atual",
+   "effective_from": null,
+   "source_code": "44"
+  },
+  {
+   "course_code": "GRA-PPC-0204",
+   "code": "GRA-MAT-0204-F",
+   "name": "Matriz 43",
+   "version": "43",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "43"
+  },
+  {
+   "course_code": "GRA-PPC-0204",
+   "code": "GDI2023.1",
+   "name": "Direito 2023.1",
+   "version": "2023.1",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "GDI2023.1"
+  },
+  {
+   "course_code": "GRA-PPC-0204",
+   "code": "GDI2018.2",
+   "name": "Direito 2019.1",
+   "version": "2019.1",
+   "status": "Ativa",
+   "effective_from": "2018-08-01",
+   "source_code": "GDI2018.2"
+  },
+  {
+   "course_code": "GRA-PPC-0204",
+   "code": "UNI71098",
+   "name": "Direito 2018.2 - Imperador",
+   "version": "2018.2",
+   "status": "Ativa",
+   "effective_from": "2018-08-01",
+   "source_code": "UNI71098"
+  },
+  {
+   "course_code": "GRA-PPC-0204",
+   "code": "UNI71097",
+   "name": "Direito 2018.2",
+   "version": "2018.2",
+   "status": "Ativa",
+   "effective_from": "2007-07-01",
+   "source_code": "UNI71097"
+  },
+  {
+   "course_code": "GRA-PPC-0204",
+   "code": "UNI7431",
+   "name": "Direito 2007.2",
+   "version": "2007.2",
+   "status": "Ativa",
+   "effective_from": "2007-07-01",
+   "source_code": "UNI7431"
+  },
+  {
+   "course_code": "GRA-PPC-0236",
+   "code": "UNI71095",
+   "name": "Design Gráfico 2017.1",
+   "version": "2017.1",
+   "status": "Ativa",
+   "effective_from": "2017-02-01",
+   "source_code": "UNI71095"
+  },
+  {
+   "course_code": "GRA-PPC-0201-2",
+   "code": "GRA-MAT-0201-2-F",
+   "name": "Matriz 16",
+   "version": "16",
+   "status": "Atual",
+   "effective_from": null,
+   "source_code": "16"
+  },
+  {
+   "course_code": "GRA-PPC-0201-2",
+   "code": "GRA-MAT-0201-2-E",
+   "name": "Matriz 15",
+   "version": "15",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "15"
+  },
+  {
+   "course_code": "GRA-PPC-0201-2",
+   "code": "GPP2023.1",
+   "name": "Comunicação Social Hab. em Publicidade e Propaganda 2023.1",
+   "version": "2023.1",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "GPP2023.1"
+  },
+  {
+   "course_code": "GRA-PPC-0201-2",
+   "code": "GPP2019.1",
+   "name": "Comunicação Social Hab. em Publicidade e Propaganda 2019.1",
+   "version": "2019.1",
+   "status": "Ativa",
+   "effective_from": "2019-01-01",
+   "source_code": "GPP2019.1"
+  },
+  {
+   "course_code": "GRA-PPC-0201-1",
+   "code": "GRA-MAT-0201-1-F",
+   "name": "Matriz 16",
+   "version": "16",
+   "status": "Atual",
+   "effective_from": null,
+   "source_code": "16"
+  },
+  {
+   "course_code": "GRA-PPC-0201-1",
+   "code": "GRA-MAT-0201-1-E",
+   "name": "Matriz 15",
+   "version": "15",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "15"
+  },
+  {
+   "course_code": "GRA-PPC-0201-1",
+   "code": "GJO2023.1",
+   "name": "Comunicação Social Hab. em Jornalismo 2023.1",
+   "version": "2023.1",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "GJO2023.1"
+  },
+  {
+   "course_code": "GRA-PPC-0201-1",
+   "code": "GJO2019.1",
+   "name": "Comunicação Social Hab. em Jornalismo 2019.1",
+   "version": "2019.1",
+   "status": "Ativa",
+   "effective_from": "2019-01-01",
+   "source_code": "GJO2019.1"
+  },
+  {
+   "course_code": "GRA-PPC-0291",
+   "code": "GRA-MAT-0291-D",
+   "name": "Matriz 4",
+   "version": "4",
+   "status": "Atual",
+   "effective_from": null,
+   "source_code": "4"
+  },
+  {
+   "course_code": "GRA-PPC-0229",
+   "code": "GRA-MAT-0229-H",
+   "name": "Matriz 26",
+   "version": "26",
+   "status": "Atual",
+   "effective_from": null,
+   "source_code": "26"
+  },
+  {
+   "course_code": "GRA-PPC-0229",
+   "code": "GRA-MAT-0229-G",
+   "name": "Matriz 25",
+   "version": "25",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "25"
+  },
+  {
+   "course_code": "GRA-PPC-0229",
+   "code": "GCC2023.1",
+   "name": "Ciências Contábeis 2023.1",
+   "version": "2023.1",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "GCC2023.1"
+  },
+  {
+   "course_code": "GRA-PPC-0229",
+   "code": "GCC2019.2",
+   "name": "Ciências Contábeis 2019.2",
+   "version": "2019.2",
+   "status": "Ativa",
+   "effective_from": "2019-01-01",
+   "source_code": "GCC2019.2"
+  },
+  {
+   "course_code": "GRA-PPC-0229",
+   "code": "GCC2019.1",
+   "name": "Ciências Contábeis 2019.1",
+   "version": "2019.1",
+   "status": "Ativa",
+   "effective_from": "2019-01-01",
+   "source_code": "GCC2019.1"
+  },
+  {
+   "course_code": "GRA-PPC-0229",
+   "code": "UNI71060",
+   "name": "Ciências Contábeis 2008.2 - Imperador",
+   "version": "2008.2",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "UNI71060"
+  },
+  {
+   "course_code": "GRA-PPC-0229",
+   "code": "UNI7631",
+   "name": "Ciências Contábeis 2008.2",
+   "version": "2008.2",
+   "status": "Ativa",
+   "effective_from": "2008-01-01",
+   "source_code": "UNI7631"
+  },
+  {
+   "course_code": "GRA-PPC-0229",
+   "code": "UNI723-1",
+   "name": "Ciências Contábeis (noite) 2004.1",
+   "version": "2004.1",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "UNI723-1"
+  },
+  {
+   "course_code": "GRA-PPC-0229",
+   "code": "UNI723",
+   "name": "Ciências Contábeis (noite) 2004.1",
+   "version": "2004.1",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "UNI723"
+  },
+  {
+   "course_code": "UNI7EADGCC",
+   "code": "EADGCC20.1",
+   "name": "Ciências Contábeis",
+   "version": "EADGCC20.1",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "EADGCC20.1"
+  },
+  {
+   "course_code": "GRA-PPC-0205",
+   "code": "GRA-MAT-0205-H",
+   "name": "Matriz 16",
+   "version": "16",
+   "status": "Atual",
+   "effective_from": null,
+   "source_code": "16"
+  },
+  {
+   "course_code": "GRA-PPC-0205",
+   "code": "GRA-MAT-0205-G",
+   "name": "Matriz 15",
+   "version": "15",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "15"
+  },
+  {
+   "course_code": "GRA-PPC-0205",
+   "code": "GBM2023.1",
+   "name": "Biomedicina",
+   "version": "GBM2023.1",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "GBM2023.1"
+  },
+  {
+   "course_code": "CSE330",
+   "code": "GRA-MAT-02330-A",
+   "name": "Matriz 1",
+   "version": "1",
+   "status": "Atual",
+   "effective_from": null,
+   "source_code": "1"
+  },
+  {
+   "course_code": "GRA-PPC-0230",
+   "code": "GRA-MAT-0230-F",
+   "name": "Matriz 9",
+   "version": "9",
+   "status": "Atual",
+   "effective_from": null,
+   "source_code": "9"
+  },
+  {
+   "course_code": "GRA-PPC-0230",
+   "code": "GRA-MAT-0230-E",
+   "name": "Matriz 8",
+   "version": "8",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "8"
+  },
+  {
+   "course_code": "GRA-PPC-0230",
+   "code": "GAU2023.1",
+   "name": "Arquitetura e Urbanismo 2023.1",
+   "version": "2023.1",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "GAU2023.1"
+  },
+  {
+   "course_code": "GRA-PPC-0230",
+   "code": "GAU2019.1",
+   "name": "Arquitetura e Urbanismo 2019.1",
+   "version": "2019.1",
+   "status": "Ativa",
+   "effective_from": "2019-01-01",
+   "source_code": "GAU2019.1"
+  },
+  {
+   "course_code": "GRA-PPC-0230",
+   "code": "UNI7GAU",
+   "name": "Arquitetura e Urbanismo - 2013.1",
+   "version": "2013.1",
+   "status": "Ativa",
+   "effective_from": "2013-08-01",
+   "source_code": "UNI7GAU"
+  },
+  {
+   "course_code": "GRA-PPC-0202",
+   "code": "UNI712A",
+   "name": "Matriz Clone - Administração: Marketing (noite)",
+   "version": "UNI712A",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "UNI712A"
+  },
+  {
+   "course_code": "GRA-PPC-0202",
+   "code": "UNI744A",
+   "name": "Matriz Clone - Administração (noite)",
+   "version": "UNI744A",
+   "status": "Ativa",
+   "effective_from": "2004-01-01",
+   "source_code": "UNI744A"
+  },
+  {
+   "course_code": "GRA-PPC-0202",
+   "code": "GRA-MAT-0202-H",
+   "name": "Matriz 32",
+   "version": "32",
+   "status": "Atual",
+   "effective_from": null,
+   "source_code": "32"
+  },
+  {
+   "course_code": "GRA-PPC-0202",
+   "code": "GRA-MAT-0202-G",
+   "name": "Matriz 29",
+   "version": "29",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "29"
+  },
+  {
+   "course_code": "GRA-PPC-0202",
+   "code": "GAD2023.1",
+   "name": "Administração 2023.1",
+   "version": "2023.1",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "GAD2023.1"
+  },
+  {
+   "course_code": "UNI7EADGAD",
+   "code": "EADGAD20.1",
+   "name": "Administração 2020.1",
+   "version": "2020.1",
+   "status": "Ativa",
+   "effective_from": null,
+   "source_code": "EADGAD20.1"
+  },
+  {
+   "course_code": "GRA-PPC-0202",
+   "code": "GAD2019.2",
+   "name": "Administração 2019.2",
+   "version": "2019.2",
+   "status": "Ativa",
+   "effective_from": "2012-01-01",
+   "source_code": "GAD2019.2"
+  },
+  {
+   "course_code": "GRA-PPC-0202",
+   "code": "GAD2019.1",
+   "name": "Administração 2019.1",
+   "version": "2019.1",
+   "status": "Ativa",
+   "effective_from": "2019-01-01",
+   "source_code": "GAD2019.1"
+  }
+ ]
+}

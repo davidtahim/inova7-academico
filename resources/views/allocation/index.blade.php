@@ -18,7 +18,10 @@
                 </p>
             </div>
             <div class="d-flex flex-wrap gap-2 align-items-center">
-                @if ($term?->isSchedulePublished())
+                @if (\App\Support\CourseScope::restricted())
+                    <span class="badge {{ $term?->isSchedulePublished() ? 'bg-success' : 'bg-warning text-dark' }}">{{ $term?->isSchedulePublished() ? 'Publicada' : 'Rascunho' }}</span>
+                    <span class="small text-muted">Publicar vale para todos os cursos: com o Administrador de TI.</span>
+                @elseif ($term?->isSchedulePublished())
                     <span class="badge bg-success">Publicada {{ $term->schedule_published_at->format('d/m/Y H:i') }}{{ $term->publisher ? ' por ' . $term->publisher->name : '' }}</span>
                     <form method="POST" action="{{ route('allocation.unpublish') }}" onsubmit="return confirm('Voltar a grade para rascunho? Alunos e professores deixam de vê-la.')">
                         @csrf<button class="btn btn-outline-warning btn-sm">Voltar para rascunho</button>

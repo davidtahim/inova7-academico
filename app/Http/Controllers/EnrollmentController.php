@@ -19,7 +19,7 @@ class EnrollmentController extends Controller
     public function index(Request $request, EnrollmentPlanner $planner)
     {
         $term = AvailabilityGrid::selectedTerm();
-        $matrices = CurriculumMatrix::with('course')
+        $matrices = \App\Support\CourseScope::filter(CurriculumMatrix::with('course'))
             ->whereIn('id', User::where('role', 'student')->whereNotNull('curriculum_matrix_id')->distinct()->pluck('curriculum_matrix_id'))
             ->orderBy('code')->get();
         $matrix = $matrices->firstWhere('id', $request->integer('matrix')) ?? $matrices->first();
@@ -33,7 +33,7 @@ class EnrollmentController extends Controller
             'demand' => $term && $matrix ? $planner->demand($term, $matrix) : collect(),
             'students' => $students,
             // Para importar históricos: todas as matrizes, com a SI 2019.1 sugerida.
-            'importMatrices' => CurriculumMatrix::with('course')->orderBy('code')->get(),
+            'importMatrices' => \App\Support\CourseScope::filter(CurriculumMatrix::with('course'))->orderBy('code')->get(),
             'defaultImportMatrix' => $matrix?->id ?? CurriculumMatrix::where('code', StudentHistoryImporter::CURRICULUM_TO_MATRIX['GSI2019.1'])->value('id'),
             'clashes' => $term ? $students->mapWithKeys(fn ($student) => [$student->id => $planner->studentClashes($student, $term)]) : collect(),
         ]);
