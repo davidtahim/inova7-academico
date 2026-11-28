@@ -55,6 +55,20 @@ class Planilha20271SeederTest extends TestCase
         $this->assertTrue(User::where('email', 'admin@inova7.local')->where('role', 'admin')->exists());
     }
 
+    public function test_seeder_keeps_existing_users_passwords(): void
+    {
+        // Produção: admin e professor já existentes não podem ter a senha redefinida.
+        $admin = User::create(['name' => 'Admin', 'email' => 'admin@inova7.local', 'password' => 'SenhaForte#2027', 'role' => 'admin', 'is_active' => true]);
+        $teacher = User::create(['name' => 'David', 'email' => '560127720@prof.uni7.edu.br', 'password' => 'OutraSenha#2027', 'role' => 'teacher', 'is_active' => true]);
+
+        $this->seed(Planilha20271Seeder::class);
+
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('SenhaForte#2027', $admin->fresh()->password));
+        $this->assertFalse((bool) $admin->fresh()->must_change_password);
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('OutraSenha#2027', $teacher->fresh()->password));
+        $this->assertSame('UNI727720', $teacher->fresh()->professor->registration);
+    }
+
     public function test_seeder_is_idempotent(): void
     {
         $this->seed(Planilha20271Seeder::class);
