@@ -43,6 +43,7 @@ class SolverProblemBuilder
 
             return [
                 'id' => $o->id,
+                'course' => $o->course_id,
                 'class' => $o->class_code,
                 'shift' => $o->shift,
                 'subject' => $o->subject->name,
@@ -65,7 +66,7 @@ class SolverProblemBuilder
             $current = $this->allocator->currentInput($o);
 
             return [
-                'id' => $o->id, 'class' => $o->class_code, 'shift' => $o->shift, 'subject' => $o->subject->name,
+                'id' => $o->id, 'course' => $o->course_id, 'class' => $o->class_code, 'shift' => $o->shift, 'subject' => $o->subject->name,
                 'abbr' => $o->subject->short_label,
                 'subjectKey' => preg_replace('/[^a-z0-9]/', '', Str::lower(Str::ascii($o->subject->name))),
                 'expected' => array_sum(array_map('count', $current['placements'])),

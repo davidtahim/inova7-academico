@@ -713,3 +713,26 @@ body {
         height: 72px
     }
 }
+/* Topo no celular: título e ações quebram em duas linhas em vez de se sobrepor. */
+.topbar-area:hover { text-decoration: underline !important; }
+
+@media (max-width: 767.98px) {
+    .topbar {
+        height: auto;
+        min-height: 64px;
+        flex-wrap: wrap;
+        padding: 10px 0;
+        row-gap: 8px;
+    }
+
+    .topbar-title { flex: 1 1 0; }
+    .topbar h1 { font-size: 18px; line-height: 1.25; overflow-wrap: anywhere; }
+
+    .topbar-actions {
+        flex: 1 1 100%;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    .topbar-credit { display: none; }
+}

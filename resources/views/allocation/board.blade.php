@@ -31,6 +31,8 @@
                 </div>
                 <button type="button" class="btn btn-sm btn-outline-secondary" id="b-undo" disabled title="Desfazer (Ctrl+Z)">↶ Desfazer</button>
                 <button type="button" class="btn btn-sm btn-outline-secondary" id="b-redo" disabled title="Refazer (Ctrl+Y)">↷ Refazer</button>
+                <a href="{{ route('allocation.diagnosis') }}" class="btn btn-sm btn-outline-secondary" id="b-diag"
+                    title="Por que a grade não fecha? Causas e o que fazer">Diagnóstico <span class="badge rounded-pill" id="b-diag-count" hidden></span></a>
                 <a href="{{ route('allocation.index') }}" class="btn btn-sm btn-outline-primary">Formulário de montagem</a>
             </div>
         </div>
@@ -340,6 +342,34 @@
             const workerUrl = @json(asset('js/schedule-solver.js') . '?v=' . @filemtime(public_path('js/schedule-solver.js')));
             const problemUrl = @json(route('allocation.solver.problem'));
             const applyUrl = @json(route('allocation.solver.apply'));
+            const diagnosisUrl = @json(route('allocation.diagnosis.data'));
+
+            // Diagnóstico (RF06): selo no botão e explicação quando a grade não fecha.
+            let diagnosis = null;
+            async function loadDiagnosis() {
+                try {
+                    const r = await fetch(diagnosisUrl, { headers: { Accept: 'application/json' } });
+                    if (!r.ok) return;
+                    diagnosis = await r.json();
+                    const n = diagnosis.summary.blockers, badge = $('b-diag-count'), btn = $('b-diag');
+                    badge.hidden = false;
+                    badge.textContent = n ? n : '✓';
+                    badge.className = 'badge rounded-pill ' + (n ? 'bg-danger' : 'bg-success');
+                    btn.className = 'btn btn-sm ' + (n ? 'btn-outline-danger' : 'btn-outline-secondary');
+                    btn.title = n ? n + ' impedimento(s) para fechar a grade — ver causas e o que fazer' : 'Nenhum impedimento estrutural';
+                } catch (e) { /* o diagnóstico é auxiliar: a grade funciona sem ele */ }
+            }
+            function explainHard(hard) {
+                if (!hard || !diagnosis) return '';
+                const s = diagnosis.summary;
+                if (!s.blockers) {
+                    return '<div class="mt-1 text-muted">Nenhum impedimento estrutural nos dados: rode por mais tempo ou desmarque “Preservar aulas já posicionadas”.</div>';
+                }
+                const items = diagnosis.top.filter(i => i.level === 'blocker').slice(0, 3).map(i => '<li>' + escapeHtml(i.title) + '</li>').join('');
+                return '<div class="alert alert-danger py-2 px-3 mt-2 mb-0 small"><strong>Por que não fechou:</strong> ' + s.blockers +
+                    ' impedimento(s) nos dados, que nenhum tempo de resolvedor contorna.<ul class="mb-1">' + items + '</ul>' +
+                    '<a href="' + diagnosis.url + '" class="alert-link">Ver o diagnóstico completo e o que fazer →</a></div>';
+            }
             const solver = { worker: null, result: null, limit: 0 };
             const fmt = ms => { const s = Math.floor(ms / 1000); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
             const labels = @json(\App\Services\ScheduleScorer::LABELS + ['consecutive' => 'Aulas seguidas acima do máximo']);
@@ -375,7 +405,7 @@
                         solver.worker.terminate(); solver.worker = null;
                         $('s-bar').style.width = '100%';
                         $('s-best').textContent = m.best.toLocaleString('pt-BR');
-                        $('s-summary').innerHTML = '<strong>Melhor solução: ' + m.best.toLocaleString('pt-BR') + ' pontos</strong> (' + m.hard + ' restrições rígidas) — ' + escapeHtml(describe(m.counts)) + '. Revise e clique em <em>Aplicar solução</em>.';
+                        $('s-summary').innerHTML = '<strong>Melhor solução: ' + m.best.toLocaleString('pt-BR') + ' pontos</strong> (' + m.hard + ' restrições rígidas) — ' + escapeHtml(describe(m.counts)) + '. Revise e clique em <em>Aplicar solução</em>.' + explainHard(m.hard);
                         setStatus('Solução pronta', 'bg-info text-dark');
                         solverButtons(false);
                     }
@@ -398,12 +428,14 @@
                 solverButtons(false);
                 if (!response.ok) { toast([r.message || 'Falha ao aplicar a solução.'], 'danger'); setStatus('Erro', 'bg-danger'); return; }
                 $('s-summary').innerHTML = '<strong>Aplicada:</strong> ' + r.saved + ' disciplinas regravadas, ' + r.unchanged + ' sem mudança. Pontos ' +
-                    r.score_before.toLocaleString('pt-BR') + ' → <strong>' + r.score_after.toLocaleString('pt-BR') + '</strong> (' + r.hard_after + ' rígidas).' +
+                    r.score_before.toLocaleString('pt-BR') + ' → <strong>' + r.score_after.toLocaleString('pt-BR') + '</strong> (' + r.hard_after + ' rígidas).' + explainHard(r.hard_after) +
                     (r.rejected.length ? '<details class="mt-1"><summary class="text-danger">' + r.rejected.length + ' recusada(s) pelo servidor</summary><ul class="mb-0">' + r.rejected.map(x => '<li>' + escapeHtml(x) + '</li>').join('') + '</ul></details>' : '');
                 await load();
+                loadDiagnosis();
             });
 
             load();
+            loadDiagnosis();
         })();
     </script>
 @endsection

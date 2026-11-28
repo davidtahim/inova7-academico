@@ -30,6 +30,7 @@
         $sections[] = ['label' => 'Planejamento', 'items' => [
             ['label' => 'Professores por turma', 'url' => route('planning.index'), 'icon' => 'teacher', 'active' => ['planning.*']],
             ['label' => 'Grade global', 'url' => route('allocation.board'), 'icon' => 'layers', 'active' => ['allocation.board*', 'allocation.solver.*']],
+            ['label' => 'Diagnóstico', 'url' => route('allocation.diagnosis'), 'icon' => 'alert', 'active' => ['allocation.diagnosis*']],
             ['label' => 'Montagem por turma', 'url' => route('allocation.index'), 'icon' => 'grid', 'active' => ['allocation.index', 'allocation.update', 'allocation.copy']],
             ['label' => 'Enturmação', 'url' => route('enrollment.index'), 'icon' => 'users', 'active' => ['enrollment.*']],
         ]];
@@ -91,6 +92,7 @@
         'logout' => 'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9',
         'panel' => 'M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM9 3v18',
         'x' => 'M18 6 6 18M6 6l12 12',
+        'alert' => 'M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01',
     ];
     $icon = fn (string $name) => '<svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="' . $icons[$name] . '"/></svg>';
 

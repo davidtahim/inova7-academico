@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CurriculumMatrixDisciplineController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DiagnosticsController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\PlanningController;
@@ -35,7 +36,7 @@ Route::middleware('guest')->group(function () {
 |   /                Início (redireciona conforme o perfil)       todos
 |   /horarios        Horários das turmas                          todos
 |   /docente/...     Painel, disciplinas e disponibilidade        professor (teach)
-|   /planejamento/.. Grade global, montagem, enturmação, publicar  admin, coordenação (manage-planning)
+|   /planejamento/.. Grade global, diagnóstico, montagem, enturmação  admin, coordenação (manage-planning)
 |   /cadastros/...   Cursos, matrizes, disciplinas, professores   admin, coordenação (manage-catalog)
 |   /consultas/...   Catálogo somente leitura                     admin, coordenação, funcionário (access-catalog)
 |   /importacoes/..  Oferta Ubíqua, TOTVS, professores            admin, coordenação, funcionário (access-imports)
@@ -68,6 +69,8 @@ Route::middleware('auth')->group(function () {
             Route::post('/grade/mover', [ScheduleBoardController::class, 'move'])->name('board.move');
             Route::get('/resolvedor/problema', [SolverController::class, 'problem'])->name('solver.problem');
             Route::post('/resolvedor/aplicar', [SolverController::class, 'apply'])->name('solver.apply');
+            Route::get('/diagnostico', [DiagnosticsController::class, 'index'])->name('diagnosis');
+            Route::get('/diagnostico/dados', [DiagnosticsController::class, 'data'])->name('diagnosis.data');
 
             Route::get('/montagem', [AllocationController::class, 'index'])->name('index');
             Route::post('/montagem/copiar', [AllocationController::class, 'copy'])->name('copy');
